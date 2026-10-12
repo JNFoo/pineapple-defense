@@ -178,6 +178,16 @@ Rules already decided: points are Golden Pineapple points earned only by playing
 
 Open for the shop: how many points a wave earns, the cost curve (the idle-core module has cost and milestone math that may fit), and whether upgrades carry over after the final stage as in Fancy.
 
+## Friends from other games: visible nods (decided Oct 12, 3:41 PM)
+Fun references to Apple Press and Fancy, the Banana, kept small and in the same silly spirit. Most cameos are hidden Easter eggs (details in the private file); these few are visible so kids can laugh at them.
+- **Apple company billboards (from the owner):** early stages show a small billboard for a regional apple company; later stages show a much bigger, global version of the same company, so the ads visibly grow as you go. Name and slogans are placeholders (Apple Press is the obvious inspiration; draw it in this game's own glossy toy style, never a real company's logo).
+- **Posters that tease the other fruits:** extra penguin signs such as "No Bananas! No Apples! No Pineapples!", in the same sticker lettering as the other propaganda.
+
+## Secrets reward skill, curiosity and luck (decided Oct 12, 3:41 PM)
+- **Skill:** a clever flick, a perfect combo, hitting something small or moving.
+- **Curiosity:** poking at posters, scenery and odd corners; noticing a wobble or a wink.
+- **Luck:** free chance events anyone can trigger just by playing (rare glints, lucky ricochets, surprise visitors), with a hidden kindness guarantee so nobody is ever shut out. Still no prize boxes, no pulls, no purchases and no pay-to-win.
+
 ## Secret content: reserved slots (details are NOT in this public file)
 The game reserves slots for hidden areas and hidden enemies, plus unlock rules. Per the Master Guide, public text (this brief, the README, change logs, credits, help) never says what they are; it calls them "unlockable extras" until a player finds them. The working details live only in a private file that is never committed to this repository (`private/hidden-content-private.md`, ignored by git).
 
