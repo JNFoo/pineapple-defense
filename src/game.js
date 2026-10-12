@@ -931,7 +931,7 @@ function showCard(title, body, btn1, fn1, noTitleBtn) {
   $('gTitle').textContent = title; $('gBody').textContent = body;
   var b1 = $('gBtn1'); b1.textContent = btn1; b1.onclick = function () { hideCard(); fn1(); };
   $('gBtn2').onclick = function () { hideCard(); toTitle(); };
-  gcw.hidden = false; b1.focus();
+  $('gX').hidden = true; halt(); gcw.hidden = false; b1.focus();
 }
 function hideCard() { gcw.hidden = true; }
 function startAgain() { startStage(); run(); }
@@ -939,6 +939,7 @@ function pause() {
   if (S.paused || S.over || !running) return;
   S.paused = true; halt();
   showCard('Paused', 'Take your time.', 'Resume', resume);
+  $('gX').hidden = false; $('gX').onclick = function () { hideCard(); resume(); };
   $('gBtn2').textContent = 'Back to title';
 }
 function resume() { S.paused = false; run(); }
@@ -1006,7 +1007,7 @@ function fillTrophies() {
   box.innerHTML = h;
   var rows = box.children;
   for (i = 0; i < ACH.length; i++) { rows[i].querySelector('b').textContent = (sv.ach >> i) & 1 ? ACH[i].n : '???'; rows[i].querySelector('i').textContent = ACH[i].d; }
-  var n = $('cardBody').querySelector('#trNote'); if (n) n.textContent = got + ' of ' + ACH.length + ' collected. Tap a trophy on your table to collect it!';
+  var n = $('cardBody').querySelector('#trNote'); if (n) n.textContent = got + ' of ' + ACH.length + ' collected. Tap a trophy on your table to collect it.';
 }
 $('bTro').addEventListener('click', fillTrophies);
 /* ---------- shop (title screen): the auto slingshot ---------- */
@@ -1017,7 +1018,7 @@ var SHOP = {
 function fillShop() {
   var box = $('cardBody').querySelector('#shList'); if (!box) return;
   var note = $('cardBody').querySelector('#shNote');
-  if (note) note.textContent = 'You have ' + sv.bank + ' Golden Pineapples.';
+  if (note) note.textContent = 'You have ' + sv.bank + ' Golden Pineapples. Earn more from waves, bosses and trophies.';
   var rows = [];
   rows.push({ k: 'au', title: 'Auto Slingshot', desc: sv.au ? 'A helper on your table. It aims at the penguin with the teal marker, so aim at a different one!' : 'A little helper that tosses pineapples all by itself and shows who it is aiming at.', cost: sv.au ? 0 : SHOP.cost.au, st: sv.au ? 'Owned' : '' });
   rows.push({ k: 'ar', title: 'Faster Fling ' + sv.ar + '/3', desc: 'Now: a toss every ' + AUTO_INT[sv.ar] + ' seconds.' + (sv.ar < 3 ? ' Next: ' + AUTO_INT[sv.ar + 1] + ' seconds.' : ''), cost: sv.ar < 3 ? SHOP.cost.ar[sv.ar] : 0, st: sv.ar >= 3 ? 'Maxed' : '', lock: !sv.au });
@@ -1029,7 +1030,7 @@ function fillShop() {
     b.textContent = r.title; i.textContent = r.desc; s.appendChild(b); s.appendChild(i); d.appendChild(s);
     var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn sb';
     if (r.st) { btn.textContent = r.st; btn.disabled = true; }
-    else { btn.textContent = r.lock ? 'Buy the slingshot first' : 'Buy ' + r.cost; btn.disabled = !!r.lock || sv.bank < r.cost;
+    else { btn.textContent = r.lock ? 'Locked' : 'Buy ' + r.cost; btn.disabled = !!r.lock || sv.bank < r.cost;
       btn.addEventListener('click', function () { if (sv.bank < r.cost) return; sv.bank -= r.cost; sv[r.k]++; kit.save(sv); fillShop(); }); }
     d.appendChild(btn); box.appendChild(d);
   });

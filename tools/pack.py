@@ -20,16 +20,16 @@ csp = "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'
 html = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta http-equiv="Content-Security-Policy" content="{csp}"><title>Pineapple Defense</title>
-<style>html,body{{height:100%;margin:0;background:#23203f;color:#fff7e3;font:700 18px system-ui,sans-serif;display:grid;place-items:center;text-align:center}}</style></head>
-<body><p id="m">Unpacking Pineapple Defense...</p><noscript>Pineapple Defense needs JavaScript to run. Sorry!</noscript>
+</head>
+<body><p id="m" style="font:700 18px system-ui,sans-serif;text-align:center;margin:30vh 1em 0;color:#23203f">Unpacking Pineapple Defense...</p><noscript>Pineapple Defense needs JavaScript to run. Sorry!</noscript>
 <!-- Pineapple Defense {ver}, LZMA self-extracting. Copyright (c) 2026 JNFoo. All rights reserved. Decoder: lzma-js (MIT). -->
 <script>{dec}</script>
 <script>
 (function(){{try{{var s=atob("{b64}"),a=new Array(s.length),i;for(i=0;i<s.length;i++)a[i]=s.charCodeAt(i);
-var t=LZMA.decompress(a);document.open();document.write(t);document.close()}}catch(e){{document.getElementById("m").textContent="Sorry, the game could not unpack: "+e}}}}());
+var t=LZMA.decompress(a),m=document.getElementById("m");m.parentNode.removeChild(m);document.open();document.write(t);document.close()}}catch(e){{document.getElementById("m").textContent="Sorry, the game could not unpack: "+e}}}}());
 </script></body></html>
 '''
-out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else root / 'dist' / f'pineapple-defense-{ver}.lzma.html'
+out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else root / 'dist' / f'pineapple-defense-{ver}.html'
 out.parent.mkdir(exist_ok=True)
 out.write_text(html, encoding='utf-8')
 print(f'{out.name}: {len(src)//1024} KB -> {len(best)//1024} KB lzma, {len(html)//1024} KB file (lc/pb searched)')
