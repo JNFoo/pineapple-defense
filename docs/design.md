@@ -120,8 +120,12 @@ Cloned read-only for this session from https://github.com/JNFoo/JS-modules (comm
 | fuzz-kit, fuzz-play, marionette-lite | Bug hunts and Firefox driving, only once the design is final |
 Not needed: hold-press (the control is a flick), fly-to-mini. Improvements to a module go back to JS-modules (needs that repo attached with push access).
 
+## Decisions made, round 4 (Oct 12, afternoon)
+- Pineapples all have happy faces (big glossy eyes, blush cheeks, tiny smile); they squeal "wheee!" in flight and look surprised on impact. Moods change eyes, mouth and cheeks only.
+- Hit reaction: a pineapple-crown hat pops onto the penguin, dizzy stars orbit, it giggles and belly-slides home with a poof. Works for one penguin or a whole row.
+- Rewards: Golden Pineapple points earned from every wave, spent on stand upgrades and new pineapple types. No random boxes, no streaks, no purchases.
+
 ## Still open
-- Do pineapples have faces?
 - Story card text: first draft of the one-screen premise from the envy idea above (needs approval).
 - Names and gimmicks for the five bosses and the five stage titles.
 - Which proposed pineapples and penguins to keep, change or drop.
