@@ -133,7 +133,7 @@ Not needed: hold-press (the control is a flick), fly-to-mini. Improvements to a 
 - Backgrounds include silly anti-pineapple and anti-tropical-island "propaganda" posters, drawn as flat toy-style shapes in the calm background layer (see next section).
 
 ## Propaganda backdrop (proposed content, needs approval)
-Pure silliness: the penguins' own jealous signs, never mean and never about real people, real governments or real-world political styles. No real flags, symbols or slogans.
+Pure silliness: the penguins' own jealous signs, never mean and never about real people, real governments or real-world political styles. No real flags, symbols or slogans. Also no slogans or lettering that echo real-world political topics or current events.
 - **Poster art vocabulary:** a pineapple inside a red "no" circle, a crossed-out palm tree, a frowning sun with a snowflake, a penguin flexing next to a smiling fish, a thermometer shivering happily, a coconut with a sad face, a medal-wearing Champion pointing at you. Tilted a few degrees, taped at the corners, gently flapping in the wind.
 - **Rendering:** drawn once as SVG shapes and baked into the background layer at load, so it costs nothing per frame. Pale and low-contrast so the glossy pineapples stay the loudest thing on screen. Sticker lettering for slogans (sticker-text style).
 - **Slogans (short and picture-first; first drafts):**
@@ -223,10 +223,16 @@ The game reserves slots for hidden areas and hidden enemies, plus unlock rules. 
 - **Cheer meter:** a bump costs 12, a hit adds 2, a cleared wave adds 15. At zero the stage ends with a friendly "try again".
 - **Golden Pineapples:** 1 per cleared wave, plus 1 for a perfect wave with no bumps.
 
+## Decisions, round 9: controls and saving
+- **Controls:** flick only. A plain tap does nothing (click-drag works on touchpads and mice).
+- **Continue:** autosaves after every cleared wave. Continue resumes at the next wave with your Golden Pineapples and cheer. Play always starts a fresh stage and keeps your old save until its first wave is cleared.
+- **If the stand runs out of cheer:** "Try again" replays the same wave with the cheer refilled to 60.
+- **Moving a game to another device:** Settings has Show save code, Copy, Save file, Load code and Load file. Loading asks for a second tap before replacing the game on that device.
+- **Slogans:** no lettering that echoes real-world political topics or current events. The beach sign now reads "Brrr Is Best!".
+
 ## Still open
 - Exact item list and point prices for each shop slot.
 - Art for the shop screen and the other pineapple types.
-- Whether tap-to-throw stays on by default (it works now alongside flicking).
 - Flick feel tuning from real phone and touchpad testing.
 
 ## Title screen and logo (alpha 2026.10.12.1556)
@@ -242,3 +248,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.1620: story card text approved; stage titles, Champion names and rosters decided.
 - 2026.10.12.1624: upgrade shop decisions recorded.
 - 2026.10.12.1655: first playable stage 1 (5 lanes, 8 waves, Rockhopper and Adélie, Classic pineapple, cheer meter, pause, end cards, Calm mode).
+- 2026.10.12.1702: flick only; Continue and autosave after each wave; save code and save file in Settings; beach sign slogan changed.

@@ -62,6 +62,20 @@ function loadAssets() {
   return assets;
 }
 
+/* ---------- save ---------- */
+var kit = SaveKit.create({ key: 'pd-save', prefix: 'PD1',
+  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999' },
+  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0 } });
+var sv = kit.load() || kit.validate({});
+var btnCont = $('bCont');
+function updateContinue() {
+  var can = sv.wave > 0 && sv.wave < NWAVES;
+  btnCont.disabled = !can;
+  btnCont.textContent = can ? 'Continue: wave ' + (sv.wave + 1) : 'Continue';
+  btnCont.title = can ? 'Pick up where you left off' : 'No saved game yet';
+}
+updateContinue();
+
 /* ---------- state ---------- */
 var S, penguins, shots, bits, pops;
 var calm = false, running = false, raf = 0, last = 0, timeScale = 1, qLevel = 0;
@@ -277,19 +291,26 @@ function updateShot(s, dt) {
 }
 
 /* ---------- stage flow ---------- */
-function startStage() {
+function startStage(from) {
   newState();
-  S.t = 0; hud();
-  elHint.hidden = false; elBanner.hidden = true;
-  beginWave(1);
+  S.t = 0;
+  elBanner.hidden = true;
+  elHint.hidden = !!(from && from.wave > 0);
+  if (from) { S.golden = from.golden; S.cheer = Math.max(60, from.cheer); }
+  hud();
+  beginWave(from ? from.wave + 1 : 1);
 }
+function continueGame() { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage(sv); run(); }); }
+function retryWave() { var w = S.wave - 1, g = S.golden; startStage({ wave: w, golden: g, cheer: 60 }); run(); }
 function endStage(win) {
   S.over = true;
   if (win) {
     burst(W / 2, H * 0.3, 60, PINE_COL.concat(['#ff6f86', '#8fc6e4']));
+    sv.bank = Math.min(999999, sv.bank + S.golden); sv.golden = 0; sv.wave = 0; sv.cheer = 100; sv.cleared = Math.max(sv.cleared, 1);
+    kit.save(sv); updateContinue();
     showCard('Stage 1 clear!', 'You collected ' + S.golden + ' Golden Pineapples. Stage 2 and the upgrade shop are coming soon!', 'Play again', startAgain);
   } else {
-    showCard('The stand needs a break!', 'Everyone is giggling. Want to try again?', 'Try again', startAgain);
+    showCard('The stand needs a break!', 'Everyone is giggling. Let us try this wave again!', 'Try again', retryWave);
   }
 }
 function waveClear() {
@@ -298,6 +319,7 @@ function waveClear() {
   S.golden += 1 + (S.bumps === 0 ? 1 : 0);
   if (S.wave >= NWAVES) { banner('All clear!', 1800); }
   else banner(S.bumps === 0 ? 'Perfect wave!' : 'Wave clear!', 1300);
+  if (S.wave < NWAVES) { sv.wave = S.wave; sv.golden = S.golden; sv.cheer = Math.round(S.cheer); kit.save(sv); updateContinue(); }
 }
 
 /* ---------- update ---------- */
@@ -468,12 +490,7 @@ cv.addEventListener('pointerup', function (e) {
   var d = drag; drag = null;
   var end = rel(e), vx = end.x - d.sx, vy = end.y - d.sy, len = Math.hypot(vx, vy), m = Math.min(W, H);
   var oy = H * 0.93, ox;
-  if (len < TAP_MIN * m) {
-    if (end.y > H * 0.88 || end.y < hy * 0.7) return;
-    ox = W / 2 + (end.x - W / 2) * 0.5;
-    throwAt(ox, oy, end.x - ox, end.y - oy, 1.5, { x: end.x, y: end.y });
-    return;
-  }
+  if (len < TAP_MIN * m) return;   // flick only: a plain tap does nothing
   if (vy > -FLICK_MIN * H) return;
   var old = d.pts[0], i;
   for (i = d.pts.length - 1; i >= 0; i--) { if (end.t - d.pts[i].t >= 60) { old = d.pts[i]; break; } }
@@ -505,7 +522,7 @@ function resume() { S.paused = false; run(); }
 $('bPause').addEventListener('click', pause);
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && gameEl.hidden === false && !S.paused) pause(); });
 document.addEventListener('visibilitychange', function () { if (document.hidden && gameEl.hidden === false) pause(); });
-function toTitle() { halt(); S.paused = false; gameEl.hidden = true; titleEl.hidden = false; $('bPlay').focus(); }
+function toTitle() { updateContinue(); halt(); S.paused = false; gameEl.hidden = true; titleEl.hidden = false; $('bPlay').focus(); }
 $('gBtn2').textContent = 'Title';
 window.addEventListener('resize', function () { if (gameEl.hidden === false) { resize(); if (!running) { draw(); } } });
 
@@ -514,11 +531,53 @@ function start() {
   loadAssets().then(function () { resize(); startStage(); run(); });
 }
 $('bPlay').addEventListener('click', start);
+btnCont.addEventListener('click', function () { if (!btnCont.disabled) continueGame(); });
+
+/* ---------- save code and file (Settings card) ---------- */
+function wireSettings() {
+  var body = $('cardBody'), $b = function (id) { return body.querySelector('#' + id); };
+  if (!$b('svShow')) return;
+  var msg = $b('svMsg'), codeBox = $b('svCode'), copyBtn = $b('svCopy'), paste = $b('svPaste'), pick = $b('svPick');
+  function say(t) { msg.textContent = t; }
+  function cur() { return JSON.parse(JSON.stringify(sv)); }
+  $b('svShow').addEventListener('click', function () {
+    kit.exportCode(cur()).then(function (c) { codeBox.value = c; codeBox.hidden = false; copyBtn.hidden = false; codeBox.focus(); codeBox.select(); say('Here is your save code.'); });
+  });
+  copyBtn.addEventListener('click', function () {
+    codeBox.select();
+    var done = function () { say('Copied!'); };
+    var fallback = function () { try { document.execCommand('copy'); done(); } catch (e) { say('Select the code and copy it.'); } };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(codeBox.value).then(done, fallback); else fallback();
+  });
+  $b('svFile').addEventListener('click', function () {
+    kit.exportCode(cur()).then(function (c) {
+      var a = document.createElement('a'), url = URL.createObjectURL(new Blob([c + '\n'], { type: 'text/plain' }));
+      a.href = url; a.download = 'pineapple-defense-save.txt'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 3000); say('Save file made.');
+    });
+  });
+  function load(text) {
+    kit.importCode(text).then(function (clean) {
+      if (!kit.stageImport(clean, cur())) { say('This browser would not let me save that.'); return; }
+      say('Loaded! Reloading...'); setTimeout(function () { location.reload(); }, 500);
+    }, function (m) { say(String(m)); });
+  }
+  var loadBtn = $b('svLoad');
+  loadBtn.addEventListener('click', SaveKit.twoTap(function () { load(paste.value); }, 3000,
+    function () { loadBtn.textContent = 'Tap again to replace your game'; say('This replaces the game on this device.'); },
+    function () { loadBtn.textContent = 'Load code'; }));
+  $b('svFileLoad').addEventListener('click', function () { pick.click(); });
+  pick.addEventListener('change', function () {
+    var f = pick.files && pick.files[0]; if (!f) return;
+    f.text().then(load, function () { say('I could not read that file.'); });
+  });
+}
+$('bSet').addEventListener('click', wireSettings);
 
 /* test hook, only with #qa in the address */
 var qa = null;
 if (location.hash === '#qa') {
-  qa = window.__pd = { bot: false, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
+  qa = window.__pd = { bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
     tap: function (x, y) { throwAt(W / 2, H * 0.93, x - W / 2, y - H * 0.93, 1.5, { x: x, y: y }); } };
 }
 }());

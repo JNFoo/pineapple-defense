@@ -85,6 +85,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--sky-top);font-fa
 .card h2{margin:.1rem 0 .6rem;font:800 clamp(1.5rem,5vmin,2rem)/1.1 var(--display);color:#7a3a05}
 .card p{margin:.5rem 0;font:600 1.05rem/1.4 var(--body);color:var(--fg)}
 .card .btn{margin-top:.8rem}
+.card textarea{width:100%;margin:.4rem 0;padding:.5rem;border:2px solid #d0dadd;border-radius:12px;font:600 .8rem/1.3 ui-monospace,monospace;color:#162226;background:#fff;resize:none;user-select:text;-webkit-user-select:text}
+.card .row{margin:.2rem 0}
 .steps{display:flex;gap:.6rem;justify-content:center;margin:.6rem 0 .2rem;flex-wrap:wrap}
 .step{flex:1 1 120px;max-width:150px;padding:.5rem;border-radius:14px;background:#fff7e3;border:1px solid #e4d3a6;font:700 .92rem/1.25 var(--body)}
 .step svg{width:64px;height:64px;display:block;margin:0 auto .3rem}
@@ -190,7 +192,7 @@ html[data-calm="1"] *{animation:none!important;transition:none!important}
 <button class="pause" id="bPause" type="button" aria-label="Pause"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="2" fill="#4a2b0f"/><rect x="14" y="4" width="5" height="16" rx="2" fill="#4a2b0f"/></svg></button>
 </div>
 <div class="banner" id="banner" hidden></div>
-<div class="hint" id="hint"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 56C16 40 24 24 44 12" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round"/><path d="M34 10l14 0-2 14" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Flick up toward a penguin, or just tap one!</span></div>
+<div class="hint" id="hint"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 56C16 40 24 24 44 12" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round"/><path d="M34 10l14 0-2 14" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Flick up from the bottom toward a penguin!</span></div>
 <div class="ready" id="ready" data-ready="1" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#lp-art"/></svg></div>
 <div class="card-wrap" id="gcw" hidden>
 <div class="card" role="dialog" aria-modal="true" aria-labelledby="gTitle">
@@ -214,14 +216,22 @@ html[data-calm="1"] *{animation:none!important;transition:none!important}
 </div>
 </template>
 <template id="t-set">
-<span class="soon">Tap-to-throw instead of flicking: coming soon</span>
-<span class="soon">Save code and save file: coming soon</span>
+<p>Move your game to another device with a save code or a file.</p>
+<div class="row"><button class="btn" id="svShow" type="button">Show save code</button><button class="btn" id="svFile" type="button">Save file</button></div>
+<textarea id="svCode" rows="3" readonly hidden aria-label="Your save code"></textarea>
+<div class="row"><button class="btn" id="svCopy" type="button" hidden>Copy</button></div>
+<p>Load a game:</p>
+<textarea id="svPaste" rows="3" placeholder="Paste a save code here" aria-label="Paste a save code"></textarea>
+<div class="row"><button class="btn" id="svLoad" type="button">Load code</button><button class="btn" id="svFileLoad" type="button">Load file</button></div>
+<input type="file" id="svPick" accept=".txt,.md,.json" hidden>
+<p id="svMsg" role="status"></p>
 <span class="soon">Sound and music: coming later</span>
 <p>Calm mode is on the main menu. It stops bobbing, confetti and squishing.</p>
 </template>
 <script>/*{{STICKER_JS}}*/</script>
 <script>/*{{EVEN_DT}}*/</script>
 <script>/*{{QGOV}}*/</script>
+<script>/*{{SAVEKIT}}*/</script>
 <script>
 (function(){
 'use strict';
