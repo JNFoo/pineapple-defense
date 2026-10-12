@@ -64,7 +64,7 @@ Bosses: one per stage, for example Admiral Emperor (the first), with names and l
 - Art: reuse the JS-modules sprite kits (cartoon-3d-kit and sprite-baker first, then frame-kit, fx-governor and others as they fit). Check `modules.json` and the public page before writing any reusable code. Apple Press style guide to be attached by the owner so the penguins match.
 - First beta: 5 stages (four themed plus a final boss stage), about 8 waves each.
 - Saving: copy/paste save code and save file, like Fancy (save-kit from JS-modules). No sound or music in the first alpha; added later only with approval.
-- Repo: https://github.com/JNFoo/pineapple-defense created by the owner on Oct 12 and attached to this session with push access (not yet test-pushed).
+- Repo: https://github.com/JNFoo/pineapple-defense created by the owner on Oct 12 and attached to this session with push access.
 
 ## How we work (from the Master Guide)
 - Plain words, short replies; every question asked with the multiple-choice pop-up, recommended option first.
@@ -73,8 +73,15 @@ Bosses: one per stage, for example Admiral Emperor (the first), with names and l
 - Version stamps: year.month.day.HHMM in US Eastern. Copyright holder: JNFoo only. American English.
 - Sessions follow AGENTS.md and TASKS.md rules (section 28 of the guide).
 
+## Decisions made, round 3 (2026.10.12.1531)
+- Premise (owner's own words): penguins despise tropical fruit because they can't eat it and can't go to the tropical zones. Played for slapstick envy, not cruelty.
+- Stages: 1 Beach, 2 Ice flats, 3 Iceberg harbor, 4 Storm sea, 5 Glacier fortress. Each stage pushes the penguins closer to their home.
+- Bosses: one big penguin per stage, each with a gimmick and a weak spot that a particular pineapple exploits (names and gimmicks still to be proposed, for example Admiral Emperor for stage 1).
+- Pages: https://jnfoo.github.io/pineapple-defense/ is live (README only for now).
+- Push access to the repo confirmed Oct 12 (commit 5bc738e).
+
 ## Still open
-- Story: why do the penguins hate tropical fruit? A one-screen premise for the first story card.
-- Names and look of the five stages and their bosses.
+- Story card text: first draft of the one-screen premise from the envy idea above (needs approval).
+- Names and gimmicks for the five bosses and the five stage titles.
 - Which proposed pineapples and penguins to keep, change or drop.
 - Upgrade shop between stages: what can be bought and how it scales (including the rail gun's place in the order).
