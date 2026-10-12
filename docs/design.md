@@ -40,8 +40,9 @@ Real species (early stages):
 - Rockhopper: hops and dodges flat shots
 - Macaroni: medium, takes 2 hits
 - Little blue: tiny, arrives in swarms
-- Emperor: tanky, takes 3 hits
-- King: slow and heavy
+- Magellanic: tanky, takes 3 hits
+- Humboldt: slow and heavy
+- (Emperor and King species dropped Oct 12: nothing royal anywhere. Yellow-eyed and Galápagos available as extra variants.)
 
 Game-only (later stages):
 - Jetpack: flies over flat shots
@@ -50,7 +51,7 @@ Game-only (later stages):
 - Sled Slider: very fast, short warning
 - Igloo Carrier: shield bearer that shelters those behind it
 
-Bosses: one per stage, for example Admiral Emperor (the first), with names and looks to be decided.
+Bosses: one Penguin Champion per stage (Bronze, Silver, Gold, Platinum, Grand), with names and gimmicks to be decided. No kings, queens, emperors or admirals.
 
 ## Technical plan (efficiency first)
 - One self-contained HTML file; 2D canvas; pointer events for touch, mouse and touchpad.
@@ -76,7 +77,7 @@ Bosses: one per stage, for example Admiral Emperor (the first), with names and l
 ## Decisions made, round 3 (2026.10.12.1531)
 - Premise (owner's own words): penguins despise tropical fruit because they can't eat it and can't go to the tropical zones. Played for slapstick envy, not cruelty.
 - Stages: 1 Beach, 2 Ice flats, 3 Iceberg harbor, 4 Storm sea, 5 Glacier fortress. Each stage pushes the penguins closer to their home.
-- Bosses: one big penguin per stage, each with a gimmick and a weak spot that a particular pineapple exploits (names and gimmicks still to be proposed, for example Admiral Emperor for stage 1).
+- Bosses: one big Penguin Champion per stage, each with a gimmick and a weak spot that a particular pineapple exploits (names and gimmicks still to be proposed).
 - Pages: https://jnfoo.github.io/pineapple-defense/ is live (README only for now).
 - Push access to the repo confirmed Oct 12 (commit 5bc738e).
 
@@ -124,6 +125,24 @@ Not needed: hold-press (the control is a flick), fly-to-mini. Improvements to a 
 - Pineapples all have happy faces (big glossy eyes, blush cheeks, tiny smile); they squeal "wheee!" in flight and look surprised on impact. Moods change eyes, mouth and cheeks only.
 - Hit reaction: a pineapple-crown hat pops onto the penguin, dizzy stars orbit, it giggles and belly-slides home with a poof. Works for one penguin or a whole row.
 - Rewards: Golden Pineapple points earned from every wave, spent on stand upgrades and new pineapple types. No random boxes, no streaks, no purchases.
+
+## Decisions made, round 5 (Oct 12, 3:36 PM)
+- No King or Queen penguins, and no royalty of any kind (no emperors or admirals either). The Emperor and King species are dropped from the roster; Magellanic and Humboldt take the tanky and heavy roles.
+- Bosses are Penguin Champions of different levels, one per stage: Bronze, Silver, Gold, Platinum and Grand Champion. Each wears a bigger, shinier medal ribbon in its rank color so a child reads the rank at a glance (Grand uses a rainbow medal). Ramp colors follow the style guide's hi / mid / lo recipe.
+- The main audience is kids; the game stays welcoming for all ages. Anything that needs reading is short and picture-first.
+- Backgrounds include silly anti-pineapple and anti-tropical-island "propaganda" posters, drawn as flat toy-style shapes in the calm background layer (see next section).
+
+## Propaganda backdrop (proposed content, needs approval)
+Pure silliness: the penguins' own jealous signs, never mean and never about real people, real governments or real-world political styles. No real flags, symbols or slogans.
+- **Poster art vocabulary:** a pineapple inside a red "no" circle, a crossed-out palm tree, a frowning sun with a snowflake, a penguin flexing next to a smiling fish, a thermometer shivering happily, a coconut with a sad face, a medal-wearing Champion pointing at you. Tilted a few degrees, taped at the corners, gently flapping in the wind.
+- **Rendering:** drawn once as SVG shapes and baked into the background layer at load, so it costs nothing per frame. Pale and low-contrast so the glossy pineapples stay the loudest thing on screen. Sticker lettering for slogans (sticker-text style).
+- **Slogans (short and picture-first; first drafts):**
+  - Stage 1, Beach: "Brrr Is Best!", "No Pineapples On Our Shore!", "Palm Trees? No Thank You!"
+  - Stage 2, Ice flats: "Cold Toes Forever!", "Too Sunny = Too Funny", "Fish Are Fruity Enough!"
+  - Stage 3, Iceberg harbor: "No Fruit Boats!", "Ahoy, Ice!", "Coconuts Are Just Hairy Rocks!"
+  - Stage 4, Storm sea: "Waves, Not Palms!", "Stormy Seas, No Fruit Please!"
+  - Stage 5, Glacier fortress: "Home Is Where The Snow Is!", "Champions Say NO To Pineapples!", "Penguin Power!"
+- **Story link:** the posters show the penguins can't eat tropical fruit or visit the tropics, and are a little jealous; each stage's posters get sillier, and the Grand Champion's fortress is wallpapered with them.
 
 ## Still open
 - Story card text: first draft of the one-screen premise from the envy idea above (needs approval).
