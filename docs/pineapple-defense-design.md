@@ -191,10 +191,23 @@ Fun references to Apple Press and Fancy, the Banana, kept small and in the same 
 ## Secret content: reserved slots (details are NOT in this public file)
 The game reserves slots for hidden areas and hidden enemies, plus unlock rules. Per the Master Guide, public text (this brief, the README, change logs, credits, help) never says what they are; it calls them "unlockable extras" until a player finds them. The working details live only in a private file that is never committed to this repository (`private/hidden-content-private.md`, ignored by git).
 
+## Decisions, round 6 (Oct 12, 4:2x PM)
+**Stage titles:** 1 Sandy Snack Shore, 2 Flip-Flop Flats, 3 Iceberg Harbor Hullabaloo, 4 Stormy Splash Sea, 5 Glacier Giggle Fortress.
+
+**Penguin Champions** (medal rank is the title; the name is the personality; each has one gimmick kids can learn):
+| Stage | Rank | Name | Gimmick |
+|---|---|---|---|
+| 1 | Bronze | Coach Waddles | Hides behind a shield of snowballs; hit the snowballs first |
+| 2 | Silver | Captain Flipper | Dodges sideways; lead your shot |
+| 3 | Gold | Sir Slidealot | Belly-slides fast across the screen |
+| 4 | Platinum | Madame Mohawk | Calls in helper penguins |
+| 5 | Grand | Grand Champion Bernard | Uses every trick above |
+
+**Story card** (Play screen, short and giggly): "The penguins can't eat tropical fruit, and they can't visit the tropics. So they're a little jealous! Flick pineapples to send them home giggling. Nobody gets hurt!"
+
+**Rosters:** keep all (six pineapples, eight real penguins, five game-only penguins); trim after testing.
+
 ## Still open
-- Story card text: first draft of the one-screen premise from the envy idea above (needs approval).
-- Names and gimmicks for the five bosses and the five stage titles.
-- Which proposed pineapples and penguins to keep, change or drop.
 - Upgrade shop between stages: what can be bought and how it scales (including the rail gun's place in the order).
 
 ## Title screen and logo (alpha 2026.10.12.1556)
@@ -207,3 +220,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 
 ## Change log
 - 2026.10.12.1556: first title screen, logo and original pineapple and Rockhopper sprites.
+- 2026.10.12.1620: story card text approved; stage titles, Champion names and rosters decided.
