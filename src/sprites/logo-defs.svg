@@ -1,5 +1,6 @@
 <defs>
 <radialGradient id="lg-pa" cx="36%" cy="30%" r="82%"><stop offset="0" stop-color="#ffeaa0"/><stop offset=".45" stop-color="#f8bd1c"/><stop offset="1" stop-color="#a85a07"/></radialGradient>
+<radialGradient id="lg-po" cx="36%" cy="30%" r="82%"><stop offset="0" stop-color="#ffd9a8"/><stop offset=".45" stop-color="#f2862a"/><stop offset="1" stop-color="#9a3a07"/></radialGradient>
 <linearGradient id="lg-leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fd68f"/><stop offset="1" stop-color="#2f8f4c"/></linearGradient>
 <radialGradient id="lg-pg" cx="36%" cy="30%" r="82%"><stop offset="0" stop-color="#6b6aab"/><stop offset=".45" stop-color="#383767"/><stop offset="1" stop-color="#171538"/></radialGradient>
 <linearGradient id="lg-crest" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3a0"/><stop offset=".5" stop-color="#ffd21f"/><stop offset="1" stop-color="#c98a00"/></linearGradient>
@@ -12,6 +13,20 @@
 <path d="M50 38C43 26 45 12 52 2C58 12 58 26 50 38Z"/>
 </g>
 <path d="M50 34c26 0 38 20 38 40 0 17-14 24-38 24S12 91 12 74c0-20 12-40 38-40Z" fill="url(#lg-pa)" stroke="#fff7e3" stroke-width="3.2" stroke-linejoin="round"/>
+<ellipse cx="31" cy="54" rx="6" ry="13" transform="rotate(14 31 54)" fill="#fff" opacity=".5"/>
+<circle cx="39" cy="63" r="3.4" fill="#2a120d"/><circle cx="61" cy="63" r="3.4" fill="#2a120d"/>
+<circle cx="40.2" cy="61.8" r="1.1" fill="#fff"/><circle cx="62.2" cy="61.8" r="1.1" fill="#fff"/>
+<ellipse cx="30" cy="72" rx="4.5" ry="2.6" fill="#ff6f86" opacity=".5"/><ellipse cx="70" cy="72" rx="4.5" ry="2.6" fill="#ff6f86" opacity=".5"/>
+<path d="M43 74q7 7 14 0" fill="none" stroke="#2a120d" stroke-width="2.6" stroke-linecap="round"/>
+</symbol>
+<symbol id="lo-art" viewBox="0 0 100 100" overflow="visible">
+<ellipse cx="50" cy="94" rx="24" ry="4" fill="#2a120d" opacity=".16"/>
+<g fill="url(#lg-leaf)" stroke="#fff7e3" stroke-width="2" stroke-linejoin="round">
+<path d="M54 38C60 28 70 24 84 26C80 36 70 44 54 44Z"/>
+<path d="M46 38C36 30 26 24 14 26C20 36 30 44 46 44Z"/>
+<path d="M50 38C43 26 45 12 52 2C58 12 58 26 50 38Z"/>
+</g>
+<path d="M50 34c26 0 38 20 38 40 0 17-14 24-38 24S12 91 12 74c0-20 12-40 38-40Z" fill="url(#lg-po)" stroke="#fff7e3" stroke-width="3.2" stroke-linejoin="round"/>
 <ellipse cx="31" cy="54" rx="6" ry="13" transform="rotate(14 31 54)" fill="#fff" opacity=".5"/>
 <circle cx="39" cy="63" r="3.4" fill="#2a120d"/><circle cx="61" cy="63" r="3.4" fill="#2a120d"/>
 <circle cx="40.2" cy="61.8" r="1.1" fill="#fff"/><circle cx="62.2" cy="61.8" r="1.1" fill="#fff"/>

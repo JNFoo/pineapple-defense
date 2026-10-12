@@ -241,10 +241,18 @@ The game reserves slots for hidden areas and hidden enemies, plus unlock rules. 
 - **Reload as feedback:** after each throw the bands snap forward, the pouch sits empty for a moment, and a fresh pineapple pops in when you are ready to throw again. This replaces the old ready ring.
 - This updates the earlier "weapon is never shown" idea: the slingshot is the only weapon shown; the pineapple types (and the rail gun later) will use their own primed contraptions.
 
+## Decisions, round 12: Lobber, Coach Waddles, controls, shadows (Oct 12)
+- **Slingshot aims:** the fork tilts toward where you drag, and your throw leaves from the tilted pouch.
+- **Two pineapples to pick:** Classic (fast, single hit) and Lobber (orange, big high arc, slower, wide splash that knocks out nearby penguins together). Pick with the two round buttons at the bottom left, or the 1 and 2 keys.
+- **Boss, Stage 1: Coach Waddles (Bronze Champion):** a big Adélie-style coach with a red cap and a bronze medal. He walks to the middle and stops behind a ring of snowballs. Pop the snowballs first (a Lobber pops two), then hit him; three hits send him belly-sliding home giggling. Helper penguins keep coming while he holds the line. Continue can resume at the boss.
+- **Touchpad and mouse:** no click needed. A quick upward swipe of the cursor from the lower half of the screen throws, and click-and-drag still works. Touch screens use the finger flick.
+- **Shadows:** soft, offset away from the sun, with small contact shadows under the feet that shrink as a penguin hops.
+
 ## Still open
 - Exact item list and point prices for each shop slot.
-- Art for the shop screen and the other pineapple types.
-- Flick feel tuning from real phone and touchpad testing.
+- Art for the shop screen and the other pineapple types (Cluster, Bowling Pine, Juice Bomb, Rail Gun).
+- Flick feel and cursor-swipe sensitivity tuning from real phone and touchpad testing.
+- Stages 2 to 5 and their Champions.
 
 ## Title screen and logo (alpha 2026.10.12.1556)
 Built and playable in `index.html`. It is made from `src/` by `build.py` (never edit `index.html` by hand).
@@ -263,3 +271,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.1705: title faceoff, bigger orange beaks, redrawn palm tree.
 - 2026.10.12.1703: pineapple plants in the background, penguin smile removed.
 - 2026.10.12.1706: slingshot with one primed pineapple on the stand table.
+- 2026.10.12.1712: slingshot tilt, Lobber pineapple and picker, Coach Waddles boss, cursor-swipe throwing, softer shadows.
