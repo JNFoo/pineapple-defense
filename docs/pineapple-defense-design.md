@@ -207,8 +207,17 @@ The game reserves slots for hidden areas and hidden enemies, plus unlock rules. 
 
 **Rosters:** keep all (six pineapples, eight real penguins, five game-only penguins); trim after testing.
 
+## Decisions, round 7: upgrade shop
+- **When:** a friendly fruit-stand screen between stages. Spend Golden Pineapple points. No timers, no purchases with money.
+- **What:** new pineapple types (Lobber, Cluster, Bowling Pine, Juice Bomb, Rail Gun); faster cooldowns; stand cheer boost; aim helper strength (more forgiving flicks, good for little kids).
+- **Levels and prices:** 3 levels per upgrade with gentle price steps (cheap first level) so nobody gets stuck.
+- **Rail Gun:** unlocks after Stage 3, costs a lot of points, and uses a charge meter.
+- The shop's slot layout (S1-S3, tabs, U01-U10) stays as the placeholder grid until we assign items to it.
+
 ## Still open
-- Upgrade shop between stages: what can be bought and how it scales (including the rail gun's place in the order).
+- Exact item list and point prices for each shop slot.
+- Art for the shop screen and each pineapple type.
+- Next build: first playable stage (flick, one wave, one penguin) or the shop screen?
 
 ## Title screen and logo (alpha 2026.10.12.1556)
 Built and playable in `index.html`. It is made from `src/` by `build.py` (never edit `index.html` by hand).
@@ -221,3 +230,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 ## Change log
 - 2026.10.12.1556: first title screen, logo and original pineapple and Rockhopper sprites.
 - 2026.10.12.1620: story card text approved; stage titles, Champion names and rosters decided.
+- 2026.10.12.1624: upgrade shop decisions recorded.
