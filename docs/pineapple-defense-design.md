@@ -282,3 +282,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.1712: slingshot tilt, Lobber pineapple and picker, Coach Waddles boss, cursor-swipe throwing, softer shadows.
 - 2026.10.12.1726: tall 9:16 stage, table power-ups and trophies, animated scenery, Auto Slingshot shop upgrade, menu under logo, battle-worn DEFENSE sign.
 - 2026.10.12.1738: redrawn worn DEFENSE sign, compact Trophies and Shop dialogs with a floating close button, dialogs pause background animation, packed single-file build tool.
+- 2026.10.12.1743: billboard removed from the game field; title billboard rotates silly slogans; more title animation (gulls, snow, sparkles, swaying palm and plants, sun rays); closer, bigger pineapple and penguin faceoff.

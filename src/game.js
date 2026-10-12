@@ -67,7 +67,6 @@ function loadAssets() {
   });
   jobs.push(toImage($('spr-palm').innerHTML, { w: 400, h: 520 }).then(function (c) { PROP.palm = c; }));
   jobs.push(toImage($('spr-plant').innerHTML, { w: 240, h: 240 }).then(function (c) { PROP.plant = c; }));
-  jobs.push(toImage($('spr-sign').innerHTML, { w: 420, h: 490 }).then(function (c) { PROP.sign = c; }));
   jobs.push(document.fonts && document.fonts.load ? document.fonts.load('800 32px "Bricolage Grotesque"') : Promise.resolve());
   assets = Promise.all(jobs);
   return assets;
@@ -183,16 +182,6 @@ function buildDyn(sx, sy, sr) {
   dyn = { sx: sx, sy: sy, sr: sr };
   if (PROP.palm) { var ph = Math.min(H * 0.3, W * 0.45), pw = ph * 100 / 130; dyn.palm = { x: W * 0.015, y: hy + H * 0.075 - ph * 0.954, w: pw, h: ph }; }
   if (PROP.plant) { var qs = Math.min(H * 0.1, W * 0.17), by = hy + H * 0.07; dyn.pl = [{ x: W * 0.13, y: by - qs * 0.92, s: qs }, { x: W * 0.2, y: by + H * 0.012 - qs * 0.78 * 0.92, s: qs * 0.78 }]; }
-  if (PROP.sign) {
-    var sh = Math.min(H * 0.3, W * 0.45), sw = sh * 84 / 98, c = document.createElement('canvas');
-    c.width = Math.ceil(sw * DPR); c.height = Math.ceil(sh * DPR);
-    var g = c.getContext('2d'); g.scale(DPR, DPR); g.drawImage(PROP.sign, 0, 0, sw, sh);
-    g.font = '800 ' + (sw * 9.6 / 84) + 'px "Bricolage Grotesque",sans-serif';
-    g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
-    g.lineWidth = sw * 2 / 84; g.strokeStyle = '#fff7e3'; g.fillStyle = '#2f6f9f';
-    g.strokeText('BRRR IS BEST!', sw * 0.5, sh * 0.1327); g.fillText('BRRR IS BEST!', sw * 0.5, sh * 0.1327);
-    dyn.sign = { c: c, x: W - sw - W * 0.015, y: hy + H * 0.085 - sh * 0.959, w: sw, h: sh };
-  }
   var hc = document.createElement('canvas'); hc.width = hc.height = 128;
   var hg = hc.getContext('2d'), gr = hg.createRadialGradient(64, 64, 0, 64, 64, 64);
   gr.addColorStop(0, 'rgba(255,236,160,.9)'); gr.addColorStop(0.35, 'rgba(255,224,138,.35)'); gr.addColorStop(1, 'rgba(255,224,138,0)');
@@ -222,7 +211,6 @@ function drawScenery(t) {
   /* shore props sway */
   if (dyn.palm) sway(PROP.palm, dyn.palm.x, dyn.palm.y, dyn.palm.w, dyn.palm.h, 0.42, 0.95, Math.sin(t * 1.25) * 0.028);
   if (dyn.pl) for (i = 0; i < dyn.pl.length; i++) { var o = dyn.pl[i]; sway(PROP.plant, o.x, o.y, o.s, o.s, 0.5, 0.92, Math.sin(t * 1.7 + i * 1.3) * 0.045); }
-  if (dyn.sign) sway(dyn.sign.c, dyn.sign.x, dyn.sign.y, dyn.sign.w, dyn.sign.h, 0.5, 0.96, Math.sin(t * 1.05 + 2) * 0.014);
   if (q < 2) {
     /* gulls and glints */
     for (i = 0; i < 2; i++) {
