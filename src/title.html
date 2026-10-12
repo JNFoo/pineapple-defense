@@ -39,10 +39,11 @@ body{height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-righ
 .logo .mini{width:1.45em;height:1.45em;flex:none;position:relative;z-index:2;overflow:visible;filter:drop-shadow(0 .05em 0 rgba(0,0,0,.16))}
 .mini-l{margin-inline:-.1em -.5em}.mini-r{margin-inline:-.4em -.1em;transform:rotate(4deg)}
 .words{display:flex;flex-direction:column;align-items:flex-start;position:relative;z-index:1}
-.logo-1{font-weight:800;font-size:1em;--st-fill:linear-gradient(180deg,#fff2a8 0%,#f8bd1c 46%,#b3600a 100%);--st-edge:#7a3a05;--st-outline:#fff7e3}
+.logo-1{display:inline-flex;align-items:baseline;transform:rotate(-2deg);transform-origin:0 100%;font-weight:800;font-size:1em;--st-fill:linear-gradient(180deg,#fff2a8 0%,#f8bd1c 46%,#b3600a 100%);--st-edge:#7a3a05;--st-outline:#fff7e3}
 .logo-2{position:relative;align-self:stretch;margin:.22em -.15em 0 -.15em;font-size:.6em;transform:rotate(-1.4deg);display:flex;align-items:center;justify-content:center;height:2.05em;filter:drop-shadow(0 .16em .22em rgba(0,0,0,.3))}
 .logo-2 .plate,.logo-2 .scuff{position:absolute;left:-.04em;top:-.06em;width:calc(100% + .08em);height:calc(100% + .14em);overflow:visible}.logo-2 .scuff{pointer-events:none;z-index:2}
 .logo-2 .lt{position:relative;z-index:1;font:800 1em/1 var(--display);letter-spacing:.2em;padding-left:.2em;color:#fffdf3;-webkit-text-stroke:.16em #0b3350;paint-order:stroke fill;text-shadow:0 .09em 0 #0b3350,0 .2em .25em rgba(0,0,0,.25)}
+.logo-1 .lw{transform:none;--st-fill:linear-gradient(180deg,#fff2a8 0%,#f8bd1c 46%,#b3600a 100%);--st-edge:#7a3a05;--st-outline:#fff7e3}.lpa{width:.95em;height:.95em;flex:none;overflow:visible;margin:0 -.24em 0 -.2em;filter:drop-shadow(0 .05em 0 #7a3a05) drop-shadow(0 .1em .07em rgba(0,0,0,.28));position:relative;z-index:1}
 .spark{position:absolute;width:.34em;height:.34em;background:#ffd23f;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:twinkle 2.8s ease-in-out infinite;z-index:3}
 .s1{left:3%;top:-6%}.s2{right:2%;top:2%;animation-delay:-.9s;width:.26em;height:.26em}.s3{left:46%;top:-14%;animation-delay:-1.7s;width:.22em;height:.22em}
 
@@ -192,7 +193,7 @@ html[data-dlg] .title *,html[data-dlg] .title *::before,html[data-dlg] .title *:
 <div class="gull g1" aria-hidden="true"><svg viewBox="0 0 40 20"><path d="M2 14Q11 1 20 12Q29 1 38 14"/></svg></div><div class="gull g2" aria-hidden="true"><svg viewBox="0 0 40 20"><path d="M2 14Q11 1 20 12Q29 1 38 14"/></svg></div><div class="gull g3" aria-hidden="true"><svg viewBox="0 0 40 20"><path d="M2 14Q11 1 20 12Q29 1 38 14"/></svg></div><i class="flake" style="left:52cqw;width:5px;height:5px;animation-duration:12s;animation-delay:-1s"></i><i class="flake" style="left:60cqw;width:7px;height:7px;animation-duration:15s;animation-delay:-6s"></i><i class="flake" style="left:68cqw;width:4px;height:4px;animation-duration:11s;animation-delay:-3s"></i><i class="flake" style="left:75cqw;width:6px;height:6px;animation-duration:14s;animation-delay:-9s"></i><i class="flake" style="left:82cqw;width:5px;height:5px;animation-duration:10s;animation-delay:-2s"></i><i class="flake" style="left:89cqw;width:8px;height:8px;animation-duration:16s;animation-delay:-12s"></i><i class="flake" style="left:95cqw;width:4px;height:4px;animation-duration:12s;animation-delay:-5s"></i><i class="flake" style="left:57cqw;width:4px;height:4px;animation-duration:13s;animation-delay:-10s"></i><i class="flake" style="left:72cqw;width:5px;height:5px;animation-duration:17s;animation-delay:-14s"></i><i class="ember" style="left:5cqw;width:7px;height:7px;animation-duration:9s;animation-delay:-1s"></i><i class="ember" style="left:14cqw;width:5px;height:5px;animation-duration:12s;animation-delay:-5s"></i><i class="ember" style="left:24cqw;width:8px;height:8px;animation-duration:10s;animation-delay:-3s"></i><i class="ember" style="left:33cqw;width:5px;height:5px;animation-duration:13s;animation-delay:-8s"></i><i class="ember" style="left:40cqw;width:6px;height:6px;animation-duration:11s;animation-delay:-6s"></i><i class="ember" style="left:10cqw;width:5px;height:5px;animation-duration:14s;animation-delay:-10s"></i>
 <h1 class="logo" aria-label="Pineapple Defense">
 <svg class="mini mini-l" viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg>
-<span class="words"><span class="logo-1" id="logo1">Pineapple</span><span class="logo-2"><svg class="plate" viewBox="0 0 240 64" preserveAspectRatio="none" aria-hidden="true"><defs>
+<span class="words"><span class="logo-1" id="logo1"><span class="lw" id="lw1">Pine</span><svg class="lpa" viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg><span class="lw" id="lw2">pple</span></span><span class="logo-2"><svg class="plate" viewBox="0 0 240 64" preserveAspectRatio="none" aria-hidden="true"><defs>
 <linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ad8f7"/><stop offset=".45" stop-color="#2f95cc"/><stop offset="1" stop-color="#1c6798"/></linearGradient>
 <radialGradient id="sg2" cx=".5" cy=".5" r=".75"><stop offset=".5" stop-color="#0a2a44" stop-opacity="0"/><stop offset="1" stop-color="#0a2a44" stop-opacity=".5"/></radialGradient>
 <radialGradient id="sg3"><stop offset="0" stop-color="#fff" stop-opacity=".3"/><stop offset=".6" stop-color="#0a2a44" stop-opacity=".1"/><stop offset="1" stop-color="#0a2a44" stop-opacity=".4"/></radialGradient>
@@ -322,7 +323,7 @@ function fit(){var cs=getComputedStyle(document.body),pl=parseFloat(cs.paddingLe
 fit();addEventListener('resize',fit);addEventListener('orientationchange',fit);
 function $(i){return document.getElementById(i)}
 function mk(c){var e=document.createElement('span');e.className=c;return e}
-try{StickerText.apply($('logo1'),{outline:'#fff7e3'})}catch(e){}
+try{StickerText.apply($('lw1'),{outline:'#fff7e3'});StickerText.apply($('lw2'),{outline:'#fff7e3'})}catch(e){}
 
 var calm=false,btnCalm=$('bCalm');
 function setCalm(v,save){calm=v;root.setAttribute('data-calm',v?'1':'0');btnCalm.setAttribute('aria-pressed',v?'true':'false');

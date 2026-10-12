@@ -23,16 +23,14 @@
 </g>
 <ellipse cx="66" cy="92" rx="10" ry="24" transform="rotate(16 66 92)" fill="url(#rh-shine)" opacity=".55"/>
 <circle cx="72" cy="64" r="4" fill="#fff" opacity=".85"/>
-<g class="crest crest-l" fill="url(#rh-crest)" stroke="#b87800" stroke-opacity=".45" stroke-width="1">
-<path d="M68 70C54 66 40 54 30 34C48 40 62 50 74 62Z"/>
-<path d="M66 76C48 76 32 70 18 56C36 54 54 58 72 68Z"/>
-<path d="M72 66C66 54 62 40 64 24C72 34 80 46 82 60Z"/>
-</g>
-<g class="crest crest-r" fill="url(#rh-crest)" stroke="#b87800" stroke-opacity=".45" stroke-width="1" transform="rotate(9 132 70)">
-<path d="M132 70C146 66 160 54 170 34C152 40 138 50 126 62Z"/>
-<path d="M134 76C152 76 168 70 182 56C164 54 146 58 128 68Z"/>
-<path d="M128 66C134 54 138 40 136 24C128 34 120 46 118 60Z"/>
-</g>
+<g class="crest crest-l" fill="url(#rh-crest)" stroke="#b87800" stroke-opacity=".5" stroke-width=".6" stroke-linejoin="round"><g transform="translate(12.5 2) scale(1.75)">
+<path d="M34 40C26 38 18 32 12 22C22 24 30 30 38 36Z"/>
+<path d="M33 44C24 44 15 41 8 34C17 32 27 34 36 40Z"/>
+</g></g>
+<g class="crest crest-r" fill="url(#rh-crest)" stroke="#b87800" stroke-opacity=".5" stroke-width=".6" stroke-linejoin="round"><g transform="translate(12.5 2) scale(1.75)"><g transform="rotate(8 66 40)">
+<path d="M66 40C74 38 82 32 88 22C78 24 70 30 62 36Z"/>
+<path d="M67 44C76 44 85 41 92 34C83 32 73 34 64 40Z"/>
+</g></g></g>
 <g class="face">
 <ellipse class="cheek" cx="58" cy="104" rx="9" ry="5.5" fill="#ff7f8f" opacity=".5"/>
 <ellipse class="cheek" cx="142" cy="104" rx="9" ry="5.5" fill="#ff7f8f" opacity=".5"/>
