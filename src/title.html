@@ -57,7 +57,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--sky-top);font-fa
 .pupils{transition:transform 90ms ease-out}
 .flip-up{transform-box:fill-box;transform-origin:90% 90%;animation:wave 2.6s ease-in-out infinite alternate}
 .crest-r{transform-origin:132px 70px}
-.face .m-o,.face .m-grin{display:none}
+.face .m-o,.face .m-grin,.face .m-pout{display:none}
 .char[data-mood="wow"] .m-smile,.char[data-mood="giggle"] .m-smile{display:none}
 .char[data-mood="wow"] .m-o{display:block}
 .char[data-mood="giggle"] .m-grin{display:block}
@@ -99,6 +99,33 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--sky-top);font-fa
 @keyframes twinkle{0%,100%{transform:scale(.4) rotate(0);opacity:.5}50%{transform:scale(1) rotate(25deg);opacity:1}}
 @keyframes wave{from{transform:rotate(-5deg)}to{transform:rotate(7deg)}}
 @keyframes slam{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+
+.game{position:fixed;inset:0;overflow:hidden;background:#cfe6ec;touch-action:none;color-scheme:only light}
+.game[hidden]{display:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.hud{position:absolute;left:0;right:0;top:0;display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));pointer-events:none;z-index:3}
+.pill{display:inline-flex;align-items:center;gap:.4em;min-height:44px;padding:.35em .9em;border-radius:999px;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .16em 0 #b79a63,0 .35em .5em rgba(0,0,0,.18),inset 0 .1em 0 rgba(255,255,255,.7);font:800 1.05rem/1 var(--display);color:#4a2b0f;white-space:nowrap}
+.pill svg{width:1.7em;height:1.7em;flex:none;overflow:visible}
+.cheer{order:1;flex:1;max-width:320px;display:flex;align-items:center;gap:.5em;min-height:44px;padding:.3em .8em;border-radius:999px;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .16em 0 #b79a63,0 .35em .5em rgba(0,0,0,.18),inset 0 .1em 0 rgba(255,255,255,.7);font:800 .9rem/1 var(--display);color:#4a2b0f}
+.bar{position:relative;flex:1;height:16px;border-radius:99px;background:#e2d6b6;overflow:hidden;box-shadow:inset 0 2px 3px rgba(0,0,0,.2)}
+.bar i{position:absolute;inset:0;border-radius:99px;transform-origin:left;background:linear-gradient(180deg,#8be6a3,#2c8a49);transition:transform 200ms ease-out}
+.bar[data-low="1"] i{background:linear-gradient(180deg,#ffb3c1,#e0526f)}
+.spacer{flex:1}
+.pause{margin-left:auto;order:2;pointer-events:auto;width:56px;height:56px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .2em 0 #b79a63,0 .4em .6em rgba(0,0,0,.2),inset 0 .12em 0 rgba(255,255,255,.7);cursor:pointer}
+.pause:active{transform:translateY(.15em)}
+.pause:focus-visible{outline:3px solid #1f6feb;outline-offset:3px}
+.banner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);z-index:4;font:800 clamp(2.4rem,9vmin,5rem)/1 var(--display);pointer-events:none;--st-fill:linear-gradient(180deg,#fff2a8 0%,#f8bd1c 46%,#b3600a 100%);--st-edge:#7a3a05}
+.banner[hidden],.hint[hidden]{display:none}
+.hint{position:absolute;left:50%;bottom:calc(12vh + 100px);transform:translateX(-50%);z-index:3;pointer-events:none;display:flex;align-items:center;gap:.6rem;padding:.55em 1.1em;border-radius:999px;background:rgba(255,247,227,.94);font:800 clamp(1rem,3.4vmin,1.4rem)/1.1 var(--display);color:#4a2b0f;box-shadow:0 .16em 0 #b79a63,0 .35em .5em rgba(0,0,0,.18);animation:nudge 1.6s ease-in-out infinite;text-align:center;max-width:92vw}
+.hint svg{width:2em;height:2em;flex:none}
+@keyframes nudge{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+.ready{position:absolute;left:max(14px,env(safe-area-inset-left));bottom:calc(12vh + 12px);width:54px;height:54px;border-radius:50%;z-index:3;pointer-events:none;background:conic-gradient(#3fbf68 var(--pct,100%),rgba(255,255,255,.55) 0);padding:5px;box-shadow:0 .2em .4em rgba(0,0,0,.2)}
+.ready::before{content:"";position:absolute;inset:5px;border-radius:50%;background:#fffaf0}
+.ready svg{position:absolute;inset:9px;width:36px;height:36px;overflow:visible}
+.ready[data-ready="0"] svg{opacity:.45}
+html[data-calm="1"] .hint{animation:none}
+@media (max-height:520px){.ready{bottom:calc(14vh + 8px)}}
+@media (max-width:640px){.cheer{order:3;flex:1 1 100%;max-width:none}.ready{bottom:calc(12vh + 100px)}}
 html[data-calm="1"] *{animation:none!important;transition:none!important}
 @media (max-aspect-ratio:3/4){
   :root{--menu-h:232px;--floor-h:calc(var(--menu-h) + 24vh)}
@@ -154,6 +181,27 @@ html[data-calm="1"] *{animation:none!important;transition:none!important}
 </div>
 </div>
 </main>
+<section class="game" id="game" hidden aria-label="Stage 1, Sandy Snack Shore">
+<canvas id="cv" aria-hidden="true"></canvas>
+<div class="hud">
+<span class="pill" id="waveBox"><span id="waveTxt">Wave 1 / 8</span></span>
+<span class="pill" title="Golden Pineapples"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg><span id="goldTxt">0</span></span>
+<div class="cheer" role="img" aria-label="Stand cheer"><span aria-hidden="true">Cheer</span><div class="bar" data-low="0"><i id="cheerFill"></i></div></div>
+<button class="pause" id="bPause" type="button" aria-label="Pause"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="2" fill="#4a2b0f"/><rect x="14" y="4" width="5" height="16" rx="2" fill="#4a2b0f"/></svg></button>
+</div>
+<div class="banner" id="banner" hidden></div>
+<div class="hint" id="hint"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 56C16 40 24 24 44 12" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round"/><path d="M34 10l14 0-2 14" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Flick up toward a penguin, or just tap one!</span></div>
+<div class="ready" id="ready" data-ready="1" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#lp-art"/></svg></div>
+<div class="card-wrap" id="gcw" hidden>
+<div class="card" role="dialog" aria-modal="true" aria-labelledby="gTitle">
+<h2 id="gTitle"></h2><p id="gBody"></p>
+<button class="btn btn-play" id="gBtn1" type="button" style="font-size:1.3rem;min-height:64px"></button><br>
+<button class="btn" id="gBtn2" type="button">Title</button>
+</div></div>
+</section>
+<template id="spr-ad"><!--{{adelie}}--></template>
+<template id="spr-palm"><!--{{palm}}--></template>
+<template id="spr-sign"><!--{{sign}}--></template>
 <template id="t-play">
 <p>The penguins can&rsquo;t eat tropical fruit, and they can&rsquo;t visit the tropics. So they&rsquo;re a little jealous!</p>
 <p>Flick pineapples to send them home giggling. Nobody gets hurt!</p>
@@ -172,6 +220,8 @@ html[data-calm="1"] *{animation:none!important;transition:none!important}
 <p>Calm mode is on the main menu. It stops bobbing, confetti and squishing.</p>
 </template>
 <script>/*{{STICKER_JS}}*/</script>
+<script>/*{{EVEN_DT}}*/</script>
+<script>/*{{QGOV}}*/</script>
 <script>
 (function(){
 'use strict';
@@ -230,7 +280,6 @@ chars.forEach(function(c){
 var cw=$('cw'),opener=null;
 function openCard(tid,t,from){$('cardBody').replaceChildren($(tid).content.cloneNode(true));$('cardTitle').textContent=t;cw.hidden=false;opener=from;$('cardOk').focus()}
 function closeCard(){cw.hidden=true;if(opener)opener.focus()}
-$('bPlay').addEventListener('click',function(){openCard('t-play','Stage 1 is coming soon!',this)});
 $('bHow').addEventListener('click',function(){openCard('t-how','How to play',this)});
 $('bSet').addEventListener('click',function(){openCard('t-set','Settings',this)});
 $('cardOk').addEventListener('click',closeCard);
@@ -238,5 +287,6 @@ cw.addEventListener('click',function(e){if(e.target===cw)closeCard()});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!cw.hidden)closeCard()});
 })();
 </script>
+<script>/*{{GAME_JS}}*/</script>
 </body>
 </html>

@@ -214,10 +214,20 @@ The game reserves slots for hidden areas and hidden enemies, plus unlock rules. 
 - **Rail Gun:** unlocks after Stage 3, costs a lot of points, and uses a charge meter.
 - The shop's slot layout (S1-S3, tabs, U01-U10) stays as the placeholder grid until we assign items to it.
 
+## Decisions, round 8: first playable stage
+- **View:** ground in perspective with 5 lanes; penguins walk out of the water at the horizon toward your fruit stand at the bottom of the screen.
+- **Penguins:** Rockhopper and the new original Adélie (white eye rings, a cowlick, a little faster than Rockhopper).
+- **Scope:** one stage (Sandy Snack Shore), 8 waves, the Classic pineapple, no shop or boss yet.
+- **If a penguin reaches the stand:** it bumps the stand, the stand wobbles, the cheer meter dips a little, and the penguin pouts and waddles off.
+- **Hit reaction:** a pineapple hat lands on its head, dizzy stars circle, then it belly-slides home giggling.
+- **Cheer meter:** a bump costs 12, a hit adds 2, a cleared wave adds 15. At zero the stage ends with a friendly "try again".
+- **Golden Pineapples:** 1 per cleared wave, plus 1 for a perfect wave with no bumps.
+
 ## Still open
 - Exact item list and point prices for each shop slot.
-- Art for the shop screen and each pineapple type.
-- Next build: first playable stage (flick, one wave, one penguin) or the shop screen?
+- Art for the shop screen and the other pineapple types.
+- Whether tap-to-throw stays on by default (it works now alongside flicking).
+- Flick feel tuning from real phone and touchpad testing.
 
 ## Title screen and logo (alpha 2026.10.12.1556)
 Built and playable in `index.html`. It is made from `src/` by `build.py` (never edit `index.html` by hand).
@@ -231,3 +241,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.1556: first title screen, logo and original pineapple and Rockhopper sprites.
 - 2026.10.12.1620: story card text approved; stage titles, Champion names and rosters decided.
 - 2026.10.12.1624: upgrade shop decisions recorded.
+- 2026.10.12.1700: first playable stage 1 (5 lanes, 8 waves, Rockhopper and Adélie, Classic pineapple, cheer meter, pause, end cards, Calm mode).

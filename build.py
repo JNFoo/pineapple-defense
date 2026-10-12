@@ -33,6 +33,12 @@ def main():
                          + "\n" + font_face("Figtree", "figtree-latin-700-normal.woff", 700),
         "/*{{STICKER_CSS}}*/": (S / "vendor/sticker-text/sticker-text.css").read_text(),
         "/*{{STICKER_JS}}*/": (S / "vendor/sticker-text/sticker-text.js").read_text(),
+        "/*{{EVEN_DT}}*/": (S / "vendor/frame-kit/even-dt.js").read_text(),
+        "/*{{QGOV}}*/": (S / "vendor/frame-kit/quality-governor.js").read_text(),
+        "/*{{GAME_JS}}*/": (S / "game.js").read_text(),
+        "<!--{{adelie}}-->": (sp / "adelie.svg").read_text(),
+        "<!--{{palm}}-->": (sp / "prop-palm.svg").read_text(),
+        "<!--{{sign}}-->": (sp / "prop-sign.svg").read_text(),
     }
     for k, v in rep.items():
         assert k in t, k

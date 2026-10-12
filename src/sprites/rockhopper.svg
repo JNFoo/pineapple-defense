@@ -49,5 +49,6 @@
 <path class="m-smile" d="M92 121q8 8 16 0" fill="none" stroke="#2a120d" stroke-width="3.6" stroke-linecap="round"/>
 <ellipse class="m-o" cx="100" cy="123" rx="5" ry="6" fill="#5a1710" stroke="#2a120d" stroke-width="2.2"/>
 <path class="m-grin" d="M88 118q12 18 24 0Z" fill="#7a1f14" stroke="#2a120d" stroke-width="2.6" stroke-linejoin="round"/>
+<path class="m-pout" d="M92 125q8-8 16 0" fill="none" stroke="#2a120d" stroke-width="3.6" stroke-linecap="round"/>
 </g>
 </svg>
