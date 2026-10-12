@@ -31,7 +31,7 @@ html = f'''<!doctype html>
 var t=LZMA.decompress(a),m=document.getElementById("m");m.parentNode.removeChild(m);document.open();document.write(t);document.close()}}catch(e){{document.getElementById("m").textContent="Sorry, the game could not unpack: "+e}}}}());
 </script></body></html>
 '''
-out = pathlib.Path(args[0]) if args else root / 'dist' / (f'pineapple-defense-lab-{ver}.html' if lab else f'pineapple-defense-{ver}.html')
+out = pathlib.Path(args[0]) if args else root / 'dist' / (f'pineapple-defense-tester-{ver}.html' if lab else f'pineapple-defense-{ver}.html')
 out.parent.mkdir(exist_ok=True)
 out.write_text(html, encoding='utf-8')
 print(f'{out.name}: {len(src)//1024} KB -> {len(best)//1024} KB lzma, {len(html)//1024} KB file (lc/pb searched)')
