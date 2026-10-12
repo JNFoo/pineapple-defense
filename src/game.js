@@ -862,16 +862,23 @@ function draw() {
   drawFx(drawParticles());
 }
 
-/* ---------- bonus game: a rolling-ball arcade lane with nested target holes ---------- */
+/* ---------- bonus game: a short lane, a hop, and a 35 degree target board with small holes ---------- */
 var K = null, skBg = null, HINT_TXT = elHint.lastChild ? elHint.lastChild.textContent : '';
-var SK_BALLS = 9, SK_LIP = 0.5, SK_START = 0.84, SK_RIM = 0.45, SK_WALL = 1.45;
-var SK_HOLES = [{ v: 50, p: 0.125, r: 0.15 }, { v: 40, p: 0.17, r: 0.19 }, { v: 30, p: 0.225, r: 0.24 }, { v: 20, p: 0.30, r: 0.30 }, { v: 10, p: 0.39, r: 0.36 }];
+/* world units: the board is 2 wide (u in -1..1); v runs up the incline from its front edge (v=0); the lane is below zero and the hop sits at SK_HUMP */
+var SK_BALLS = 9, SK_RIM = 0.45, SK_WALL = 1.45, SK_G = 12, SK_KZ = 0.45, SK_INC = 35, SK_RB = 0.07, SK_DIN = 0.95, SK_ZC = 0.07;
+var SK_V0 = -0.67, SK_HUMP = -0.2, SK_VMAX = 3.4, SK_K = 0.12, SK_RAT = 0.75, SK_LIFT = 0.55, SK_LFR = 0.5, SK_ANG = 0.25;
+var SK_HOLES = [{ v: 50, c: 3.0, r: 0.085 }, { v: 40, c: 2.55, r: 0.1 }, { v: 30, c: 2.05, r: 0.12 }, { v: 20, c: 1.5, r: 0.14 }, { v: 10, c: 0.85, r: 0.165 }];
+function skCl(x, a, b) { return Math.max(a, Math.min(b, x)); }
+function skFb() { return W * 0.416; }
+function skS(v) { return 1 / (1 + SK_K * v); }
+function skX(u, v) { return W / 2 + u * skFb() * skS(v); }
+function skY(v) { return H * 0.75 - SK_RAT * skFb() / SK_K * Math.log(1 + SK_K * v); }
 function skCredits(score) { return Math.floor(score / 20); }
 function newSkee() {
   newState();
   K = { balls: SK_BALLS, score: 0, ball: null, over: false };
   elBanner.hidden = true; elHint.hidden = false;
-  if (elHint.lastChild) elHint.lastChild.textContent = 'Flick up to roll! Harder goes farther. Small holes score big.';
+  if (elHint.lastChild) elHint.lastChild.textContent = 'Flick up to roll! Harder goes farther. Misses roll back.';
   banner('Pineapple Roll!', 1500);
 }
 function skLabels(on) {
@@ -899,189 +906,170 @@ function skFlick(d) {
   if (dy > -2) { dx = vx; dy = vy; old = { t: d.t0 }; }
   return { dx: dx, dy: dy, spd: Math.hypot(dx, dy) / Math.max(30, end.t - old.t) * 1000 / H };
 }
-/* physics: the ball rolls up a ramp, leaves the lip at a slight upward angle and flies in an arc; cups have walls and rims */
-var SK_G = 17.5, SK_KZ = 6, SK_LAT = 1.8, SK_ZC = 0.3, SK_RB = 0.1, SK_RAT = 0.55, SK_FR = 0.9, SK_DIN = 0.85;
-function skRp(h) { return SK_RAT * h.r * FW * sc(h.p) / (gy - hy); }
-/* a flick picks a landing distance (speed) and a side (angle); returns the launch numbers and where the ball first comes down */
+/* physics helpers: gravity splits into a pull down the incline and a pull into the board */
+function skGs() { return SK_G * Math.sin(SK_INC * Math.PI / 180); }
+function skGc() { return SK_G * Math.cos(SK_INC * Math.PI / 180); }
+/* a flick picks where the ball first comes down (speed) and which side (angle); this is the exact launch, also used for the aim preview */
 function skLaunch(f) {
-  var ang = Math.max(-0.6, Math.min(0.6, Math.atan2(f.dx, -f.dy))), u = Math.max(0, Math.min(1, (f.spd - 1) / 4.5)), dpT = 0.03 + 0.4 * u;
-  var ca = Math.cos(ang), sa = Math.sin(ang) * SK_LAT, nrm = Math.hypot(ca, sa), c = ca / nrm;
-  var vpl = Math.sqrt(dpT * SK_G * c / (2 * SK_KZ)), fl = vpl / c, T = 2 * SK_KZ * fl / SK_G;
-  var f0 = Math.sqrt(fl * fl + 2 * SK_FR * (SK_START - SK_LIP) / c), xl = sa / ca * (SK_START - SK_LIP), vxl = fl * sa / nrm;
-  return { vx: f0 * sa / nrm, vp: -f0 * c, fl: fl, T: T, xLip: xl, vxl: vxl, vpl: vpl, vz: SK_KZ * fl,
-    xn: Math.max(-0.92, Math.min(0.92, xl + vxl * T)), p: SK_LIP - dpT };
+  var ang = skCl(Math.atan2(f.dx, -f.dy), -0.6, 0.6) * SK_ANG, u01 = skCl((f.spd - 1) / 4.5, 0, 1), vL = 0.45 + 2.9 * u01, D = vL - SK_HUMP;
+  var gs = skGs(), gc = skGc(), ca = Math.cos(ang), sa = Math.sin(ang), kz = SK_KZ;
+  var den = 2 * kz * ca / gc - 2 * gs * kz * kz / (gc * gc), fl = Math.sqrt(D / Math.max(den, 0.001)), T = 2 * kz * fl / gc;
+  var f0 = Math.sqrt(fl * fl + 2 * SK_LFR * (SK_HUMP - SK_V0) / ca), uLip = Math.tan(ang) * (SK_HUMP - SK_V0);
+  return { vu0: f0 * sa, vv0: f0 * ca, fl: fl, T: T, uLip: uLip, vuL: fl * sa, vvL: fl * ca, vz: kz * fl, v: vL, u: skCl(uLip + fl * sa * T, -0.9, 0.9) };
 }
-function skPlan(f) { return skLaunch(f); }
 function skeeRoll(dx, dy, spd) {
   if (!K || K.ball || K.balls <= 0 || K.over || S.paused) return;
   var L = skLaunch({ dx: dx, dy: dy, spd: spd });
-  K.ball = { xn: 0, p: SK_START, z: 0, vx: L.vx, vp: L.vp, vz: 0, st: 'ramp', t: 0, rot: 0, still: 0 };
+  K.ball = { u: 0, v: SK_V0, z: 0, vu: L.vu0, vv: L.vv0, vz: 0, st: 'lane', t: 0, rot: 0, still: 0 };
   K.balls--; elHint.hidden = true;
 }
 function skResolve(hole) {
   K.ball = null;
   if (hole) {
     K.score += hole.v;
-    var x = px(0, hole.p), y = py(hole.p) - SK_ZC * hole.r * FW * sc(hole.p);
-    burst(x, y, hole.v >= 40 ? 22 : 12, PINE_COL.concat(['#fff7e3'])); popText(x, y - psz(hole.p) * 0.45, '+' + hole.v + '!', hole.v >= 40 ? '#d4380d' : '#b86e00');
-  } else popText(W / 2, H * 0.72, ['oops!', 'so close!', 'whoops!', 'bonk!'][Math.floor(Math.random() * 4)], '#2f6f9f');
+    var x = skX(0, hole.c), y = skY(hole.c);
+    burst(x, y, hole.v >= 40 ? 22 : 12, PINE_COL.concat(['#fff7e3'])); popText(x, y - 26, '+' + hole.v + '!', hole.v >= 40 ? '#d4380d' : '#b86e00');
+  } else popText(W / 2, H * 0.62, ['oops!', 'so close!', 'whoops!', 'bonk!'][Math.floor(Math.random() * 4)], '#7fc4ee');
   if (K.balls <= 0) endSkee();
 }
-/* the cup (nearest first, matching how they are drawn) whose footprint the ball overlaps */
-function skCupAt(b) {
-  for (var i = SK_HOLES.length - 1; i >= 0; i--) {
-    var h = SK_HOLES[i], rp = skRp(h), ex = b.xn / h.r, ey = (b.p - h.p) / rp, d = Math.sqrt(ex * ex + ey * ey);
-    if (d < 1 + 0.6 * SK_RB / h.r) return { h: h, ex: ex, ey: ey, d: d || 0.001, rp: rp };
-  }
-  return null;
-}
 function skStep(b, h) {
-  var pz = b.z, floor = b.z <= 0 && b.vz <= 0, sp, k;
-  if (floor) { sp = Math.hypot(b.vx, b.vp); k = sp ? Math.max(0, sp - 0.5 * h) / sp : 0; b.vx *= k; b.vp *= k; b.vp += 0.3 * h; b.vx += b.xn * 0.35 * h; }
-  else b.vz -= SK_G * h;
-  b.xn += b.vx * h; b.p += b.vp * h; b.z += b.vz * h; b.rot += (Math.abs(b.vp) * 3 + Math.abs(b.vx)) * h * 9 * (b.vp > 0 ? -1 : 1);
-  if (b.xn > 0.92) { b.xn = 0.92; b.vx = -Math.abs(b.vx) * 0.5; } else if (b.xn < -0.92) { b.xn = -0.92; b.vx = Math.abs(b.vx) * 0.5; }
-  if (b.p < 0.09) { b.p = 0.09; b.vp = Math.abs(b.vp) * 0.35; }
-  var c = skCupAt(b), zc, ed, nx, ny, imp, vxn, vpn, vn;
-  if (c) {
-    zc = SK_ZC * c.h.r; ed = 1 + 0.6 * SK_RB / c.h.r; nx = c.ex / c.d; ny = c.ey / c.d;
-    if (pz >= zc && b.z < zc && b.vz < 0) {
-      if (c.d < SK_DIN) { b.st = 'sink'; b.t = 0; b.hole = c.h; b.x0 = b.xn; b.p0 = b.p; return; }
-      imp = -b.vz; b.z = zc; b.vz = Math.max(0.9, imp * SK_RIM);
-      b.vx = (b.vx + nx * c.h.r * imp * 0.9) * 0.8; b.vp = (b.vp + ny * c.rp * imp * 4) * 0.8; b.bonk = 1;
+  var gs = skGs(), gc = skGc(), pz = b.z, floor = b.z <= 0 && b.vz <= 0 && b.v >= 0, sp, k, i, c, d, zc = SK_ZC, nx, ny, imp, vn, ro, rr = SK_RB;
+  if (floor) { sp = Math.hypot(b.vu, b.vv); k = sp ? Math.max(0, sp - 0.3 * h) / sp : 0; b.vu *= k; b.vv *= k; b.vv -= gs * 0.71 * h; }
+  else { b.vv -= gs * h; b.vz -= gc * h; }
+  b.u += b.vu * h; b.v += b.vv * h; b.z += b.vz * h; b.rot += Math.hypot(b.vu, b.vv) * h * 3 * (b.vv < 0 ? -1 : 1);
+  if (b.u > 1 - rr) { b.u = 1 - rr; b.vu = -Math.abs(b.vu) * 0.5; } else if (b.u < rr - 1) { b.u = rr - 1; b.vu = Math.abs(b.vu) * 0.5; }
+  if (b.v > SK_VMAX - rr) { b.v = SK_VMAX - rr; b.vv = -Math.abs(b.vv) * 0.35; }
+  for (i = 0; i < SK_HOLES.length; i++) {
+    c = SK_HOLES[i]; d = Math.hypot(b.u, b.v - c.c) || 0.001; ro = c.r + 0.05;
+    if (d > ro + 0.6 * rr) continue;
+    nx = b.u / d; ny = (b.v - c.c) / d;
+    if (pz >= zc && b.z < zc && b.vz < 0 && d < ro + 0.5 * rr) {
+      if (d < c.r * SK_DIN) { b.st = 'sink'; b.t = 0; b.hole = c; b.u0 = b.u; b.v0 = b.v; return; }
+      imp = -b.vz; b.z = zc; b.vz = Math.max(0.8, imp * SK_RIM); b.vu = (b.vu + nx * imp * 0.5) * 0.8; b.vv = (b.vv + ny * imp * 0.5) * 0.8;
     } else if (b.z < zc) {
-      b.xn = nx * ed * c.h.r; b.p = c.h.p + ny * ed * c.rp;
-      vxn = b.vx / c.h.r; vpn = b.vp / c.rp; vn = vxn * nx + vpn * ny;
-      if (vn < 0) { vxn -= SK_WALL * vn * nx; vpn -= SK_WALL * vn * ny; b.vx = vxn * c.h.r; b.vp = vpn * c.rp; b.vz = Math.max(b.vz, Math.min(2.2, -vn * 0.1)); if (-vn > 4) b.bonk = 1; }
+      b.u = nx * (ro + 0.6 * rr); b.v = c.c + ny * (ro + 0.6 * rr);
+      vn = b.vu * nx + b.vv * ny;
+      if (vn < 0) { b.vu -= SK_WALL * vn * nx; b.vv -= SK_WALL * vn * ny; b.vz = Math.max(b.vz, Math.min(1.5, -vn * 0.3)); }
     }
   }
-  if (b.z <= 0 && b.vz < 0) { b.z = 0; if (b.vz < -1) { b.vz = -b.vz * 0.3; b.vx *= 0.85; b.vp *= 0.85; } else b.vz = 0; }
-  if (b.z <= 0 && b.p > SK_LIP) { b.st = 'back'; b.vz = 0; b.z = 0; b.vp = Math.max(b.vp, 0.1); }
+  if (b.v >= 0 && b.z <= 0 && b.vz < 0) { b.z = 0; if (b.vz < -0.8) { b.vz = -b.vz * 0.3; b.vu *= 0.85; b.vv *= 0.85; } else b.vz = 0; }
+  if (b.v < 0 && b.z <= 0 && b.vz <= 0) { b.st = 'drop'; b.t = 0; b.vz = 0; b.vu *= 0.3; }
 }
 function updateSkee(dt) {
   S.t += dt; fxUpdate(dt);
   var b = K.ball; if (!b || K.over) return;
   b.t += dt;
-  var sp = Math.hypot(b.vx, b.vp), ns, k, n, i, h;
-  if (b.st === 'ramp') {
-    ns = Math.max(0, sp - SK_FR * dt); k = sp ? ns / sp : 0; b.vx *= k; b.vp *= k;
-    b.xn = Math.max(-0.92, Math.min(0.92, b.xn + b.vx * dt)); b.p += b.vp * dt; b.rot += -b.vp * dt * 9;
-    if (b.p <= SK_LIP) { b.p = SK_LIP; b.st = 'play'; b.t = 0; b.z = 0; b.vz = SK_KZ * Math.hypot(b.vx, b.vp); b.launched = 1; }
-    else if (ns < 0.03) { b.st = 'back'; b.vp = 0.05; b.vx = 0; }
+  var sp, ns, k, n, i, h;
+  if (b.st === 'lane') {
+    sp = Math.hypot(b.vu, b.vv); ns = Math.max(0, sp - SK_LFR * dt); k = sp ? ns / sp : 0; b.vu *= k; b.vv *= k;
+    b.u = skCl(b.u + b.vu * dt, -0.9, 0.9); b.v += b.vv * dt; b.rot += ns * dt * 3;
+    if (b.v >= SK_HUMP) { b.v = SK_HUMP; b.st = 'play'; b.t = 0; b.z = 0; b.vz = SK_KZ * Math.hypot(b.vu, b.vv); }
+    else if (ns < 0.05) { b.st = 'drop'; b.t = 0; }
   } else if (b.st === 'play') {
     n = Math.max(1, Math.ceil(dt * 120)); h = dt / n;
     for (i = 0; i < n && b.st === 'play'; i++) skStep(b, h);
     if (b.st === 'play') {
-      if (b.z <= 0 && Math.hypot(b.vx, b.vp) < 0.06) { b.still += dt; if (b.still > 0.8) { b.vx = (b.xn >= 0 ? 1 : -1) * 0.5; b.vz = 2; b.still = 0; } } else b.still = 0;
-      if (b.t > 8) { b.st = 'back'; b.z = 0; b.vz = 0; b.vp = 0.2; }
+      if (b.z <= 0 && Math.hypot(b.vu, b.vv) < 0.08) { b.still += dt; if (b.still > 0.5) { b.vu = (b.u >= 0 ? 1 : -1) * 0.8; b.vz = 1.2; b.still = 0; } } else b.still = 0;
+      if (b.t > 8) { b.st = 'drop'; b.t = 0; }
     }
-  } else if (b.st === 'back') {
-    b.vp += 0.9 * dt; b.p += b.vp * dt; b.rot -= b.vp * dt * 9; b.vx *= 0.98; b.xn = Math.max(-0.92, Math.min(0.92, b.xn + b.vx * dt));
-    if (b.p >= 0.9) skResolve(null);
-  } else if (b.st === 'sink') { if (b.t > 0.6) skResolve(b.hole); }
+  } else if (b.st === 'drop') { b.rot += dt * 4; if (b.t > 0.55) skResolve(null); }
+  else if (b.st === 'sink') { if (b.t > 0.6) skResolve(b.hole); }
 }
-function skBall() { return size0 * 0.36; }
+function skBallPose(b) {
+  var v = b.v, u = b.u, z = b.z, s, R, a = 1, y, x, fb = skFb();
+  if (b.st === 'sink') { var e = Math.min(1, b.t / 0.6); e = e * e * (3 - 2 * e); u = b.u0 * (1 - e); v = b.v0 + (b.hole.c - b.v0) * e; z = 0; a = 1 - Math.max(0, (b.t - 0.3) / 0.3); }
+  s = skS(v); R = SK_RB * fb * s * (1 + Math.max(0, -v) * 1.4) * (b.st === 'sink' ? 1 - 0.55 * e : 1);
+  x = skX(u, v); y = skY(v) - z * fb * s * SK_LIFT;
+  if (b.st === 'drop') { y += b.t * b.t * 420; R *= Math.max(0.5, 1 - b.t); x = skX(u + b.vu * b.t * 0.3, v); }
+  return { x: x, y: y, R: R, a: a, gy: skY(v), z: z };
+}
 function drawSkeeBall(b) {
-  var x, y, s, lift, yc = 0, hh, zc;
-  if (b.st === 'sink') {
-    var u = Math.min(1, b.t / 0.6), e = u * u * (3 - 2 * u); hh = b.hole; zc = SK_ZC * hh.r;
-    var pp = b.p0 + (hh.p - b.p0) * e;
-    x = px(b.x0 * (1 - e), pp); y = py(pp); s = skBall() * sc(pp) * (1 - 0.2 * e); lift = (zc - (zc + 0.28) * e) * FW * sc(pp);
-    yc = py(hh.p) - zc * FW * sc(hh.p) + hh.r * FW * sc(hh.p) * SK_RAT * 0.5;
-  } else { x = px(b.xn, b.p); y = py(b.p); s = skBall() * sc(b.p); lift = b.z * FW * sc(b.p); }
-  drawShadow(x, y + s * 0.02, s * 0.32 / (1 + lift / (H * 0.08)), 0.6 / (1 + lift / (H * 0.1)));
-  var im = IMG.pa.happy; if (!im) return;
-  ctx.save();
-  if (yc) { ctx.beginPath(); ctx.rect(0, 0, W, yc); ctx.clip(); }
-  ctx.translate(x, y - s * 0.46 - lift); ctx.rotate(b.rot || 0); ctx.drawImage(im, -s * 0.62, -s * 0.62, s * 1.24, s * 1.24); ctx.restore();
+  var p = skBallPose(b), im = IMG.pa.happy; if (!im || p.a <= 0) return;
+  drawShadow(p.x, p.gy + p.R * 0.1, p.R * 0.9 / (1 + p.z * 2), 0.55 * p.a / (1 + p.z * 3));
+  ctx.save(); ctx.globalAlpha = p.a; ctx.translate(p.x, p.y - p.R * 0.3); ctx.rotate(b.rot || 0); ctx.drawImage(im, -p.R * 1.35, -p.R * 1.35, p.R * 2.7, p.R * 2.7); ctx.restore();
 }
-function drawHoleCyl(h) {
-  var rs = h.r * FW * sc(h.p), hg = rs * SK_ZC, ry = rs * SK_RAT, x = px(0, h.p), y = py(h.p) - hg;
-  ctx.fillStyle = '#f1ecdd'; ctx.strokeStyle = '#8f8a7c'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(x - rs, y); ctx.lineTo(x - rs, y + hg); ctx.ellipse(x, y + hg, rs, ry, 0, Math.PI, 0, true); ctx.lineTo(x + rs, y); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#fffdf5'; ctx.beginPath(); ctx.ellipse(x, y, rs, ry, 0, 0, 6.3); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#1a0e0a'; ctx.beginPath(); ctx.ellipse(x, y + ry * 0.1, rs * 0.8, ry * 0.76, 0, 0, 6.3); ctx.fill();
-  var fs = Math.max(11, Math.round(rs * 0.8)), tx = x - rs - Math.max(12, fs * 0.9);
-  ctx.font = '800 ' + fs + 'px "Bricolage Grotesque",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-  ctx.lineWidth = fs * 0.22; ctx.strokeStyle = '#2a120d'; ctx.fillStyle = h.v >= 40 ? '#ffd23f' : '#fff7e3'; ctx.strokeText(h.v, tx, y + hg * 0.3); ctx.fillText(h.v, tx, y + hg * 0.3);
+function drawHoleB(h) {
+  var fb = skFb(), s = skS(h.c), x = W / 2, y = skY(h.c), rx = h.r * fb * s, ry = rx * SK_RAT, ro = (h.r + 0.05) * fb * s, rro = ro * SK_RAT;
+  ctx.fillStyle = '#f6f0dd'; ctx.strokeStyle = '#8f8a7c'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(x, y, ro, rro, 0, 0, 6.3); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#140a07'; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, 6.3); ctx.fill();
+  ctx.fillStyle = '#3b2418'; ctx.beginPath(); ctx.ellipse(x, y - ry * 0.18, rx * 0.88, ry * 0.7, 0, 0, 6.3); ctx.fill();
+  ctx.fillStyle = '#0a0504'; ctx.beginPath(); ctx.ellipse(x, y + ry * 0.12, rx * 0.8, ry * 0.7, 0, 0, 6.3); ctx.fill();
+  var fs = Math.max(11, Math.round(ro * 0.85));
+  ctx.font = '800 ' + fs + 'px "Bricolage Grotesque",sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.lineWidth = fs * 0.22; ctx.strokeStyle = '#2a120d'; ctx.fillStyle = h.v >= 40 ? '#ffd23f' : '#fff7e3'; ctx.strokeText(h.v, x - ro - 5, y); ctx.fillText(h.v, x - ro - 5, y);
 }
-function skArc(g, xa, pa, ptop, w) {
-  var pt = ptop - 0.03;
-  g.lineCap = 'round'; g.lineJoin = 'round';
-  g.beginPath(); g.moveTo(px(-xa, pa), py(pa));
-  g.bezierCurveTo(px(-xa, ptop), py(ptop), px(-xa * 0.5, pt), py(pt), px(0, pt), py(pt));
-  g.bezierCurveTo(px(xa * 0.5, pt), py(pt), px(xa, ptop), py(ptop), px(xa, pa), py(pa));
-  g.strokeStyle = '#8f8a7c'; g.lineWidth = w + 3; g.stroke(); g.strokeStyle = '#f6f2e4'; g.lineWidth = w; g.stroke();
+function skQuad(g, u0, v0, u1, v1, fill) {
+  g.fillStyle = fill; g.beginPath(); g.moveTo(skX(u0, v0), skY(v0)); g.lineTo(skX(u1, v0), skY(v0)); g.lineTo(skX(u1, v1), skY(v1)); g.lineTo(skX(u0, v1), skY(v1)); g.closePath(); g.fill();
 }
 function buildSkeeBg() {
   skBg = document.createElement('canvas'); skBg.width = cv.width; skBg.height = cv.height;
-  var g = skBg.getContext('2d'), i, k, p, side; g.scale(DPR, DPR);
-  var wl = g.createLinearGradient(0, 0, 0, hy); wl.addColorStop(0, '#1d1636'); wl.addColorStop(1, '#40306b');
-  g.fillStyle = wl; g.fillRect(0, 0, W, hy + 2);
-  g.fillStyle = '#17112e'; g.fillRect(0, hy, W, H - hy);
-  /* ramp (wood) and board (felt) */
-  var lw = g.createLinearGradient(0, py(SK_LIP), 0, H); lw.addColorStop(0, '#caa06a'); lw.addColorStop(1, '#efca8e');
-  g.fillStyle = lw; g.beginPath(); g.moveTo(px(-1, SK_LIP), py(SK_LIP)); g.lineTo(px(1, SK_LIP), py(SK_LIP)); g.lineTo(px(1, 1.1), py(1.1)); g.lineTo(px(-1, 1.1), py(1.1)); g.closePath(); g.fill();
-  g.strokeStyle = 'rgba(90,50,20,.16)'; g.lineWidth = 2;
-  for (i = -3; i <= 3; i++) { g.beginPath(); g.moveTo(px(i * 0.25, SK_LIP), py(SK_LIP)); g.lineTo(px(i * 0.25, 1.1), py(1.1)); g.stroke(); }
-  var fg = g.createLinearGradient(0, py(0.1), 0, py(SK_LIP)); fg.addColorStop(0, '#9c3f2c'); fg.addColorStop(1, '#c75b40');
-  g.fillStyle = fg; g.beginPath(); g.moveTo(px(-1, 0.1), py(0.1)); g.lineTo(px(1, 0.1), py(0.1)); g.lineTo(px(1, SK_LIP), py(SK_LIP)); g.lineTo(px(-1, SK_LIP), py(SK_LIP)); g.closePath(); g.fill();
-  skArc(g, 0.72, 0.49, 0.13, 5 * sc(0.3)); skArc(g, 0.46, 0.47, 0.18, 4 * sc(0.3));
-  /* the lip: a bright edge and a shadow on the board below it */
-  var sh = g.createLinearGradient(0, py(SK_LIP) - H * 0.03, 0, py(SK_LIP)); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,.4)');
-  g.fillStyle = sh; g.fillRect(px(-1, SK_LIP), py(SK_LIP) - H * 0.03, px(1, SK_LIP) - px(-1, SK_LIP), H * 0.03);
-  g.strokeStyle = '#fff3d0'; g.lineWidth = 4; g.beginPath(); g.moveTo(px(-1, SK_LIP), py(SK_LIP) + 2); g.lineTo(px(1, SK_LIP), py(SK_LIP) + 2); g.stroke();
-  /* rails: green on the ramp, brass around the board, plus netting */
+  var g = skBg.getContext('2d'), i, side, yT = skY(SK_VMAX), yB = skY(0), yH = skY(SK_HUMP), lg;
+  g.scale(DPR, DPR);
+  lg = g.createLinearGradient(0, 0, 0, yT); lg.addColorStop(0, '#1d1636'); lg.addColorStop(1, '#40306b'); g.fillStyle = lg; g.fillRect(0, 0, W, H);
+  /* wall behind the board and the dark lower cabinet */
+  g.fillStyle = '#17112e'; g.fillRect(0, yB, W, H - yB);
+  /* board: red felt, brighter toward the player */
+  lg = g.createLinearGradient(0, yT, 0, yB); lg.addColorStop(0, '#8a3526'); lg.addColorStop(1, '#c75b40');
+  skQuad(g, -1, 0, 1, SK_VMAX, lg);
+  g.strokeStyle = 'rgba(255,230,200,.13)'; g.lineWidth = 1.5;
+  for (i = 1; i < 7; i++) { g.beginPath(); g.moveTo(skX(0, 0) + (i - 3.5) * skFb() * 0.286, skY(0)); g.lineTo(skX((i - 3.5) * 0.286, SK_VMAX), skY(SK_VMAX)); g.stroke(); }
+  /* back rail */
+  g.fillStyle = '#c9a23a'; g.beginPath(); g.moveTo(skX(-1.12, SK_VMAX), yT); g.lineTo(skX(1.12, SK_VMAX), yT); g.lineTo(skX(1.12, SK_VMAX), yT - 7); g.lineTo(skX(-1.12, SK_VMAX), yT - 7); g.closePath(); g.fill();
+  /* side rails: brass on the board, green on the lane, with netting above */
   for (side = -1; side <= 1; side += 2) {
-    g.fillStyle = '#1f8a4d'; g.beginPath(); g.moveTo(px(side, SK_LIP), py(SK_LIP)); g.lineTo(px(side * 1.16, SK_LIP), py(SK_LIP)); g.lineTo(px(side * 1.16, 1.1), py(1.1)); g.lineTo(px(side, 1.1), py(1.1)); g.closePath(); g.fill();
-    g.fillStyle = '#34b86e'; g.beginPath(); g.moveTo(px(side, SK_LIP), py(SK_LIP)); g.lineTo(px(side * 1.05, SK_LIP), py(SK_LIP)); g.lineTo(px(side * 1.05, 1.1), py(1.1)); g.lineTo(px(side, 1.1), py(1.1)); g.closePath(); g.fill();
-    g.fillStyle = '#c9a23a'; g.beginPath(); g.moveTo(px(side, 0.1), py(0.1)); g.lineTo(px(side * 1.1, 0.1), py(0.1)); g.lineTo(px(side * 1.1, SK_LIP), py(SK_LIP)); g.lineTo(px(side, SK_LIP), py(SK_LIP)); g.closePath(); g.fill();
-    g.strokeStyle = 'rgba(255,255,255,.3)'; g.lineWidth = 1;
-    for (k = 0; k <= 12; k++) { p = 0.1 + k * (SK_LIP - 0.1) / 12; var nh = H * 0.11 * sc(p); g.beginPath(); g.moveTo(px(side, p), py(p)); g.lineTo(px(side, p), py(p) - nh); g.stroke(); }
-    for (k = 0; k < 5; k++) { var q = 0.1 + k * 0.1, nq = H * 0.11 * sc(q); g.beginPath(); g.moveTo(px(side, q), py(q) - nq * k / 5 * 0.0 - nq * 0.2 * k); g.lineTo(px(side, q + 0.1), py(q + 0.1) - H * 0.11 * sc(q + 0.1) * 0.0); g.stroke(); }
+    skQuad(g, side * 1, 0, side * 1.12, SK_VMAX, '#c9a23a'); skQuad(g, side * 1, SK_V0 - 0.6, side * 1.12, SK_HUMP, '#1f8a4d'); skQuad(g, side * 1, SK_V0 - 0.6, side * 1.05, SK_HUMP, '#34b86e');
+    g.strokeStyle = 'rgba(255,255,255,.28)'; g.lineWidth = 1;
+    for (i = 0; i <= 14; i++) { var vv = SK_VMAX * i / 14, sx = skX(side * 1.06, vv), sy = skY(vv); g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + side * 3, sy - H * 0.05 * skS(vv)); g.stroke(); }
   }
-  var vg = g.createRadialGradient(W / 2, H * 0.55, Math.min(W, H) * 0.45, W / 2, H * 0.55, Math.max(W, H) * 0.75);
-  vg.addColorStop(0, 'rgba(10,5,25,0)'); vg.addColorStop(1, 'rgba(10,5,25,.35)'); g.fillStyle = vg; g.fillRect(0, 0, W, H);
+  /* the slot between the hop and the board, where a miss drops out of view */
+  lg = g.createLinearGradient(0, yH, 0, yB); lg.addColorStop(0, '#0b0710'); lg.addColorStop(1, '#241a38'); skQuad(g, -1.12, SK_HUMP, 1.12, 0, lg);
+  g.fillStyle = '#e8d48a'; g.fillRect(skX(-1.12, 0), yB - 3, skX(1.12, 0) - skX(-1.12, 0), 5);
+  /* lane and hop (wood) */
+  lg = g.createLinearGradient(0, yH, 0, H); lg.addColorStop(0, '#caa06a'); lg.addColorStop(1, '#efca8e'); skQuad(g, -1, SK_V0 - 0.6, 1, SK_HUMP, lg);
+  g.strokeStyle = 'rgba(90,50,20,.16)'; g.lineWidth = 2;
+  for (i = -3; i <= 3; i++) { g.beginPath(); g.moveTo(skX(i * 0.25, SK_HUMP), yH); g.lineTo(skX(i * 0.25, SK_V0 - 0.6), skY(SK_V0 - 0.6)); g.stroke(); }
+  lg = g.createLinearGradient(0, skY(SK_HUMP - 0.3), 0, yH); lg.addColorStop(0, '#d9b57c'); lg.addColorStop(1, '#fff0c8'); skQuad(g, -1, SK_HUMP - 0.3, 1, SK_HUMP, lg);
+  g.fillStyle = 'rgba(60,30,10,.35)'; g.fillRect(skX(-1, SK_HUMP - 0.3), skY(SK_HUMP - 0.3) - 1, skX(1, SK_HUMP - 0.3) - skX(-1, SK_HUMP - 0.3), 3);
+  g.strokeStyle = '#fff6d8'; g.lineWidth = 3; g.beginPath(); g.moveTo(skX(-1, SK_HUMP), yH); g.lineTo(skX(1, SK_HUMP), yH); g.stroke();
+  lg = g.createRadialGradient(W / 2, H * 0.5, Math.min(W, H) * 0.45, W / 2, H * 0.5, Math.max(W, H) * 0.75);
+  lg.addColorStop(0, 'rgba(10,5,25,0)'); lg.addColorStop(1, 'rgba(10,5,25,.35)'); g.fillStyle = lg; g.fillRect(0, 0, W, H);
 }
 function led(txt, x, y, w, h) {
-  ctx.fillStyle = '#120808'; ctx.fillRect(x - w / 2, y - h / 2, w, h); ctx.strokeStyle = '#7d7d86'; ctx.lineWidth = 2; ctx.strokeRect(x - w / 2, y - h / 2, w, h);
+  ctx.fillStyle = '#120808'; ctx.fillRect(x - w / 2, y - h / 2, w, h); ctx.strokeStyle = '#7d7d86'; ctx.lineWidth = 1.5; ctx.strokeRect(x - w / 2, y - h / 2, w, h);
   ctx.font = '800 ' + Math.round(h * 0.82) + 'px ui-monospace,Menlo,Consolas,monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(255,40,40,.35)'; ctx.fillText(txt, x + 1, y + 2); ctx.fillStyle = '#ff3b3b'; ctx.fillText(txt, x, y + 1);
 }
 function drawSkee() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.drawImage(skBg, 0, 0, W, H);
-  var t = calm ? 0 : S.t, i, b = K.ball;
+  var t = calm ? 0 : S.t, i, b = K.ball, fb = skFb();
   if (drag && !elHint.hidden) elHint.hidden = true;
-  /* scoreboard on the back wall */
-  var bx = W * 0.5, by = hy * 0.68, bw = W * 0.78, bh = hy * 0.4;
-  ctx.fillStyle = '#c8cdd4'; ctx.fillRect(bx - bw / 2 - 4, by - bh / 2 - 4, bw + 8, bh + 8); ctx.fillStyle = '#0c0c10'; ctx.fillRect(bx - bw / 2, by - bh / 2, bw, bh);
-  var fl = calm ? 1 : 0.9 + 0.1 * Math.sin(t * 3);
-  ctx.font = '800 ' + Math.round(W * 0.07) + 'px "Bricolage Grotesque",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-  ctx.lineWidth = W * 0.012; ctx.strokeStyle = 'rgba(255,60,90,' + (0.7 * fl) + ')'; ctx.strokeText('PINEAPPLE ROLL', bx, by - bh * 0.28); ctx.fillStyle = '#fff'; ctx.fillText('PINEAPPLE ROLL', bx, by - bh * 0.28);
-  ctx.font = '800 ' + Math.round(W * 0.03) + 'px "Figtree",sans-serif'; ctx.fillStyle = '#9aa0ad'; ctx.fillText('SCORE', bx - bw * 0.25, by + bh * 0.02); ctx.fillText('BALLS', bx + bw * 0.25, by + bh * 0.02);
-  led(String(K.score).padStart(3, '0'), bx - bw * 0.25, by + bh * 0.28, bw * 0.34, bh * 0.3); led(String(K.balls + (K.ball ? 1 : 0)).padStart(2, '0'), bx + bw * 0.25, by + bh * 0.28, bw * 0.34, bh * 0.3);
-  /* cups far to near; the ball is drawn between them so nearer walls cover it */
-  var bi = SK_HOLES.length;
-  if (b && b.st !== 'sink') { for (i = 0; i < SK_HOLES.length; i++) if (SK_HOLES[i].p > b.p && b.z < SK_ZC * SK_HOLES[i].r) { bi = i; break; } }
+  /* marquee */
+  var bx = W * 0.5, by = H * 0.205, bw = W * 0.88, bh = H * 0.082, fl = calm ? 1 : 0.9 + 0.1 * Math.sin(t * 3);
+  ctx.fillStyle = '#c8cdd4'; ctx.fillRect(bx - bw / 2 - 3, by - bh / 2 - 3, bw + 6, bh + 6); ctx.fillStyle = '#0c0c10'; ctx.fillRect(bx - bw / 2, by - bh / 2, bw, bh);
+  ctx.font = '800 ' + Math.round(bh * 0.36) + 'px "Bricolage Grotesque",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,60,90,' + (0.7 * fl) + ')'; ctx.strokeText('PINEAPPLE ROLL', bx, by - bh * 0.25); ctx.fillStyle = '#fff'; ctx.fillText('PINEAPPLE ROLL', bx, by - bh * 0.25);
+  ctx.font = '800 9px "Figtree",sans-serif'; ctx.fillStyle = '#9aa0ad'; ctx.textAlign = 'left'; ctx.fillText('SCORE', bx - bw * 0.46, by + bh * 0.22); ctx.textAlign = 'right'; ctx.fillText('BALLS', bx + bw * 0.46, by + bh * 0.22);
+  led(String(K.score).padStart(3, '0'), bx - bw * 0.2, by + bh * 0.22, bw * 0.26, bh * 0.36); led(String(K.balls + (K.ball ? 1 : 0)).padStart(2, '0'), bx + bw * 0.2, by + bh * 0.22, bw * 0.26, bh * 0.36);
+  for (i = SK_HOLES.length - 1; i >= 0; i--) drawHoleB(SK_HOLES[i]);
   if (drag && !b && !K.over) {
     var f = skFlick(drag);
     if (f) {
-      var L = skLaunch(f), sx0 = px(0, SK_START), sy0 = py(SK_START), lx = px(L.xLip, SK_LIP), ly = py(SK_LIP), j, tt, zz, pp2;
+      var L = skLaunch(f), j, tt, vv, uu, zz, gs = skGs(), gc = skGc();
       ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 3; ctx.setLineDash([6, 7]); ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(sx0, sy0); ctx.lineTo(lx, ly);
-      for (j = 1; j <= 14; j++) { tt = L.T * j / 14; zz = L.vz * tt - 0.5 * SK_G * tt * tt; pp2 = SK_LIP - L.vpl * tt; ctx.lineTo(px(L.xLip + L.vxl * tt, pp2), py(pp2) - zz * FW * sc(pp2)); }
+      ctx.beginPath(); ctx.moveTo(skX(0, SK_V0), skY(SK_V0)); ctx.lineTo(skX(L.uLip, SK_HUMP), skY(SK_HUMP));
+      for (j = 1; j <= 16; j++) { tt = L.T * j / 16; vv = SK_HUMP + L.vvL * tt - 0.5 * gs * tt * tt; uu = L.uLip + L.vuL * tt; zz = L.vz * tt - 0.5 * gc * tt * tt; ctx.lineTo(skX(uu, vv), skY(vv) - zz * fb * skS(vv) * SK_LIFT); }
       ctx.stroke(); ctx.setLineDash([]);
-      var er = skBall() * sc(L.p) * 0.55; ctx.beginPath(); ctx.ellipse(px(L.xn, L.p), py(L.p), er, er * 0.55, 0, 0, 6.3); ctx.stroke();
+      var er = SK_RB * fb * skS(L.v); ctx.beginPath(); ctx.ellipse(skX(L.u, L.v), skY(L.v), er, er * SK_RAT, 0, 0, 6.3); ctx.stroke();
     }
   }
-  for (i = 0; i < SK_HOLES.length; i++) { if (i === bi && b) drawSkeeBall(b); drawHoleCyl(SK_HOLES[i]); }
-  if (b && bi >= SK_HOLES.length) drawSkeeBall(b);
+  if (b && b.st !== 'drop') drawSkeeBall(b);
+  if (b && b.st === 'drop') { drawSkeeBall(b); var yF = skY(SK_HUMP); ctx.drawImage(skBg, 0, yF * DPR, skBg.width, skBg.height - yF * DPR, 0, yF, W, H - yF); }
   drawStand();
   if (!b && !K.over && K.balls > 0) {
-    var s = skBall() * sc(SK_START) * 1.5, bob = calm ? 0 : Math.sin(t * 3) * 2, im = IMG.pa.happy;
-    drawShadow(W / 2, py(SK_START) + 4, s * 0.3, 0.6);
-    if (im) ctx.drawImage(im, W / 2 - s / 2, py(SK_START) - s * 0.92 + bob, s, s);
+    var R = SK_RB * fb * skS(SK_V0) * (1 + 0.67 * 1.4) * 1.15, bob = calm ? 0 : Math.sin(t * 3) * 2, im = IMG.pa.happy, yy = skY(SK_V0);
+    drawShadow(W / 2, yy + 3, R * 0.9, 0.55);
+    if (im) ctx.drawImage(im, W / 2 - R * 1.35, yy - R * 1.65 + bob, R * 2.7, R * 2.7);
   }
   drawParticles();
 }
@@ -1288,7 +1276,7 @@ $('bShop').addEventListener('click', fillShop);
 var qa = null;
 if (location.hash === '#qa') {
   qa = window.__pd = { bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
-    give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
+    give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
 }
 /*{{LAB_JS}}*/
 }());
