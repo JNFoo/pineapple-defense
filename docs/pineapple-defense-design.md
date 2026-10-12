@@ -291,3 +291,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.1752: logo: a mini pineapple replaces the letter a in Pineapple; rockhopper crest redrawn to match the logo penguin.
 - 2026.10.12.1918: more top counters, vertical Cheer meter, upgrade prices doubled, labeled pineapples and pickups, pickup guide, README pictures.
 - 2026.10.12.1933: polish and stability fixes.
+- 2026.10.12.1940: more polish.
