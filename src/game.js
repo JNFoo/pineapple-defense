@@ -864,7 +864,7 @@ function draw() {
 
 /* ---------- bonus game: a rolling-ball arcade lane with nested target holes ---------- */
 var K = null, skBg = null, HINT_TXT = elHint.lastChild ? elHint.lastChild.textContent : '';
-var SK_BALLS = 9, SK_LIP = 0.5, SK_START = 0.84;
+var SK_BALLS = 9, SK_LIP = 0.5, SK_START = 0.84, SK_RIM = 0.45, SK_WALL = 1.45;
 var SK_HOLES = [{ v: 50, p: 0.125, r: 0.15 }, { v: 40, p: 0.17, r: 0.19 }, { v: 30, p: 0.225, r: 0.24 }, { v: 20, p: 0.30, r: 0.30 }, { v: 10, p: 0.39, r: 0.36 }];
 function skCredits(score) { return Math.floor(score / 20); }
 function newSkee() {
@@ -947,12 +947,12 @@ function skStep(b, h) {
     zc = SK_ZC * c.h.r; ed = 1 + 0.6 * SK_RB / c.h.r; nx = c.ex / c.d; ny = c.ey / c.d;
     if (pz >= zc && b.z < zc && b.vz < 0) {
       if (c.d < SK_DIN) { b.st = 'sink'; b.t = 0; b.hole = c.h; b.x0 = b.xn; b.p0 = b.p; return; }
-      imp = -b.vz; b.z = zc; b.vz = Math.max(0.9, imp * 0.45);
+      imp = -b.vz; b.z = zc; b.vz = Math.max(0.9, imp * SK_RIM);
       b.vx = (b.vx + nx * c.h.r * imp * 0.9) * 0.8; b.vp = (b.vp + ny * c.rp * imp * 4) * 0.8; b.bonk = 1;
     } else if (b.z < zc) {
       b.xn = nx * ed * c.h.r; b.p = c.h.p + ny * ed * c.rp;
       vxn = b.vx / c.h.r; vpn = b.vp / c.rp; vn = vxn * nx + vpn * ny;
-      if (vn < 0) { vxn -= 1.45 * vn * nx; vpn -= 1.45 * vn * ny; b.vx = vxn * c.h.r; b.vp = vpn * c.rp; b.vz = Math.max(b.vz, Math.min(2.2, -vn * 0.1)); if (-vn > 4) b.bonk = 1; }
+      if (vn < 0) { vxn -= SK_WALL * vn * nx; vpn -= SK_WALL * vn * ny; b.vx = vxn * c.h.r; b.vp = vpn * c.rp; b.vz = Math.max(b.vz, Math.min(2.2, -vn * 0.1)); if (-vn > 4) b.bonk = 1; }
     }
   }
   if (b.z <= 0 && b.vz < 0) { b.z = 0; if (b.vz < -1) { b.vz = -b.vz * 0.3; b.vx *= 0.85; b.vp *= 0.85; } else b.vz = 0; }
@@ -1290,4 +1290,5 @@ if (location.hash === '#qa') {
   qa = window.__pd = { bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
     give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
 }
+/*{{LAB_JS}}*/
 }());
