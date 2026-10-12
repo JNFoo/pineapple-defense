@@ -248,6 +248,14 @@ The game reserves slots for hidden areas and hidden enemies, plus unlock rules. 
 - **Touchpad and mouse:** no click needed. A quick upward swipe of the cursor from the lower half of the screen throws, and click-and-drag still works. Touch screens use the finger flick.
 - **Shadows:** soft, offset away from the sun, with small contact shadows under the feet that shrink as a penguin hops.
 
+## Decisions, round 13: tall stage, table pickups, auto slingshot (Oct 12)
+- The whole game now plays in a tall 9:16 stage (like Fancy the Banana), centered and letterboxed, so it suits phones and a narrow window beside other apps.
+- Special power-up pineapples appear on the table (left) and can be clicked or tapped: Zippy (fast throws), Mega (every throw splashes), Cheer up (fills the cheer meter), Brrr (penguins walk slowly). They fade if ignored. Keys 3 and 4 also grab table items.
+- Trophies (10 achievements) appear on the table (right) when earned. Collecting one gives 2 Golden Pineapples; a trophy left alone is collected automatically after 12 seconds, so nothing is lost. A Trophies card on the title screen lists them.
+- More animated scenery: swaying palm, plants and sign, moving waves, bobbing icebergs, gulls, glints, a pulsing sun glow. All of it stops in Calm mode.
+- Upgrade: the Auto Slingshot (title-screen Shop, paid with banked Golden Pineapples). A small teal slingshot on the table tosses pineapples by itself, slowly at first, and marks its next target so you can aim at a different penguin. Upgrades: Faster Fling (3 levels) and Better Pineapples (Lobber, then Mega splash).
+- Title screen: menu moved under the logo; DEFENSE sign is larger, wider and battle-worn.
+
 ## Still open
 - Exact item list and point prices for each shop slot.
 - Art for the shop screen and the other pineapple types (Cluster, Bowling Pine, Juice Bomb, Rail Gun).
@@ -272,3 +280,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.1703: pineapple plants in the background, penguin smile removed.
 - 2026.10.12.1706: slingshot with one primed pineapple on the stand table.
 - 2026.10.12.1712: slingshot tilt, Lobber pineapple and picker, Coach Waddles boss, cursor-swipe throwing, softer shadows.
+- 2026.10.12.1726: tall 9:16 stage, table power-ups and trophies, animated scenery, Auto Slingshot shop upgrade, menu under logo, battle-worn DEFENSE sign.

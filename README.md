@@ -2,7 +2,7 @@
 
 A free, silly browser game for kids of all ages: flick pineapples at penguins who are a little jealous of tropical fruit. Nobody gets hurt; everyone goes home giggling.
 
-**Status:** early alpha. The title screen, logo and a first playable stage (8 waves) are in. Flick up from the bottom, or tap a penguin.
+**Status:** early alpha. The title screen, logo and a first playable stage (8 waves) are in. Flick up from the bottom toward a penguin. Plays in a tall phone-shaped stage.
 
 - Design brief: [docs/pineapple-defense-design.md](docs/pineapple-defense-design.md)
 - Build: `python3 build.py` makes the single-file `index.html` from `src/` (needs `fonttools`). Don't edit `index.html` by hand.
