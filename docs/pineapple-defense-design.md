@@ -248,4 +248,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.1620: story card text approved; stage titles, Champion names and rosters decided.
 - 2026.10.12.1624: upgrade shop decisions recorded.
 - 2026.10.12.1655: first playable stage 1 (5 lanes, 8 waves, Rockhopper and Adélie, Classic pineapple, cheer meter, pause, end cards, Calm mode).
-- 2026.10.12.1702: flick only; Continue and autosave after each wave; save code and save file in Settings; beach sign slogan changed.
+- 2026.10.12.1700: flick only; Continue and autosave after each wave; save code and save file in Settings; beach sign slogan changed.
