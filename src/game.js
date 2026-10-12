@@ -18,7 +18,7 @@ function psz(p) { return size0 * sc(p); }
 
 /* ---------- sprites ---------- */
 var SZ = 384, IMG = { pa: {}, rh: {}, ad: {} }, PROP = {}, assets = null;
-var VARS = ':root{--pa-hi:#ffeaa0;--pa-mid:#f8bd1c;--pa-lo:#a85a07;--pg-hi:#6b6aab;--pg-mid:#383767;--pg-lo:#171538;--ad-hi:#6a6677;--ad-mid:#34303f;--ad-lo:#15121d}.m-o,.m-grin,.m-pout{display:none}';
+var VARS = ':root{--pa-hi:#ffeaa0;--pa-mid:#f8bd1c;--pa-lo:#a85a07;--pg-hi:#6b6aab;--pg-mid:#383767;--pg-lo:#171538;--ad-hi:#6a6677;--ad-mid:#34303f;--ad-lo:#15121d}.m-o,.m-grin,.m-pout,.brow{display:none}';
 var MOOD = {
   happy: '',
   giggle: '.m-smile{display:none}.m-grin{display:block}',
