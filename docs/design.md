@@ -144,6 +144,43 @@ Pure silliness: the penguins' own jealous signs, never mean and never about real
   - Stage 5, Glacier fortress: "Home Is Where The Snow Is!", "Champions Say NO To Pineapples!", "Penguin Power!"
 - **Story link:** the posters show the penguins can't eat tropical fruit or visit the tropics, and are a little jealous; each stage's posters get sillier, and the Grand Champion's fortress is wallpapered with them.
 
+## Upgrade shops: PLACEHOLDERS (fill in later; nothing here is decided except the rules)
+Rules already decided: points are Golden Pineapple points earned only by playing; no purchases, no random boxes, no streaks, nothing missable; every upgrade can be earned by any player eventually.
+
+**Shop slots (names are placeholders):**
+| Slot | Working name | Opens | Contents (placeholder) |
+|---|---|---|---|
+| S1 | Stand Shop | Always, between stages | Four tabs below |
+| S2 | Shop B | PLACEHOLDER (a later stage or a milestone) | TBD |
+| S3 | Shop C | PLACEHOLDER | TBD |
+
+**Stand Shop tabs (placeholders):**
+| Tab | Holds | Example rows (all TBD) |
+|---|---|---|
+| Pineapples | New pineapple types and upgrades to each type | unlock a type; faster reload; bigger splash |
+| Stand | The stand's cheer meter and how fast it recovers | more cheer; faster recovery; tougher boop-proofing |
+| Throwing | How the flick feels | aim-assist strength; flick power; arc height |
+| Looks | Cosmetics only | stand decorations; crown colors; flight trails |
+
+**Upgrade rows (fill in):**
+| ID | Name | Tab | Effect | Steps | Cost curve | Needs | Status |
+|---|---|---|---|---|---|---|---|
+| U01 | TBD | Pineapples | TBD | TBD | TBD | none | PLACEHOLDER |
+| U02 | TBD | Pineapples | TBD | TBD | TBD | U01 | PLACEHOLDER |
+| U03 | Rail Gun | Pineapples | Top upgrade: charge-meter shot that pierces a whole column | TBD | TBD | TBD (where it sits in the order is open) | PLACEHOLDER |
+| U04 | TBD | Stand | TBD | TBD | TBD | none | PLACEHOLDER |
+| U05 | TBD | Stand | TBD | TBD | TBD | none | PLACEHOLDER |
+| U06 | TBD | Throwing | TBD | TBD | TBD | none | PLACEHOLDER |
+| U07 | TBD | Throwing | TBD | TBD | TBD | none | PLACEHOLDER |
+| U08 | TBD | Looks | TBD | TBD | TBD | none | PLACEHOLDER |
+| U09 | TBD | Looks | TBD | TBD | TBD | none | PLACEHOLDER |
+| U10 | TBD | any | TBD | TBD | TBD | TBD | PLACEHOLDER |
+
+Open for the shop: how many points a wave earns, the cost curve (the idle-core module has cost and milestone math that may fit), and whether upgrades carry over after the final stage as in Fancy.
+
+## Secret content: reserved slots (details are NOT in this public file)
+The game reserves slots for hidden areas and hidden enemies, plus unlock rules. Per the Master Guide, public text (this brief, the README, change logs, credits, help) never says what they are; it calls them "unlockable extras" until a player finds them. The working details live only in a private file that is never committed to this repository (`private/hidden-content-private.md`, ignored by git).
+
 ## Still open
 - Story card text: first draft of the one-screen premise from the envy idea above (needs approval).
 - Names and gimmicks for the five bosses and the five stage titles.
