@@ -56,6 +56,7 @@ function loadAssets() {
     });
   });
   jobs.push(toImage($('spr-palm').innerHTML, { w: 400, h: 520 }).then(function (c) { PROP.palm = c; }));
+  jobs.push(toImage($('spr-plant').innerHTML, { w: 240, h: 240 }).then(function (c) { PROP.plant = c; }));
   jobs.push(toImage($('spr-sign').innerHTML, { w: 420, h: 490 }).then(function (c) { PROP.sign = c; }));
   jobs.push(document.fonts && document.fonts.load ? document.fonts.load('800 32px "Bricolage Grotesque"') : Promise.resolve());
   assets = Promise.all(jobs);
@@ -161,6 +162,11 @@ function buildBg() {
     g.beginPath(); g.moveTo(px(xn, 0.06), py(0.06)); g.lineTo(px(xn, 1.05), py(1.05)); g.stroke();
   }
   if (PROP.palm) { var ph = Math.min(H * 0.3, W * 0.45), pw = ph * 100 / 130; g.drawImage(PROP.palm, W * 0.015, hy + H * 0.075 - ph * 0.954, pw, ph); }
+  if (PROP.plant) {
+    var qs = Math.min(H * 0.1, W * 0.17), by = hy + H * 0.07;
+    g.drawImage(PROP.plant, W * 0.13, by - qs * 0.92, qs, qs);
+    g.drawImage(PROP.plant, W * 0.2, by + H * 0.012 - qs * 0.78 * 0.92, qs * 0.78, qs * 0.78);
+  }
   if (PROP.sign) {
     var sh = Math.min(H * 0.3, W * 0.45), sw = sh * 84 / 98, sxx = W - sw - W * 0.015, syy = hy + H * 0.085 - sh * 0.959;
     g.drawImage(PROP.sign, sxx, syy, sw, sh);

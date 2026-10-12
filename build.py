@@ -39,6 +39,7 @@ def main():
         "/*{{GAME_JS}}*/": (S / "game.js").read_text(),
         "<!--{{adelie}}-->": (sp / "adelie.svg").read_text(),
         "<!--{{palm}}-->": (sp / "prop-palm.svg").read_text(),
+        "<!--{{plant}}-->": (sp / "prop-plant.svg").read_text(),
         "<!--{{sign}}-->": (sp / "prop-sign.svg").read_text(),
     }
     for k, v in rep.items():

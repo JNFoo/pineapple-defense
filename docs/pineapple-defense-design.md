@@ -233,7 +233,8 @@ The game reserves slots for hidden areas and hidden enemies, plus unlock rules. 
 ## Decisions, round 10: title screen polish (Oct 12)
 - **Faceoff:** on the title screen the pineapple and the penguin now lean toward each other with silly stare-down brows and eyes locked on each other; every few seconds they lean in a little closer. Tapping either one breaks the stare with giggles.
 - **Beaks:** both penguins now have the bigger orange beak from the logo.
-- **Palm tree:** redrawn with proper drooping fronds on the title screen and in the game stage.
+- **Palm tree and pineapple plants:** the palm is redrawn with proper drooping fronds, and low pineapple plants (spiky leaves with a fruit on top, how pineapples really grow) sit beside it, on the title screen and in the game stage.
+- **Penguin faces:** the smile under the beak is gone; the beak is the mouth. Reaction faces (giggle, surprise, pout) still show briefly.
 
 ## Still open
 - Exact item list and point prices for each shop slot.
@@ -255,3 +256,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.1655: first playable stage 1 (5 lanes, 8 waves, Rockhopper and Adélie, Classic pineapple, cheer meter, pause, end cards, Calm mode).
 - 2026.10.12.1700: flick only; Continue and autosave after each wave; save code and save file in Settings; beach sign slogan changed.
 - 2026.10.12.1705: title faceoff, bigger orange beaks, redrawn palm tree.
+- 2026.10.12.1703: pineapple plants in the background, penguin smile removed.
