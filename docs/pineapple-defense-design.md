@@ -236,6 +236,11 @@ The game reserves slots for hidden areas and hidden enemies, plus unlock rules. 
 - **Palm tree and pineapple plants:** the palm is redrawn with proper drooping fronds, and low pineapple plants (spiky leaves with a fruit on top, how pineapples really grow) sit beside it, on the title screen and in the game stage.
 - **Penguin faces:** the smile under the beak is gone; the beak is the mouth. Reaction faces (giggle, surprise, pout) still show briefly.
 
+## Decisions, round 11: the slingshot (Oct 12)
+- **One pineapple on the table:** the stand's counter now holds a single wooden slingshot with one pineapple primed in its pouch. Your flicks launch from it.
+- **Reload as feedback:** after each throw the bands snap forward, the pouch sits empty for a moment, and a fresh pineapple pops in when you are ready to throw again. This replaces the old ready ring.
+- This updates the earlier "weapon is never shown" idea: the slingshot is the only weapon shown; the pineapple types (and the rail gun later) will use their own primed contraptions.
+
 ## Still open
 - Exact item list and point prices for each shop slot.
 - Art for the shop screen and the other pineapple types.
@@ -257,3 +262,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.1700: flick only; Continue and autosave after each wave; save code and save file in Settings; beach sign slogan changed.
 - 2026.10.12.1705: title faceoff, bigger orange beaks, redrawn palm tree.
 - 2026.10.12.1703: pineapple plants in the background, penguin smile removed.
+- 2026.10.12.1706: slingshot with one primed pineapple on the stand table.

@@ -273,7 +273,7 @@ function throwAt(ox, oy, dx, dy, spd, tapPoint) {
   }
   S.cd = COOLDOWN; S.thrown = true;
   elHint.hidden = true;
-  shots.push({ x0: ox, y0: oy, xE: xE, yE: yE, pEnd: pEnd, t: 0, T: ttf, arc: H * (0.14 + 0.2 * (1 - pEnd)), spin: (Math.random() < 0.5 ? -1 : 1) * 7, ph: 0, aim: best ? best.id : 0 });
+  shots.push({ s0: slingGeom().ps * 0.92, x0: ox, y0: oy, xE: xE, yE: yE, pEnd: pEnd, t: 0, T: ttf, arc: H * (0.14 + 0.2 * (1 - pEnd)), spin: (Math.random() < 0.5 ? -1 : 1) * 7, ph: 0, aim: best ? best.id : 0 });
 }
 function landShot(s) {
   var best = null, bd = 0.55;
@@ -354,7 +354,7 @@ function update(dt) {
   if (qa && qa.bot && S.cd <= 0) {
     var tgt = null;
     for (i = 0; i < penguins.length; i++) if (penguins[i].st === 'walk' && (!tgt || penguins[i].p > tgt.p)) tgt = penguins[i];
-    if (tgt) { var c = penCenter(tgt); throwAt(W / 2, H * 0.93, c.x - W / 2, c.y - H * 0.93, 1.5, { x: c.x, y: c.y }); }
+    if (tgt) { var c = penCenter(tgt), o = pouchPos(); throwAt(o.x, o.y, c.x - o.x, c.y - o.y, 1.5, { x: c.x, y: c.y }); }
   }
 }
 
@@ -398,7 +398,7 @@ function drawShot(sh) {
     u = Math.min(1, sh.t / sh.T);
     x = sh.x0 + (sh.xE - sh.x0) * u;
     y = sh.y0 + (sh.yE - sh.y0) * u - 4 * sh.arc * u * (1 - u);
-    size = (psz(1.02) + (psz(sh.pEnd) - psz(1.02)) * u) * 0.5 * (1 + 0.35 * Math.sin(Math.PI * u));
+    size = (sh.s0 + (psz(sh.pEnd) * 0.5 - sh.s0) * u) * (1 + 0.35 * Math.sin(Math.PI * u));
     rot = sh.spin * sh.t;
     var gyy = sh.y0 + (py(sh.pEnd) - sh.y0) * u;
     drawShadow(x, gyy, size * 0.3, 0.6);
@@ -421,12 +421,45 @@ function drawStand() {
   top.addColorStop(0, '#fffaf0'); top.addColorStop(1, '#e3d2a8');
   ctx.fillStyle = top; ctx.fillRect(-40, y0 - h * 0.05, W + 80, h * 0.25);
   ctx.fillStyle = '#b79a63'; ctx.fillRect(-40, y0 + h * 0.2, W + 80, h * 0.03);
-  var ps = Math.min(h * 1.05, W * 0.2), xs = [W * 0.14, W * 0.5, W * 0.86];
-  if (IMG.pa.happy) for (i = 0; i < 3; i++) {
-    var j = calm ? 0 : Math.sin(S.t * 40 + i) * 5 * S.wob;
-    ctx.drawImage(IMG.pa.happy, xs[i] - ps / 2, y0 - ps * 0.8 + j, ps, ps);
-  }
+  drawSling();
   ctx.restore();
+}
+
+/* the slingshot on the table: one pineapple, primed in the pouch */
+function slingGeom() { var h = H * 0.12, f = Math.min(H * 0.22, W * 0.36); return { x: W / 2, base: H - h + h * 0.06, f: f, ps: f * 0.62 }; }
+function pouchPos() { var s = slingGeom(); return { x: s.x, y: s.base - s.f * 0.5 - s.ps * 0.92 * 0.38 }; }
+function wood(x1, y1, x2, y2, w) {
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#4a2f1a'; ctx.lineWidth = w + 3; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.strokeStyle = '#8f5f30'; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,226,170,.5)'; ctx.lineWidth = w * 0.28; ctx.beginPath(); ctx.moveTo(x1 - w * 0.2, y1); ctx.lineTo(x2 - w * 0.2, y2); ctx.stroke();
+}
+function band(x1, y1, x2, y2, w) {
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#a82a1f'; ctx.lineWidth = w + 2; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.strokeStyle = '#e0483a'; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+function drawSling() {
+  var s = slingGeom(), f = s.f, bx = s.x, by = s.base, r = 1 - Math.max(0, S.cd) / COOLDOWN;
+  var tipY = by - f, dx = f * 0.3, stemTop = by - f * 0.4;
+  wood(bx, by, bx, stemTop, f * 0.13);
+  wood(bx, stemTop, bx - dx, tipY, f * 0.1);
+  wood(bx, stemTop, bx + dx, tipY, f * 0.1);
+  var snap = r < 0.2 ? 1 - r / 0.2 : 0;
+  var py0 = by - f * 0.52 - snap * f * 0.22 + (calm ? 0 : Math.sin(S.t * 55) * snap * 3);
+  var has = r >= 0.3, pop = has ? Math.min(1, (r - 0.3) / 0.45) : 0;
+  band(bx + dx, tipY, bx + f * 0.14, py0, f * 0.05);
+  if (has && IMG.pa.happy) {
+    var k = pop < 1 ? 1 + 0.22 * Math.sin(pop * Math.PI) : 1, z = s.ps * 0.92 * pop * k;
+    if (calm) z = s.ps * 0.92;
+    ctx.drawImage(IMG.pa.happy, bx - z / 2, py0 - z * 0.88, z, z);
+  }
+  ctx.fillStyle = '#6b4a2f'; ctx.strokeStyle = '#3d2a18'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(bx, py0 + f * 0.01, f * 0.17, f * 0.06, 0, 0, 6.3); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,226,170,.35)'; ctx.beginPath(); ctx.ellipse(bx - f * 0.05, py0 - f * 0.005, f * 0.08, f * 0.02, 0, 0, 6.3); ctx.fill();
+  band(bx - dx, tipY, bx - f * 0.14, py0, f * 0.05);
+  ctx.fillStyle = '#6b4a2f'; ctx.strokeStyle = '#3d2a18';
+  [-dx, dx].forEach(function (o) { ctx.beginPath(); ctx.arc(bx + o, tipY, f * 0.07, 0, 6.3); ctx.fill(); ctx.stroke(); });
 }
 function drawCloud(x, y, s) {
   ctx.fillStyle = 'rgba(255,255,255,.85)';
@@ -495,7 +528,7 @@ cv.addEventListener('pointerup', function (e) {
   if (!drag || e.pointerId !== drag.id) return;
   var d = drag; drag = null;
   var end = rel(e), vx = end.x - d.sx, vy = end.y - d.sy, len = Math.hypot(vx, vy), m = Math.min(W, H);
-  var oy = H * 0.93, ox;
+  var po = pouchPos(), oy = po.y, ox;
   if (len < TAP_MIN * m) return;   // flick only: a plain tap does nothing
   if (vy > -FLICK_MIN * H) return;
   var old = d.pts[0], i;
@@ -503,7 +536,7 @@ cv.addEventListener('pointerup', function (e) {
   var dx = end.x - old.x, dy = end.y - old.y;
   if (dy > -2) { dx = vx; dy = vy; old = { t: d.t0 }; }
   var dur = Math.max(30, end.t - old.t), spd = Math.hypot(dx, dy) / dur * 1000 / H;
-  ox = W / 2 + (d.sx - W / 2) * 0.55;
+  ox = po.x;
   throwAt(ox, oy, dx, dy, spd, null);
 });
 cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
@@ -584,6 +617,6 @@ $('bSet').addEventListener('click', wireSettings);
 var qa = null;
 if (location.hash === '#qa') {
   qa = window.__pd = { bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
-    tap: function (x, y) { throwAt(W / 2, H * 0.93, x - W / 2, y - H * 0.93, 1.5, { x: x, y: y }); } };
+    tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
 }
 }());
