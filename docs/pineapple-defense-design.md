@@ -256,6 +256,11 @@ The game reserves slots for hidden areas and hidden enemies, plus unlock rules. 
 - Upgrade: the Auto Slingshot (title-screen Shop, paid with banked Golden Pineapples). A small teal slingshot on the table tosses pineapples by itself, slowly at first, and marks its next target so you can aim at a different penguin. Upgrades: Faster Fling (3 levels) and Better Pineapples (Lobber, then Mega splash).
 - Title screen: menu moved under the logo; DEFENSE sign is larger, wider and battle-worn.
 
+## Decisions, round 14: HUD and prices (Oct 12)
+- Upgrade prices are now double: Auto Slingshot 8; Faster Fling 10, 16, 24; Better Pineapples 12, 20.
+- The top of the game screen has more counters: Wave, penguins Left, Combo (hits in a row), Golden Pineapples this stage, Bank, and Cups (trophies). The Cheer meter is now a tall vertical bar on the right edge.
+- Clarity: the two pineapple buttons are labeled (Classic, Lobber), table pickups carry name tags and a tip message, and the How to play card has a short guide to every pineapple and pickup.
+
 ## Still open
 - Exact item list and point prices for each shop slot.
 - Art for the shop screen and the other pineapple types (Cluster, Bowling Pine, Juice Bomb, Rail Gun).
@@ -284,3 +289,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.1738: redrawn worn DEFENSE sign, compact Trophies and Shop dialogs with a floating close button, dialogs pause background animation, packed single-file build tool.
 - 2026.10.12.1743: billboard removed from the game field; title billboard rotates silly slogans; more title animation (gulls, snow, sparkles, swaying palm and plants, sun rays); closer, bigger pineapple and penguin faceoff.
 - 2026.10.12.1752: logo: a mini pineapple replaces the letter a in Pineapple; rockhopper crest redrawn to match the logo penguin.
+- 2026.10.12.1812: more top counters, vertical Cheer meter, upgrade prices doubled, labeled pineapples and pickups, pickup guide, README pictures.

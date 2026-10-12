@@ -122,15 +122,18 @@ body{height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-righ
 .game{position:absolute;inset:0;overflow:hidden;background:#cfe6ec;touch-action:none;color-scheme:only light}
 .game[hidden]{display:none}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
-.hud{position:absolute;left:0;right:0;top:0;display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));pointer-events:none;z-index:3}
-.pill{display:inline-flex;align-items:center;gap:.4em;min-height:2.75rem;padding:.35em .9em;border-radius:999px;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .16em 0 #b79a63,0 .35em .5em rgba(0,0,0,.18),inset 0 .1em 0 rgba(255,255,255,.7);font:800 1.05rem/1 var(--display);color:#4a2b0f;white-space:nowrap}
+.hud{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;gap:.4rem;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left));pointer-events:none;z-index:3}
+.hrow{display:flex;align-items:center;gap:.4rem}
+.pill{display:inline-flex;align-items:center;gap:.35em;min-height:2.3rem;padding:.25em .75em;border-radius:999px;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .14em 0 #b79a63,0 .3em .45em rgba(0,0,0,.18),inset 0 .1em 0 rgba(255,255,255,.7);font:800 .95rem/1 var(--display);color:#4a2b0f;white-space:nowrap}
+.pill small{font:800 .68rem/1 var(--body);color:#8a6a3c;text-transform:uppercase;letter-spacing:.04em}.pill b{font:800 1rem/1 var(--display)}
 .pill svg{width:1.7em;height:1.7em;flex:none;overflow:visible}
-.cheer{order:1;flex:1;max-width:320px;display:flex;align-items:center;gap:.5em;min-height:2.75rem;padding:.3em .8em;border-radius:999px;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .16em 0 #b79a63,0 .35em .5em rgba(0,0,0,.18),inset 0 .1em 0 rgba(255,255,255,.7);font:800 .9rem/1 var(--display);color:#4a2b0f}
-.bar{position:relative;flex:1;height:16px;border-radius:99px;background:#e2d6b6;overflow:hidden;box-shadow:inset 0 2px 3px rgba(0,0,0,.2)}
-.bar i{position:absolute;inset:0;border-radius:99px;transform-origin:left;background:linear-gradient(180deg,#8be6a3,#2c8a49);transition:transform 200ms ease-out}
-.bar[data-low="1"] i{background:linear-gradient(180deg,#ffb3c1,#e0526f)}
+.cheer{position:absolute;right:6px;top:19cqh;bottom:25cqh;width:1.9rem;z-index:3;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:.4rem .2rem .5rem;border-radius:999px;background:linear-gradient(90deg,#fffaf0,#f3e6c8);box-shadow:0 .14em 0 #b79a63,0 .3em .45em rgba(0,0,0,.18),inset 0 .1em 0 rgba(255,255,255,.7)}
+.cheer svg{width:1.3rem;height:1.3rem;flex:none}
+.bar{position:relative;flex:1;width:.8rem;border-radius:99px;background:#e2d6b6;overflow:hidden;box-shadow:inset 0 2px 3px rgba(0,0,0,.2)}
+.bar i{position:absolute;inset:0;border-radius:99px;transform-origin:bottom;background:linear-gradient(90deg,#8be6a3,#2c8a49);transition:transform 200ms ease-out}
+.bar[data-low="1"] i{background:linear-gradient(90deg,#ffb3c1,#e0526f)}
 .spacer{flex:1}
-.pause{margin-left:auto;order:2;pointer-events:auto;width:3.5rem;height:3.5rem;border-radius:50%;border:0;padding:0;display:grid;place-items:center;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .2em 0 #b79a63,0 .4em .6em rgba(0,0,0,.2),inset 0 .12em 0 rgba(255,255,255,.7);cursor:pointer}
+.pause{margin-left:auto;pointer-events:auto;width:2.8rem;height:2.8rem;border-radius:50%;border:0;padding:0;display:grid;place-items:center;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .2em 0 #b79a63,0 .4em .6em rgba(0,0,0,.2),inset 0 .12em 0 rgba(255,255,255,.7);cursor:pointer}
 .pause:active{transform:translateY(.15em)}
 .pause:focus-visible{outline:3px solid #1f6feb;outline-offset:3px}
 .banner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);z-index:4;font:800 clamp(2.4rem,9cqmin,5rem)/1 var(--display);pointer-events:none;--st-fill:linear-gradient(180deg,#fff2a8 0%,#f8bd1c 46%,#b3600a 100%);--st-edge:#7a3a05}
@@ -139,8 +142,8 @@ body{height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-righ
 .hint svg{width:2em;height:2em;flex:none}
 @keyframes nudge{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
 .picks{position:absolute;left:max(12px,env(safe-area-inset-left));bottom:max(10px,env(safe-area-inset-bottom));display:flex;gap:.5rem;z-index:3}
-.pick{width:4rem;height:4rem;border-radius:50%;border:3px solid transparent;padding:6px;cursor:pointer;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .2em 0 #b79a63,0 .4em .6em rgba(0,0,0,.25),inset 0 .12em 0 rgba(255,255,255,.7)}
-.pick svg{width:100%;height:100%;display:block;overflow:visible}
+.pick{display:flex;flex-direction:column;align-items:center;gap:.1rem;min-width:4.4rem;border-radius:1.5rem;border:3px solid transparent;padding:.3rem .55rem .35rem;font:800 .72rem/1 var(--display);color:#4a2b0f;cursor:pointer;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .2em 0 #b79a63,0 .4em .6em rgba(0,0,0,.25),inset 0 .12em 0 rgba(255,255,255,.7)}
+.pick svg{width:2.5rem;height:2.5rem;display:block;overflow:visible}
 .pick[aria-pressed="true"]{border-color:#3fbf68;box-shadow:0 .2em 0 #1b5c32,0 0 0 4px rgba(63,191,104,.35),0 .4em .6em rgba(0,0,0,.25),inset 0 .12em 0 rgba(255,255,255,.7)}
 .pick:focus-visible{outline:3px solid #1f6feb;outline-offset:3px}
 .ready{display:none;position:absolute;left:max(14px,env(safe-area-inset-left));bottom:calc(12cqh + 12px);width:54px;height:54px;border-radius:50%;z-index:3;pointer-events:none;background:conic-gradient(#3fbf68 var(--pct,100%),rgba(255,255,255,.55) 0);padding:5px;box-shadow:0 .2em .4em rgba(0,0,0,.2)}
@@ -148,12 +151,14 @@ body{height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-righ
 .ready svg{position:absolute;inset:9px;width:36px;height:36px;overflow:visible}
 .ready[data-ready="0"] svg{opacity:.45}
 html[data-calm="1"] .hint{animation:none}
-.cheer{order:3;flex:1 1 100%;max-width:none}
+.game[data-bonus] .cheer,.game[data-bonus] .picks{display:none}.game[data-bonus] .hint{bottom:19cqh}
 html[data-calm="1"] *{animation:none!important;transition:none!important}
 .char{width:clamp(120px,min(72cqw,46cqh),420px)}
   .char+.char{margin-left:-22cqw}
   .sun{top:13cqh;right:4cqw}
   .logo{top:2.5cqh}
+.card .steps{flex-wrap:nowrap;gap:.35rem;margin:.3rem 0}.card .step{flex:1;min-width:0;width:auto;padding:.4rem .3rem;font-size:.74rem;line-height:1.15}.card .step svg{width:2.1rem;height:2.1rem;margin-bottom:.15rem}
+.lg{margin:.6rem 0 .25rem;font:800 .95rem/1.1 var(--display);color:#7a3a05;text-align:left}
 .xbtn{position:absolute;top:-.8rem;right:-.4rem;z-index:3;width:2.9rem;height:2.9rem;padding:0;border-radius:50%;border:3px solid #fff7e3;background:linear-gradient(180deg,#ff7d6d,#d6392b);box-shadow:0 .14em 0 #8f241a,0 .3em .5em rgba(0,0,0,.35);cursor:pointer;display:grid;place-items:center}.xbtn svg{width:1.4rem;height:1.4rem}.xbtn:active{transform:translateY(.1em)}.xbtn:focus-visible{outline:3px solid #1f6feb;outline-offset:3px}.xbtn[hidden]{display:none}
 .tl{display:grid;gap:.35rem;margin:.3rem 0 .2rem}.tl.two{grid-template-columns:1fr 1fr}
 .ti{display:flex;align-items:center;gap:.5em;padding:.3em .55em;border-radius:.9em;background:#fff7e3;text-align:left;box-shadow:inset 0 0 0 2px #ead9ae}.ti svg{width:1.7rem;height:1.7rem;flex:none}.ti b{display:block;font:800 .9rem/1.1 var(--display);color:#4a2b0f}.ti i{display:block;font:700 .72rem/1.15 var(--body);font-style:normal;color:var(--muted)}
@@ -252,16 +257,15 @@ html[data-dlg] .title *,html[data-dlg] .title *::before,html[data-dlg] .title *:
 <section class="game" id="game" hidden aria-label="Stage 1, Sandy Snack Shore">
 <canvas id="cv" aria-hidden="true"></canvas>
 <div class="hud">
-<span class="pill" id="waveBox"><span id="waveTxt">Wave 1 / 8</span></span>
-<span class="pill" title="Golden Pineapples"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg><span id="goldTxt">0</span></span>
-<div class="cheer" role="img" aria-label="Stand cheer"><span aria-hidden="true">Cheer</span><div class="bar" data-low="0"><i id="cheerFill"></i></div></div>
-<button class="pause" id="bPause" type="button" aria-label="Pause"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="2" fill="#4a2b0f"/><rect x="14" y="4" width="5" height="16" rx="2" fill="#4a2b0f"/></svg></button>
+<div class="hrow"><span class="pill" id="waveBox"><span id="waveTxt">Wave 1 / 8</span></span><span class="pill sm" title="Penguins left"><small>Left</small><b id="leftTxt">0</b></span><span class="pill sm" title="Hits in a row"><small>Combo</small><b id="comboTxt">0</b></span><button class="pause" id="bPause" type="button" aria-label="Pause"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="2" fill="#4a2b0f"/><rect x="14" y="4" width="5" height="16" rx="2" fill="#4a2b0f"/></svg></button></div>
+<div class="hrow"><span class="pill sm" title="Golden Pineapples this stage"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg><b id="goldTxt">0</b></span><span class="pill sm" title="Banked Golden Pineapples"><small>Bank</small><b id="bankTxt">0</b></span><span class="pill sm" title="Trophies collected"><small>Cups</small><b id="cupsTxt">0/10</b></span></div>
 </div>
+<div class="cheer" role="img" aria-label="Stand cheer"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 54C8 36 8 14 22 12c6 0 9 4 10 8 1-4 4-8 10-8 14 2 14 24-10 42Z" fill="#e8392d" stroke="#fff7e3" stroke-width="3"/></svg><div class="bar" data-low="0"><i id="cheerFill"></i></div></div>
 <div class="banner" id="banner" hidden></div>
 <div class="hint" id="hint"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 56C16 40 24 24 44 12" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round"/><path d="M34 10l14 0-2 14" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Flick up from the bottom toward a penguin!</span></div>
 <div class="picks" role="group" aria-label="Pineapple type">
-<button class="pick" type="button" data-t="classic" aria-pressed="true" aria-label="Classic pineapple" title="Classic (1)"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg></button>
-<button class="pick" type="button" data-t="lobber" aria-pressed="false" aria-label="Lobber pineapple" title="Lobber (2)"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lo-art"/></svg></button>
+<button class="pick" type="button" data-t="classic" aria-pressed="true" aria-label="Classic pineapple" title="Classic (key 1): quick throw at one penguin"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg><span>Classic</span></button>
+<button class="pick" type="button" data-t="lobber" aria-pressed="false" aria-label="Lobber pineapple" title="Lobber (key 2): slower, splashes nearby penguins"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lo-art"/></svg><span>Lobber</span></button>
 </div>
 <div class="ready" id="ready" data-ready="1" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#lp-art"/></svg></div>
 <div class="card-wrap" id="gcw" hidden>
@@ -289,6 +293,10 @@ html[data-dlg] .title *,html[data-dlg] .title *::before,html[data-dlg] .title *:
 <div class="step"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg>A pineapple flies and sends it home giggling</div>
 <div class="step"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 54C8 36 8 14 22 12c6 0 9 4 10 8 1-4 4-8 10-8 14 2 14 24-10 42Z" fill="#e8392d" stroke="#fff7e3" stroke-width="3"/></svg>Keep your fruit stand cheerful!</div>
 </div>
+<h3 class="lg">Your pineapples (pick them at the bottom left)</h3>
+<div class="tl"><div class="ti"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg><span><b>Classic</b><i>Yellow. A quick throw at one penguin.</i></span></div><div class="ti"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lo-art"/></svg><span><b>Lobber</b><i>Orange. Slower, but splashes nearby penguins too.</i></span></div></div>
+<h3 class="lg">Pickups on the table (tap them!)</h3>
+<div class="tl"><div class="ti"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="#5cc84a" stroke="#fff7e3" stroke-width="3"/><path d="M22 7L12 22h7l-2 11 11-16h-7z" fill="#fff"/></svg><span><b>Zippy</b><i>Green. Super-fast throws for 8 seconds.</i></span></div><div class="ti"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="#9b5de5" stroke="#fff7e3" stroke-width="3"/><path d="M20 8l3.5 8 8.5.8-6.4 5.7 1.9 8.4-7.5-4.5-7.5 4.5 1.9-8.4L8 16.8l8.5-.8z" fill="#fff"/></svg><span><b>Mega</b><i>Purple. Every throw splashes for 8 seconds.</i></span></div><div class="ti"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="#ff6f9c" stroke="#fff7e3" stroke-width="3"/><path d="M20 31C8 23 9 13 15 12c3-.4 4.5 1.6 5 3 .5-1.4 2-3.4 5-3 6 1 7 11-5 19z" fill="#fff"/></svg><span><b>Cheer up</b><i>Pink. Fills the cheer meter.</i></span></div><div class="ti"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="#5bb8f0" stroke="#fff7e3" stroke-width="3"/><path d="M20 8v24M9.6 14l20.8 12M9.6 26l20.8-12" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg><span><b>Brrr</b><i>Blue. Penguins walk slowly for 6 seconds.</i></span></div><div class="ti"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M9 6h22v8c0 8-5 12-11 14-6-2-11-6-11-14Z" fill="#f8bd1c" stroke="#a8700f" stroke-width="2.5" stroke-linejoin="round"/><path d="M9 10H4c0 6 2 9 6 10M31 10h5c0 6-2 9-6 10" fill="none" stroke="#a8700f" stroke-width="2.5" stroke-linecap="round"/><path d="M16 28h8v5h5v3H11v-3h5Z" fill="#d99a14" stroke="#a8700f" stroke-width="2"/></svg><span><b>Trophy</b><i>Gold cup. Tap it to collect 2 Golden Pineapples.</i></span></div><div class="ti"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 35V22M20 22L11 7M20 22L29 7" stroke="#16787a" stroke-width="4.5" fill="none" stroke-linecap="round"/><circle cx="11" cy="7" r="3.5" fill="#2fb3aa"/><circle cx="29" cy="7" r="3.5" fill="#2fb3aa"/></svg><span><b>Auto Slingshot</b><i>Teal. Bought in the Shop. It tosses on its own at the penguin with the teal marker, so aim at a different one.</i></span></div></div>
 </template>
 <template id="t-ach">
 <p class="note" id="trNote" role="status"></p>
