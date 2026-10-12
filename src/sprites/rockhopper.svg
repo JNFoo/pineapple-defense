@@ -1,0 +1,53 @@
+<svg class="art-svg" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+<defs>
+<radialGradient id="rh-body" cx="36%" cy="30%" r="82%"><stop offset="0" style="stop-color:var(--pg-hi)"/><stop offset=".5" style="stop-color:var(--pg-mid)"/><stop offset="1" style="stop-color:var(--pg-lo)"/></radialGradient>
+<linearGradient id="rh-flip" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--pg-mid)"/><stop offset="1" style="stop-color:var(--pg-lo)"/></linearGradient>
+<radialGradient id="rh-shade" cx="72%" cy="88%" r="62%"><stop offset="0" stop-color="#0d0a24" stop-opacity=".45"/><stop offset="1" stop-color="#0d0a24" stop-opacity="0"/></radialGradient>
+<linearGradient id="rh-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<radialGradient id="rh-rim" cx="70%" cy="50%" r="60%"><stop offset="0" stop-color="#bfc0ff" stop-opacity=".5"/><stop offset="1" stop-color="#bfc0ff" stop-opacity="0"/></radialGradient>
+<radialGradient id="rh-belly" cx="38%" cy="28%" r="85%"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#fff4e0"/><stop offset="1" stop-color="#e8d3ae"/></radialGradient>
+<linearGradient id="rh-crest" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3a0"/><stop offset=".5" stop-color="#ffd21f"/><stop offset="1" stop-color="#c98a00"/></linearGradient>
+<linearGradient id="rh-beak" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc872"/><stop offset=".5" stop-color="#ff9a2f"/><stop offset="1" stop-color="#c4560a"/></linearGradient>
+<clipPath id="rh-clip"><path d="M100 44c34 0 56 28 56 70 0 38-22 66-56 66s-56-28-56-66c0-42 22-70 56-70Z"/></clipPath>
+</defs>
+<ellipse cx="76" cy="184" rx="21" ry="9" fill="url(#rh-beak)"/>
+<ellipse cx="124" cy="184" rx="21" ry="9" fill="url(#rh-beak)"/>
+<path d="M64 188q4-5 8 0M80 190q4-5 8 0M112 190q4-5 8 0M128 188q4-5 8 0" fill="none" stroke="#c4560a" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+<path class="flip-up" d="M54 120C34 120 16 100 12 74C10 68 17 64 22 68C38 80 54 92 62 108Z" fill="url(#rh-flip)"/>
+<path d="M148 112C166 124 172 148 168 164C158 160 148 148 144 134Z" fill="url(#rh-flip)"/>
+<path d="M100 44c34 0 56 28 56 70 0 38-22 66-56 66s-56-28-56-66c0-42 22-70 56-70Z" fill="url(#rh-body)"/>
+<g clip-path="url(#rh-clip)">
+<path d="M100 94c22 0 36 18 36 42 0 26-16 46-36 46s-36-20-36-46c0-24 14-42 36-42Z" fill="url(#rh-belly)"/>
+<rect width="200" height="200" fill="url(#rh-shade)"/>
+<ellipse cx="150" cy="116" rx="13" ry="44" transform="rotate(-14 150 116)" fill="url(#rh-rim)"/>
+</g>
+<ellipse cx="66" cy="92" rx="10" ry="24" transform="rotate(16 66 92)" fill="url(#rh-shine)" opacity=".55"/>
+<circle cx="72" cy="64" r="4" fill="#fff" opacity=".85"/>
+<g class="crest crest-l" fill="url(#rh-crest)" stroke="#b87800" stroke-opacity=".45" stroke-width="1">
+<path d="M68 70C54 66 40 54 30 34C48 40 62 50 74 62Z"/>
+<path d="M66 76C48 76 32 70 18 56C36 54 54 58 72 68Z"/>
+<path d="M72 66C66 54 62 40 64 24C72 34 80 46 82 60Z"/>
+</g>
+<g class="crest crest-r" fill="url(#rh-crest)" stroke="#b87800" stroke-opacity=".45" stroke-width="1" transform="rotate(9 132 70)">
+<path d="M132 70C146 66 160 54 170 34C152 40 138 50 126 62Z"/>
+<path d="M134 76C152 76 168 70 182 56C164 54 146 58 128 68Z"/>
+<path d="M128 66C134 54 138 40 136 24C128 34 120 46 118 60Z"/>
+</g>
+<g class="face">
+<ellipse class="cheek" cx="58" cy="104" rx="9" ry="5.5" fill="#ff7f8f" opacity=".5"/>
+<ellipse class="cheek" cx="142" cy="104" rx="9" ry="5.5" fill="#ff7f8f" opacity=".5"/>
+<g class="eyes">
+<ellipse cx="78" cy="84" rx="11" ry="13" fill="#fff" stroke="#2a120d" stroke-width="2.2"/>
+<ellipse cx="122" cy="84" rx="11" ry="13" fill="#fff" stroke="#2a120d" stroke-width="2.2"/>
+<g class="pupils">
+<circle cx="78" cy="86" r="6.4" fill="#1d1410"/><circle cx="122" cy="86" r="6.4" fill="#1d1410"/>
+<circle cx="80.6" cy="83" r="2.3" fill="#fff"/><circle cx="124.6" cy="83" r="2.3" fill="#fff"/>
+</g>
+</g>
+<path d="M91 98c3-6 15-6 18 0 1 6-3 14-9 15-6-1-10-9-9-15Z" fill="url(#rh-beak)" stroke="#a84a08" stroke-width="1.2" stroke-opacity=".5"/>
+<ellipse cx="96" cy="99" rx="3" ry="1.6" fill="#fff" opacity=".7"/>
+<path class="m-smile" d="M92 121q8 8 16 0" fill="none" stroke="#2a120d" stroke-width="3.6" stroke-linecap="round"/>
+<ellipse class="m-o" cx="100" cy="123" rx="5" ry="6" fill="#5a1710" stroke="#2a120d" stroke-width="2.2"/>
+<path class="m-grin" d="M88 118q12 18 24 0Z" fill="#7a1f14" stroke="#2a120d" stroke-width="2.6" stroke-linejoin="round"/>
+</g>
+</svg>

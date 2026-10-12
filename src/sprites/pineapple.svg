@@ -1,0 +1,41 @@
+<svg class="art-svg" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+<defs>
+<radialGradient id="pa-body" cx="36%" cy="30%" r="82%"><stop offset="0" style="stop-color:var(--pa-hi)"/><stop offset=".5" style="stop-color:var(--pa-mid)"/><stop offset="1" style="stop-color:var(--pa-lo)"/></radialGradient>
+<radialGradient id="pa-shade" cx="72%" cy="88%" r="62%"><stop offset="0" stop-color="#3a1208" stop-opacity=".4"/><stop offset="1" stop-color="#3a1208" stop-opacity="0"/></radialGradient>
+<linearGradient id="pa-shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<radialGradient id="pa-rim" cx="70%" cy="50%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity=".4"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<linearGradient id="pa-leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fd68f"/><stop offset="1" stop-color="#2f8f4c"/></linearGradient>
+<pattern id="pa-lat" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0H26M0 0V26" fill="none" stroke="#a85a07" stroke-opacity=".24" stroke-width="2.2"/></pattern>
+<clipPath id="pa-clip"><path d="M100 58c37 0 64 26 64 66 0 34-27 56-64 56s-64-22-64-56c0-40 27-66 64-66Z"/></clipPath>
+</defs>
+<g class="crown">
+<path d="M108 72C124 58 142 54 158 58C150 70 130 76 108 78Z" fill="url(#pa-leaf)"/>
+<path d="M94 70C78 52 64 40 44 36C50 54 66 68 92 76Z" fill="url(#pa-leaf)"/>
+<path d="M104 70C106 50 116 32 130 22C130 40 118 58 104 72Z" fill="url(#pa-leaf)"/>
+<path d="M96 70C88 50 80 30 70 16C86 22 98 42 100 68Z" fill="url(#pa-leaf)"/>
+<path d="M100 70C90 46 94 22 104 4C110 24 110 48 100 70Z" fill="url(#pa-leaf)"/>
+</g>
+<path d="M100 58c37 0 64 26 64 66 0 34-27 56-64 56s-64-22-64-56c0-40 27-66 64-66Z" fill="url(#pa-body)"/>
+<g clip-path="url(#pa-clip)">
+<rect width="200" height="200" fill="url(#pa-lat)"/>
+<rect width="200" height="200" fill="url(#pa-shade)"/>
+<ellipse cx="156" cy="124" rx="14" ry="46" transform="rotate(-14 156 124)" fill="url(#pa-rim)"/>
+</g>
+<ellipse cx="60" cy="100" rx="11" ry="26" transform="rotate(16 60 100)" fill="url(#pa-shine)" opacity=".7"/>
+<circle cx="66" cy="80" r="4.5" fill="#fff" opacity=".85"/>
+<g class="face">
+<ellipse class="cheek" cx="58" cy="142" rx="9" ry="5.5" fill="#ff6f86" opacity=".42"/>
+<ellipse class="cheek" cx="142" cy="142" rx="9" ry="5.5" fill="#ff6f86" opacity=".42"/>
+<g class="eyes">
+<ellipse cx="80" cy="118" rx="11" ry="13" fill="#fff" stroke="#2a120d" stroke-width="2.2"/>
+<ellipse cx="120" cy="118" rx="11" ry="13" fill="#fff" stroke="#2a120d" stroke-width="2.2"/>
+<g class="pupils">
+<circle cx="80" cy="120" r="6.4" fill="#1d1410"/><circle cx="120" cy="120" r="6.4" fill="#1d1410"/>
+<circle cx="82.6" cy="117" r="2.3" fill="#fff"/><circle cx="122.6" cy="117" r="2.3" fill="#fff"/>
+</g>
+</g>
+<path class="m-smile" d="M88 150q12 12 24 0" fill="none" stroke="#2a120d" stroke-width="4.5" stroke-linecap="round"/>
+<ellipse class="m-o" cx="100" cy="153" rx="6" ry="7.5" fill="#5a1710" stroke="#2a120d" stroke-width="2.4"/>
+<path class="m-grin" d="M84 146q16 22 32 0Z" fill="#7a1f14" stroke="#2a120d" stroke-width="3" stroke-linejoin="round"/>
+</g>
+</svg>

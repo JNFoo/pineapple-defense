@@ -196,3 +196,14 @@ The game reserves slots for hidden areas and hidden enemies, plus unlock rules. 
 - Names and gimmicks for the five bosses and the five stage titles.
 - Which proposed pineapples and penguins to keep, change or drop.
 - Upgrade shop between stages: what can be bought and how it scales (including the rail gun's place in the order).
+
+## Title screen and logo (alpha 2026.10.12.1556)
+Built and playable in `index.html`. It is made from `src/` by `build.py` (never edit `index.html` by hand).
+- **Scene:** a pineapple and a Rockhopper penguin face each other on a beach-meets-ice shoreline, with a palm tree, a fruit stand, and the silly "BRRR IS BEST!" sign with two cartoon no-pineapple and no-palm posters.
+- **Logo:** sticker-style "Pineapple" lettering with a blue "Defense" pill, flanked by a mini pineapple and a mini Rockhopper. Exported as `assets/logo.png` (transparent).
+- **Characters:** original sprites (`src/sprites/`), glossy toy style, with a lopsided crest on the penguin. Tap or poke them for squish, giggles and "wheee!" or "no thanks!" pops. Their eyes follow the pointer.
+- **Menu:** Play (shows a "coming soon" card with the envy premise), Continue (greyed until saves exist), How to play, Settings (future items greyed), Calm mode (saved; also follows the device's reduced-motion setting).
+- **Tech:** one offline file, strict CSP, subsetted fonts (Bricolage Grotesque and Figtree, SIL OFL, licenses in `src/fonts/`), vendored `sticker-text` from JS-modules (MIT).
+
+## Change log
+- 2026.10.12.1556: first title screen, logo and original pineapple and Rockhopper sprites.

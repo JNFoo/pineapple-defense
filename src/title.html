@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="color-scheme" content="only light">
+<meta name="theme-color" content="#b5d6e8">
+<meta name="description" content="Pineapple Defense: flick pineapples at silly, jealous penguins. A free game for kids of all ages.">
+<title>Pineapple Defense</title>
+<style>
+/*{{FONTS}}*/
+/*{{STICKER_CSS}}*/
+:root{
+  --ink:#2a120d;--cream:#fff7e3;--panel:#fbfcfc;--fg:#162226;--muted:#55656b;--line:#d0dadd;
+  --sky-top:#b5d6e8;--sky-bot:#eef5f1;
+  --pa-hi:#ffeaa0;--pa-mid:#f8bd1c;--pa-lo:#a85a07;--pa-glow:#ffd24a;
+  --pg-hi:#6b6aab;--pg-mid:#383767;--pg-lo:#171538;--pg-glow:#9a98ff;
+  --display:'Bricolage Grotesque',system-ui,sans-serif;--body:'Figtree',system-ui,sans-serif;
+  --menu-h:176px;--floor-h:calc(var(--menu-h) + 8vh);
+  color-scheme:only light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--sky-top);font-family:var(--body);color:var(--fg);touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.title{position:fixed;inset:0;overflow:hidden;background:linear-gradient(180deg,var(--sky-top) 0%,#cfe6ec 50%,var(--sky-bot) 80%)}
+.title::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;background:radial-gradient(ellipse at 50% 55%,transparent 62%,rgba(42,18,13,.2) 100%)}
+.sun{position:absolute;right:7vw;top:7vh;width:clamp(70px,15vmin,160px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff3c4 0 36%,#ffe08a 37% 60%,rgba(255,217,138,.32) 61% 100%);animation:breathe 5.2s ease-in-out infinite}
+.cloud{position:absolute;left:-30vw;width:clamp(110px,24vmin,260px);opacity:.85;animation:drift 110s linear infinite}
+.c1{top:22vh;animation-delay:-20s}.c2{top:36vh;width:clamp(80px,17vmin,190px);opacity:.7;animation-duration:150s;animation-delay:-90s}.c3{top:12vh;width:clamp(90px,20vmin,220px);opacity:.8;animation-duration:130s;animation-delay:-55s}
+.floor{position:absolute;left:0;right:0;bottom:0;height:var(--floor-h);background:linear-gradient(90deg,#e2cb8f 0%,#ecdfb4 42%,#eef4f6 58%,#f9fcfd 100%)}
+.floor::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(90,60,20,0),rgba(90,60,20,.12))}
+.land{position:absolute;left:0;bottom:calc(var(--floor-h) - 2px);width:100%;height:auto;display:block}
+.poster{transform-box:fill-box;transform-origin:50% 0;animation:flap 4.2s ease-in-out infinite alternate}
+.poster:nth-of-type(2){animation-duration:3.6s}.poster:nth-of-type(3){animation-duration:4.9s}
+
+.logo{position:absolute;top:clamp(8px,2.6vh,30px);left:50%;transform:translateX(-50%);margin:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:clamp(2.1rem,min(12.5vw,10.5vh),5.8rem);line-height:1;letter-spacing:-.02em;white-space:nowrap;z-index:3}
+.logo .mini{width:1.45em;height:1.45em;flex:none;position:relative;z-index:2;overflow:visible;filter:drop-shadow(0 .05em 0 rgba(0,0,0,.16))}
+.mini-l{margin-inline:-.1em -.5em}.mini-r{margin-inline:-.4em -.1em;transform:rotate(4deg)}
+.words{display:flex;flex-direction:column;align-items:flex-start;position:relative;z-index:1}
+.logo-1{font-weight:800;font-size:1em;--st-fill:linear-gradient(180deg,#fff2a8 0%,#f8bd1c 46%,#b3600a 100%);--st-edge:#7a3a05;--st-outline:#fff7e3}
+.logo-2{font-size:.4em;margin:.4em 0 0 .7em;background:linear-gradient(180deg,#7fd9f5,#2a8fc4);box-shadow:0 .12em 0 #17608a,0 .3em .5em rgba(0,0,0,.22),inset 0 .08em 0 rgba(255,255,255,.4)}
+.spark{position:absolute;width:.34em;height:.34em;background:#ffd23f;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:twinkle 2.8s ease-in-out infinite;z-index:3}
+.s1{left:3%;top:-6%}.s2{right:2%;top:2%;animation-delay:-.9s;width:.26em;height:.26em}.s3{left:46%;top:-14%;animation-delay:-1.7s;width:.22em;height:.22em}
+
+.duo{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--menu-h) + 2vh);display:flex;align-items:flex-end;justify-content:center;z-index:2}
+.char{position:relative;width:clamp(120px,min(38vw,43vh),400px);aspect-ratio:1;cursor:pointer;outline:none;--bob:3.4s;--blink:4.6s}
+.char+.char{margin-left:-3vw;--bob:3.8s;--blink:5.1s}
+.char:focus-visible{outline:3px solid #1f6feb;outline-offset:2px;border-radius:12px}
+.ground{position:absolute;left:18%;right:18%;bottom:3%;height:6%;border-radius:50%;background:rgba(42,18,13,.26);filter:blur(3px)}
+.aura{position:absolute;inset:-4%;border-radius:50%;background:radial-gradient(circle,var(--glow) 0,transparent 66%);opacity:.26;animation:aura 3.2s ease-in-out infinite}
+.bob{position:absolute;inset:0;animation:bob var(--bob) ease-in-out infinite}
+.wig{position:absolute;inset:0;transform-origin:50% 90%;animation:wiggle 9s ease-in-out 3s infinite}
+.pg .wig{animation-delay:6s}
+.art{position:absolute;inset:0;transform-origin:50% 90%}
+.art-svg{width:100%;height:100%;display:block;overflow:visible}
+.eyes{transform-box:fill-box;transform-origin:50% 50%;animation:blink var(--blink) infinite}
+.pupils{transition:transform 90ms ease-out}
+.flip-up{transform-box:fill-box;transform-origin:90% 90%;animation:wave 2.6s ease-in-out infinite alternate}
+.crest-r{transform-origin:132px 70px}
+.face .m-o,.face .m-grin{display:none}
+.char[data-mood="wow"] .m-smile,.char[data-mood="giggle"] .m-smile{display:none}
+.char[data-mood="wow"] .m-o{display:block}
+.char[data-mood="giggle"] .m-grin{display:block}
+.char[data-mood="giggle"] .cheek,.char[data-mood="wow"] .cheek{opacity:.75}
+.ring{position:absolute;inset:6%;border:4px solid var(--glow);border-radius:50%;pointer-events:none}
+.pop{position:absolute;pointer-events:none;z-index:5;white-space:nowrap;font:800 clamp(1.3rem,4vmin,2.3rem)/1 var(--display);color:var(--c);text-shadow:-2px 0 var(--cream),2px 0 var(--cream),0 -2px var(--cream),0 2px var(--cream),-2px -2px var(--cream),2px 2px var(--cream),-2px 2px var(--cream),2px -2px var(--cream),0 0 16px var(--glow)}
+.bit{position:absolute;pointer-events:none;z-index:5}
+
+.menu{position:absolute;left:0;right:0;bottom:max(24px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:.7rem;padding-inline:12px;z-index:4}
+.row{display:flex;flex-wrap:wrap;justify-content:center;gap:.55rem}
+.btn{font:800 1rem/1 var(--display);min-height:56px;padding:.7em 1.2em .78em;border:0;border-radius:999px;color:#4a2b0f;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .2em 0 #b79a63,0 .45em .6em rgba(0,0,0,.2),inset 0 .12em 0 rgba(255,255,255,.7);text-shadow:0 1px 0 rgba(255,255,255,.6);cursor:pointer;transition:transform 80ms,box-shadow 80ms;display:inline-flex;align-items:center;gap:.5em}
+.btn:active{transform:translateY(.15em);box-shadow:0 .05em 0 #b79a63,0 .2em .4em rgba(0,0,0,.2),inset 0 .12em 0 rgba(255,255,255,.7)}
+.btn:focus-visible{outline:3px solid #1f6feb;outline-offset:3px}
+.btn[disabled]{opacity:.55;filter:saturate(.5);cursor:default}
+.btn[disabled]:active{transform:none}
+.btn-play{font-size:clamp(1.5rem,5vmin,2.3rem);min-height:76px;padding:.5em 1.9em .58em;color:#fff;letter-spacing:.06em;background:linear-gradient(180deg,#62c981,#2c8a49);box-shadow:0 .16em 0 #1b5c32,0 .4em .6em rgba(0,0,0,.25),inset 0 .1em 0 rgba(255,255,255,.35);text-shadow:0 .06em 0 rgba(0,0,0,.28)}
+.btn-play:active{box-shadow:0 .04em 0 #1b5c32,0 .2em .4em rgba(0,0,0,.25),inset 0 .1em 0 rgba(255,255,255,.35)}
+.dot{width:.7em;height:.7em;border-radius:50%;background:#b9c4c8;box-shadow:inset 0 .1em .15em rgba(0,0,0,.25)}
+#bCalm[aria-pressed="true"] .dot{background:#3fbf68;box-shadow:0 0 .5em #7ee89c}
+.legal{position:absolute;left:0;right:0;bottom:4px;margin:0;text-align:center;font:700 .68rem var(--body);color:#3b4f4a;opacity:.85;z-index:4;padding-inline:8px}
+
+.card-wrap{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(circle at 50% 45%,rgba(255,210,74,.28),rgba(30,20,40,.62))}
+.card-wrap[hidden]{display:none}
+.card{width:min(94vw,520px);max-height:90vh;overflow:auto;background:var(--panel);border:3px solid #f8bd1c;border-radius:20px;padding:1.2rem 1.3rem 1.3rem;text-align:center;box-shadow:0 0 0 6px rgba(255,210,74,.35),0 30px 90px rgba(0,0,0,.45);animation:slam 520ms cubic-bezier(.2,.9,.3,1.1)}
+.card h2{margin:.1rem 0 .6rem;font:800 clamp(1.5rem,5vmin,2rem)/1.1 var(--display);color:#7a3a05}
+.card p{margin:.5rem 0;font:600 1.05rem/1.4 var(--body);color:var(--fg)}
+.card .btn{margin-top:.8rem}
+.steps{display:flex;gap:.6rem;justify-content:center;margin:.6rem 0 .2rem;flex-wrap:wrap}
+.step{flex:1 1 120px;max-width:150px;padding:.5rem;border-radius:14px;background:#fff7e3;border:1px solid #e4d3a6;font:700 .92rem/1.25 var(--body)}
+.step svg{width:64px;height:64px;display:block;margin:0 auto .3rem}
+.soon{display:block;margin:.35rem 0;padding:.55rem .8rem;border-radius:12px;background:#eef2f3;color:var(--muted);font:700 .98rem var(--body)}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes wiggle{0%,86%,100%{transform:rotate(0)}88%{transform:rotate(-5deg)}90%{transform:rotate(5deg)}92%{transform:rotate(-3deg)}94%{transform:rotate(2deg)}}
+@keyframes blink{0%,90%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+@keyframes aura{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(170vw)}}
+@keyframes flap{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
+@keyframes twinkle{0%,100%{transform:scale(.4) rotate(0);opacity:.5}50%{transform:scale(1) rotate(25deg);opacity:1}}
+@keyframes wave{from{transform:rotate(-5deg)}to{transform:rotate(7deg)}}
+@keyframes slam{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+html[data-calm="1"] *{animation:none!important;transition:none!important}
+@media (max-aspect-ratio:3/4){
+  :root{--menu-h:232px;--floor-h:calc(var(--menu-h) + 24vh)}
+  .char{width:clamp(120px,min(47vw,36vh),400px)}
+  .char+.char{margin-left:-7vw}
+  .duo{bottom:calc(var(--menu-h) + 5vh)}
+  .sun{top:20vh;right:6vw}
+  .logo{top:3vh}
+}
+@media (max-height:520px){:root{--menu-h:140px}.btn-play{min-height:60px}.btn{min-height:48px}}
+</style>
+</head>
+<body>
+<noscript>Pineapple Defense needs JavaScript to run. Sorry!</noscript>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><!--{{logo-defs}}--></svg>
+<main class="title" id="title">
+<div class="sun" aria-hidden="true"></div>
+<svg class="cloud c1" viewBox="0 0 120 50" aria-hidden="true"><ellipse cx="60" cy="38" rx="52" ry="10" fill="#fff"/><circle cx="42" cy="28" r="16" fill="#fff"/><circle cx="68" cy="24" r="20" fill="#fff"/><circle cx="92" cy="32" r="12" fill="#fff"/></svg>
+<svg class="cloud c2" viewBox="0 0 120 50" aria-hidden="true"><ellipse cx="60" cy="38" rx="52" ry="10" fill="#fff"/><circle cx="42" cy="28" r="16" fill="#fff"/><circle cx="68" cy="24" r="20" fill="#fff"/><circle cx="92" cy="32" r="12" fill="#fff"/></svg>
+<svg class="cloud c3" viewBox="0 0 120 50" aria-hidden="true"><ellipse cx="60" cy="38" rx="52" ry="10" fill="#fff"/><circle cx="42" cy="28" r="16" fill="#fff"/><circle cx="68" cy="24" r="20" fill="#fff"/><circle cx="92" cy="32" r="12" fill="#fff"/></svg>
+<div class="floor"></div>
+<!--{{land}}-->
+<h1 class="logo" aria-label="Pineapple Defense">
+<svg class="mini mini-l" viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg>
+<span class="words"><span class="logo-1" id="logo1">Pineapple</span><span class="logo-2 sticker-pill">Defense</span></span>
+<svg class="mini mini-r" viewBox="0 0 100 100" aria-hidden="true"><use href="#lr-art"/></svg>
+<i class="spark s1"></i><i class="spark s2"></i><i class="spark s3"></i>
+</h1>
+<div class="duo">
+<div class="char pa" id="pa" role="button" tabindex="0" aria-label="Tickle the pineapple" data-mood="happy" style="--glow:var(--pa-glow)">
+<div class="aura"></div><div class="ground"></div>
+<div class="bob"><div class="wig"><div class="art"><!--{{pineapple}}--></div></div></div>
+</div>
+<div class="char pg" id="pg" role="button" tabindex="0" aria-label="Poke the penguin" data-mood="happy" style="--glow:var(--pg-glow)">
+<div class="aura"></div><div class="ground"></div>
+<div class="bob"><div class="wig"><div class="art"><!--{{rockhopper}}--></div></div></div>
+</div>
+</div>
+<nav class="menu" aria-label="Main menu">
+<button class="btn btn-play" id="bPlay" type="button">Play</button>
+<div class="row">
+<button class="btn" id="bCont" type="button" disabled title="No saved game yet">Continue</button>
+<button class="btn" id="bHow" type="button">How to play</button>
+<button class="btn" id="bSet" type="button">Settings</button>
+<button class="btn" id="bCalm" type="button" aria-pressed="false">Calm mode <span class="dot"></span></button>
+</div>
+</nav>
+<p class="legal">Alpha {{VERSION}} &middot; &copy; 2026 JNFoo. All rights reserved.</p>
+<div class="card-wrap" id="cw" hidden>
+<div class="card" role="dialog" aria-modal="true" aria-labelledby="cardTitle">
+<h2 id="cardTitle"></h2><div id="cardBody"></div>
+<button class="btn btn-play" id="cardOk" type="button" style="font-size:1.3rem;min-height:64px">Got it!</button>
+</div>
+</div>
+</main>
+<template id="t-play">
+<p>The penguins can&rsquo;t eat tropical fruit, and they can&rsquo;t visit the tropics. So they&rsquo;re a little jealous!</p>
+<p>Soon you&rsquo;ll flick pineapples at them from your fruit stand. Everyone goes home giggling. Nobody gets hurt!</p>
+</template>
+<template id="t-how">
+<div class="steps">
+<div class="step"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 56C16 40 24 24 44 12" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round"/><path d="M34 10l14 0-2 14" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>Flick up from the bottom toward a penguin</div>
+<div class="step"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg>A pineapple flies and sends it home giggling</div>
+<div class="step"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 54C8 36 8 14 22 12c6 0 9 4 10 8 1-4 4-8 10-8 14 2 14 24-10 42Z" fill="#e8392d" stroke="#fff7e3" stroke-width="3"/></svg>Keep your fruit stand cheerful!</div>
+</div>
+</template>
+<template id="t-set">
+<span class="soon">Tap-to-throw instead of flicking: coming soon</span>
+<span class="soon">Save code and save file: coming soon</span>
+<span class="soon">Sound and music: coming later</span>
+<p>Calm mode is on the main menu. It stops bobbing, confetti and squishing.</p>
+</template>
+<script>/*{{STICKER_JS}}*/</script>
+<script>
+(function(){
+'use strict';
+var root=document.documentElement,title=document.getElementById('title');
+function $(i){return document.getElementById(i)}
+function mk(c){var e=document.createElement('span');e.className=c;return e}
+try{StickerText.apply($('logo1'),{outline:'#fff7e3'})}catch(e){}
+
+var calm=false,btnCalm=$('bCalm');
+function setCalm(v,save){calm=v;root.setAttribute('data-calm',v?'1':'0');btnCalm.setAttribute('aria-pressed',v?'true':'false');
+  if(save){try{localStorage.setItem('pd-calm',v?'1':'0')}catch(e){}}}
+var stored=null;try{stored=localStorage.getItem('pd-calm')}catch(e){}
+var mql=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)');
+setCalm(stored==='1'||(stored===null&&!!(mql&&mql.matches)),false);
+btnCalm.addEventListener('click',function(){setCalm(!calm,true)});
+
+function mkChar(id,dx){var el=$(id);return{id:id,el:el,art:el.querySelector('.art'),pupils:el.querySelector('.pupils'),dx:dx,timer:0}}
+var chars=[mkChar('pa',3.4),mkChar('pg',-3.4)];
+function lookIdle(c){c.pupils.style.transform='translate('+c.dx+'px,.8px)'}
+function look(c,x,y){var r=c.el.getBoundingClientRect(),dx=x-(r.left+r.width/2),dy=y-(r.top+r.height*.52),d=Math.sqrt(dx*dx+dy*dy)||1,k=Math.min(1,d/140);
+  c.pupils.style.transform='translate('+(dx/d*4.6*k).toFixed(2)+'px,'+(dy/d*4.6*k).toFixed(2)+'px)'}
+chars.forEach(lookIdle);
+var px=0,py=0,pend=false,idleT=0;
+document.addEventListener('pointermove',function(e){px=e.clientX;py=e.clientY;if(!pend){pend=true;requestAnimationFrame(function(){pend=false;chars.forEach(function(c){look(c,px,py)})})}
+  clearTimeout(idleT);idleT=setTimeout(function(){chars.forEach(lookIdle)},2500)},{passive:true});
+
+function setMood(c,m,ms){c.el.setAttribute('data-mood',m);clearTimeout(c.timer);c.timer=setTimeout(function(){c.el.setAttribute('data-mood','happy')},ms)}
+var POP={pa:['wheee!','hehe!','yay!'],pg:['no thanks!','brrr!','hee hee!']};
+var COL={pa:{c:'#b86e00',bits:['#f8bd1c','#ffe58a','#7fd68f']},pg:{c:'#3b3a78',bits:['#ffffff','#cfe9f5','#8fc6e4']}};
+function press(c,e){
+  var o=chars[1-chars.indexOf(c)];
+  setMood(c,'giggle',650);setMood(o,'wow',700);
+  if(calm)return;
+  var tr=title.getBoundingClientRect(),r=c.el.getBoundingClientRect();
+  var cx=(e&&e.clientX!=null)?e.clientX:r.left+r.width/2,cy=(e&&e.clientY!=null)?e.clientY:r.top+r.height*.4;
+  var x=cx-tr.left,y=cy-tr.top;
+  var tilt=Math.max(-1,Math.min(1,(cx-(r.left+r.width/2))/(r.width/2)))*7;
+  c.art.animate([{transform:'rotate(0deg) scale(1,1)'},{transform:'rotate('+tilt.toFixed(1)+'deg) scale(1.09,0.88)',offset:.28},{transform:'rotate('+(-tilt*.35).toFixed(1)+'deg) scale(0.96,1.07)',offset:.62},{transform:'rotate(0deg) scale(1,1)'}],{duration:300,easing:'ease-out'});
+  var words=POP[c.id],p=mk('pop');p.textContent=words[Math.floor(Math.random()*words.length)];
+  p.style.cssText='left:'+(x+Math.random()*28-14)+'px;top:'+y+'px;--c:'+COL[c.id].c+';--glow:'+(c.id==='pa'?'#ffd24a':'#9a98ff');title.appendChild(p);
+  var rot=Math.random()*24-12;
+  p.animate([{transform:'translate(-50%,-50%) scale(.3) rotate('+rot+'deg)',opacity:0},{transform:'translate(-50%,-75%) scale(1.5) rotate('+rot+'deg)',opacity:1,offset:.18},{transform:'translate(-50%,-105%) scale(1) rotate('+rot*.4+'deg)',opacity:1,offset:.42},{transform:'translate(-50%,-300%) scale(.85)',opacity:0}],{duration:950,easing:'cubic-bezier(.2,.8,.3,1)'}).onfinish=function(){p.remove()};
+  var cols=COL[c.id].bits;
+  for(var i=0;i<10;i++){var k=i%3,s=4+Math.random()*6,b=mk('bit'),w=s,h=s,rad='50%',bg=cols[Math.floor(i/3)%3];
+    if(k===0){w=s*.75;h=s*1.25;rad='50% 50% 50% 50% / 62% 62% 38% 38%'}else if(k===1){w=s*1.2;h=s*.75;rad='2px';bg='#fff3cf'}else{w=3.2;h=5.6;bg='#4a2c18'}
+    b.style.cssText='left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;border-radius:'+rad+';background:'+bg;title.appendChild(b);
+    var a=Math.random()*Math.PI*2,dx=Math.cos(a)*74*(.45+Math.random()*.8),up=-(26+Math.random()*74*.85),dn=30+Math.random()*56,ro=Math.random()*540-270;
+    b.animate([{transform:'translate(-50%,-50%) rotate(0) scale(1)',opacity:1,easing:'cubic-bezier(.2,.7,.4,1)'},{transform:'translate(calc(-50% + '+dx*.6+'px),calc(-50% + '+up+'px)) rotate('+ro/2+'deg)',opacity:1,offset:.4,easing:'ease-in'},{transform:'translate(calc(-50% + '+dx*1.3+'px),calc(-50% + '+dn+'px)) rotate('+ro+'deg) scale(.5)',opacity:0}],{duration:650+Math.random()*450}).onfinish=(function(b){return function(){b.remove()}})(b)}
+  var rg=mk('ring');c.el.appendChild(rg);rg.animate([{transform:'scale(.75)',opacity:.85},{transform:'scale(1.7)',opacity:0}],{duration:520,easing:'ease-out'}).onfinish=function(){rg.remove()};
+}
+chars.forEach(function(c){
+  c.el.addEventListener('click',function(e){press(c,e)});
+  c.el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();press(c,null)}});
+});
+
+var cw=$('cw'),opener=null;
+function openCard(tid,t,from){$('cardBody').replaceChildren($(tid).content.cloneNode(true));$('cardTitle').textContent=t;cw.hidden=false;opener=from;$('cardOk').focus()}
+function closeCard(){cw.hidden=true;if(opener)opener.focus()}
+$('bPlay').addEventListener('click',function(){openCard('t-play','Stage 1 is coming soon!',this)});
+$('bHow').addEventListener('click',function(){openCard('t-how','How to play',this)});
+$('bSet').addEventListener('click',function(){openCard('t-set','Settings',this)});
+$('cardOk').addEventListener('click',closeCard);
+cw.addEventListener('click',function(e){if(e.target===cw)closeCard()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!cw.hidden)closeCard()});
+})();
+</script>
+</body>
+</html>

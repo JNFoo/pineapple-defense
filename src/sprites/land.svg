@@ -1,0 +1,39 @@
+<svg class="land" viewBox="0 0 400 220" preserveAspectRatio="xMidYMax meet" aria-hidden="true" focusable="false">
+<defs>
+<linearGradient id="ld-ground" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e2cb8f"/><stop offset=".42" stop-color="#ecdfb4"/><stop offset=".58" stop-color="#eef4f6"/><stop offset="1" stop-color="#f9fcfd"/></linearGradient>
+</defs>
+<path d="M120 150L150 124L172 138L206 96L236 120L270 84L304 116L336 98L368 124L400 110V180H120Z" fill="#d4e5ee"/>
+<path d="M206 96L186 128L206 136Z" fill="#eaf4f9"/><path d="M270 84L250 122L272 130Z" fill="#eaf4f9"/><path d="M336 98L320 124L340 128Z" fill="#eaf4f9"/><path d="M150 124L140 142L158 144Z" fill="#eaf4f9"/>
+<path d="M0 168C30 150 70 146 110 160C130 168 140 174 150 180V204H0Z" fill="#b3cdc0"/>
+<path d="M150 192C190 178 230 174 270 180C320 172 370 174 400 182V210H150Z" fill="#c3d9e6"/>
+<path d="M150 192C190 178 230 174 270 180C320 172 370 174 400 182V186C370 179 320 177 270 184C230 179 190 183 150 196Z" fill="#e8f3f8"/>
+<path d="M0 198C40 186 90 184 140 198L150 208H0Z" fill="#ead7a0"/>
+<path d="M126 204C160 196 240 196 276 204L284 214H118Z" fill="#8fc6e4"/>
+<path d="M146 206q6-3 12 0t12 0t12 0M214 206q6-3 12 0t12 0" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.6" stroke-linecap="round"/>
+<rect y="204" width="400" height="16" fill="url(#ld-ground)"/>
+<path d="M40 208C38 196 42 184 48 172" fill="none" stroke="#6b4a2f" stroke-width="5" stroke-linecap="round"/>
+<g fill="#3f7d4c"><ellipse cx="34" cy="168" rx="18" ry="5.5" transform="rotate(-28 34 168)"/><ellipse cx="62" cy="164" rx="18" ry="5.5" transform="rotate(26 62 164)"/><ellipse cx="48" cy="158" rx="5.5" ry="18"/><ellipse cx="32" cy="180" rx="16" ry="4.5" transform="rotate(30 32 180)"/><ellipse cx="64" cy="178" rx="16" ry="4.5" transform="rotate(-26 64 178)"/></g>
+<g fill="#5ca06a"><ellipse cx="32" cy="165" rx="11" ry="3.4" transform="rotate(-28 32 165)"/><ellipse cx="46" cy="154" rx="3.4" ry="11"/><ellipse cx="60" cy="161" rx="11" ry="3.4" transform="rotate(26 60 161)"/></g>
+<circle cx="45" cy="172" r="3" fill="#6b4a2f"/><circle cx="52" cy="174" r="3" fill="#6b4a2f"/>
+<rect x="86" y="182" width="3" height="24" fill="#6b4a2f"/><rect x="124" y="182" width="3" height="24" fill="#6b4a2f"/>
+<rect x="90" y="182" width="34" height="14" fill="#fbe9c0"/>
+<polygon points="86,168 94.5,168 91.8,180 82.8,180" fill="#d63a2e"/><polygon points="94.5,168 103,168 100.7,180 91.8,180" fill="#fff7e3"/><polygon points="103,168 111.5,168 109.6,180 100.7,180" fill="#d63a2e"/><polygon points="111.5,168 120,168 118.6,180 109.6,180" fill="#fff7e3"/><polygon points="120,168 128.5,168 127.5,180 118.6,180" fill="#d63a2e"/>
+<rect x="84" y="194" width="46" height="12" fill="#ece6d9"/><rect x="84" y="194" width="46" height="3" fill="#fff"/>
+<g><ellipse cx="96" cy="190" rx="5" ry="6" fill="#f8bd1c"/><ellipse cx="107" cy="190" rx="5" ry="6" fill="#f8bd1c"/><ellipse cx="118" cy="190" rx="5" ry="6" fill="#f8bd1c"/>
+<path d="M94 185l2-6 2 5 2-5 1 6zM105 185l2-6 2 5 2-5 1 6zM116 185l2-6 2 5 2-5 1 6z" fill="#3f9a55"/></g>
+<rect x="324" y="132" width="2.6" height="74" fill="#6b4a2f"/><rect x="384" y="132" width="2.6" height="74" fill="#6b4a2f"/>
+<rect x="334" y="162" width="2.6" height="44" fill="#6b4a2f"/><rect x="368" y="166" width="2.6" height="40" fill="#6b4a2f"/>
+<g class="poster"><rect x="320" y="116" width="72" height="18" rx="3" fill="#fff7e3" stroke="#d0b98a"/>
+<text x="356" y="129.2" text-anchor="middle" style="font:800 9.6px var(--display);fill:#2f6f9f;stroke:#fff7e3;stroke-width:2;paint-order:stroke">BRRR IS BEST!</text></g>
+<g class="poster" transform="rotate(-3 336 152)"><rect x="318" y="140" width="36" height="46" rx="3" fill="#fff7e3" stroke="#d0b98a"/>
+<ellipse cx="336" cy="166" rx="8" ry="10" fill="#f8bd1c"/><path d="M332 157l2-9 2 6 2-6 2 9z" fill="#3f9a55"/>
+<circle cx="336" cy="164" r="14.5" fill="none" stroke="#d63a2e" stroke-width="3.2"/><path d="M326 175L346 153" stroke="#d63a2e" stroke-width="3.2" stroke-linecap="round"/>
+<rect x="333" y="137" width="7" height="5" fill="#fff0a0" opacity=".8"/></g>
+<g class="poster" transform="rotate(3 370 156)"><rect x="352" y="144" width="36" height="46" rx="3" fill="#fff7e3" stroke="#d0b98a"/>
+<path d="M368 178C366 170 368 164 372 158" fill="none" stroke="#6b4a2f" stroke-width="3" stroke-linecap="round"/>
+<g fill="#3f7d4c"><ellipse cx="364" cy="157" rx="8" ry="2.8" transform="rotate(-24 364 157)"/><ellipse cx="380" cy="156" rx="8" ry="2.8" transform="rotate(24 380 156)"/><ellipse cx="372" cy="151" rx="2.8" ry="8"/></g>
+<circle cx="370" cy="166" r="14.5" fill="none" stroke="#d63a2e" stroke-width="3.2"/><path d="M360 177L380 155" stroke="#d63a2e" stroke-width="3.2" stroke-linecap="round"/>
+<rect x="367" y="141" width="7" height="5" fill="#fff0a0" opacity=".8"/></g>
+<ellipse cx="300" cy="212" rx="22" ry="4.5" fill="#fff" opacity=".8"/><ellipse cx="348" cy="214" rx="30" ry="4" fill="#fff" opacity=".7"/>
+<ellipse cx="22" cy="212" rx="20" ry="3.4" fill="#d9bf84" opacity=".55"/><ellipse cx="150" cy="214" rx="26" ry="3" fill="#d9bf84" opacity=".35"/>
+</svg>
