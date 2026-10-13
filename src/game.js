@@ -866,14 +866,16 @@ function draw() {
 var K = null, skBg = null, HINT_TXT = elHint.lastChild ? elHint.lastChild.textContent : '';
 /* world units: the board is 2 wide (u in -1..1); v runs up the incline from its front edge (v=0); the lane is below zero and the hop sits at SK_HUMP */
 var SK_BALLS = 9, SK_RIM = 0.45, SK_WALL = 1.45, SK_G = 10, SK_KZ = 0.7, SK_INC = 35, SK_RB = 0.11, SK_DIN = 0.9, SK_ZC = 0.12;
-var SK_V0 = -2.2, SK_HUMP = -0.2, SK_VMAX = 2.0, SK_K = 0.12, SK_RAT = 0.75, SK_LIFT = 0.55, SK_LFR = 0.5, SK_AIM = 0.7, SK_FL0 = 2.0, SK_FL1 = 2.9;
+var SK_V0 = -2.2, SK_HUMP = -0.2, SK_VMAX = 2.0, SK_K = 0.12, SK_RAT = 0.75, SK_LIFT = 0.55, SK_LFR = 0.5, SK_AIM = 0.7, SK_FL0 = 2.0, SK_FL1 = 2.9, SK_GV = -0.1, SK_DRN = 0.9;
 var SK_HOLES = [{ v: 50, u: 0, c: 1.72, r: 0.14 }, { v: 40, u: 0, c: 1.3, r: 0.16 }, { v: 30, u: 0, c: 0.86, r: 0.18 }, { v: 10, u: -0.66, c: 0.55, r: 0.22 }, { v: 10, u: 0.66, c: 0.55, r: 0.22 }, { v: 20, u: 0, c: 0.38, r: 0.2 }, { v: 100, u: -0.74, c: 1.72, r: 0.1 }, { v: 100, u: 0.74, c: 1.72, r: 0.1 }];
-var SK_CROWD = (function () { var a = [], r, c, xm; for (r = 0; r < 12; r++) { xm = 0.205 - 0.035 * r / 11; for (c = 0; c < 3; c++) a.push({ x: 0.035 + c * (xm - 0.035) / 2 + (r % 2) * 0.012, y: 0.285 + r * 0.044 + (c % 2) * 0.008, s: 0.074 + 0.036 * r / 11, r: r, c: c }); } return a; }());
+var SK_CROWD = (function () { var a = [], r, c; for (r = 0; r < 12; r++) for (c = 0; c < 3; c++) a.push({ y: 0.27 + r * 0.0525 + (c % 2) * 0.008, k: 0.085 + 0.04 * r / 11, r: r, c: c }); return a; }());
 function skCl(x, a, b) { return Math.max(a, Math.min(b, x)); }
 function skFb() { return W * 0.29; }
 function skS(v) { return v >= 0 ? 1 / (1 + SK_K * v) : 1 + 0.12 * (v / SK_V0); }
 function skX(u, v) { return W / 2 + u * skFb() * skS(v); }
-function skY(v) { var yB = H * 0.48; return v >= 0 ? yB - SK_RAT * skFb() / SK_K * Math.log(1 + SK_K * v) : yB + (H * 0.855 - yB) * (v / SK_V0); }
+function skY(v) { var yB = H * 0.43; return v >= 0 ? yB - SK_RAT * skFb() / SK_K * Math.log(1 + SK_K * v) : yB + (H * 0.865 - yB) * (v / SK_V0); }
+/* the world position along the machine for a screen y (used to keep the crowd off the machine) */
+function skV(y) { var yB = H * 0.43; return y <= yB ? (Math.exp((yB - y) * SK_K / (SK_RAT * skFb())) - 1) / SK_K : SK_V0 * (y - yB) / (H * 0.865 - yB); }
 function skCredits(score) { return Math.floor(score / 20); }
 function newSkee() {
   newState();
@@ -931,9 +933,9 @@ function skeeRoll(dx, dy, spd) {
 }
 /* the crowd: pineapples on the left cheer for a score, penguins on the right cheer for a miss */
 function skCheer(left, amp) {
-  var w = left ? ['YAY!', 'WOO!', 'NICE!', 'GO GO!'] : ['hee hee!', 'oopsie!', 'ha ha!', 'bonk!'], c = SK_CROWD[Math.floor(Math.random() * SK_CROWD.length)];
+  var w = left ? ['YAY!', 'WOO!', 'NICE!', 'GO GO!'] : ['hee hee!', 'oopsie!', 'ha ha!', 'bonk!'], c = SK_CROWD[Math.floor(Math.random() * SK_CROWD.length)], P = skCrowdPos(c);
   if (left) { K.cl = 0; K.clA = amp; if (amp >= 2) { K.bt = 0; w = ['CHEST BUMP!']; } } else { K.cr = 0; K.crA = 1; }
-  K.say.push({ x: W * (left ? c.x : 1 - c.x), y: H * c.y - 20, txt: w[Math.floor(Math.random() * w.length)], left: left, t: 0 });
+  K.say.push({ x: left ? P.x : W - P.x, y: P.y - P.s - 4, txt: w[Math.floor(Math.random() * w.length)], left: left, t: 0 });
   if (!calm) burst(left ? W * 0.1 : W * 0.9, H * 0.5, left ? 12 : 8, left ? PINE_COL.concat(['#fff7e3']) : ['#8fc6e4', '#fff7e3']);
 }
 function skResolve(hole) {
@@ -993,23 +995,29 @@ function updateSkee(dt) {
     n = Math.max(1, Math.ceil(dt * 120)); h = dt / n;
     for (i = 0; i < n && b.st === 'out'; i++) {
       b.vz -= SK_G * h; b.z += b.vz * h; b.v += b.vv * h; b.u = skCl(b.u + b.vu * h, -0.89, 0.89); b.rot -= 0.3;
-      if (b.v <= SK_HUMP) { b.v = SK_HUMP; b.st = 'drop'; b.t = 0; b.cut = SK_HUMP; b.vu *= 0.3; }
-      else if (b.z < -0.08 || b.t > 1.6) { b.st = 'drop'; b.t = 0; b.cut = SK_HUMP; b.vu *= 0.3; }
+      if (b.v <= SK_HUMP + 0.04 || b.z < -0.08 || b.t > 1.6) { b.st = 'gut'; b.t = 0; b.z = 0; b.vu = (Math.abs(b.u) < 0.03 ? (Math.random() < 0.5 ? 1 : -1) : (b.u > 0 ? 1 : -1)) * (0.7 + Math.min(0.8, Math.abs(b.vu))); b.vv = 0; }
     }
-  } else if (b.st === 'drop') { b.rot += dt * 4; if (b.t > 0.55) skResolve(null); }
+  } else if (b.st === 'gut') {
+    /* the catch trough tips every miss toward a drain at the end: it gathers speed along the curve and drops out of sight */
+    b.v += (SK_GV - b.v) * Math.min(1, dt * 14); b.vu += (b.vu < 0 ? -1 : 1) * 3.2 * dt; b.u += b.vu * dt; b.rot += b.vu * dt * 4;
+    if (Math.abs(b.u) >= SK_DRN) { b.u = (b.u < 0 ? -1 : 1) * SK_DRN; b.st = 'drain'; b.t = 0; }
+  } else if (b.st === 'drain') { b.rot += (b.vu < 0 ? -1 : 1) * dt * 6; if (b.t > 0.32) skResolve(null); }
   else if (b.st === 'sink') { if (b.t > 0.6) skResolve(b.hole); }
 }
 function skBallPose(b) {
-  var v = b.v, u = b.u, z = b.z, s, R, a = 1, y, x, fb = skFb(), e = 0;
+  var v = b.v, u = b.u, z = b.z, s, R, a = 1, y, x, fb = skFb(), e = 0, gt = b.st === 'gut' || b.st === 'drain';
   if (b.st === 'sink') { e = Math.min(1, b.t / 0.6); e = e * e * (3 - 2 * e); u = b.u0 + (b.hole.u - b.u0) * e; v = b.v0 + (b.hole.c - b.v0) * e; z = 0; a = 1 - Math.max(0, (b.t - 0.3) / 0.3); }
   s = skS(v); R = SK_RB * fb * s * (v < 0 ? 1 + 0.6 * (v / SK_V0) : 1) * (1 - 0.55 * e);
+  if (gt) { z = -0.05; R *= 0.82; if (b.st === 'drain') { e = Math.min(1, b.t / 0.32); R *= 1 - 0.85 * e; a = 1 - e * e; } }
   x = skX(u, v); y = skY(v) - z * fb * s * SK_LIFT;
-  if (b.st === 'drop') { y += b.t * b.t * 420 ; R *= Math.max(0.5, 1 - b.t); x = skX(u + b.vu * b.t * 0.3, v); }
+  if (gt && b.st === 'drain') y += e * R * 1.4;
   return { x: x, y: y, R: R, a: a, gy: skY(v), z: z };
 }
 function drawSkeeBall(b) {
-  var p = skBallPose(b), im = IMG.pa.happy; if (!im || p.a <= 0) return;
-  drawShadow(p.x, p.gy + p.R * 0.1, p.R * 0.9 / (1 + p.z * 2), 0.55 * p.a / (1 + p.z * 3));
+  var p = skBallPose(b), im = IMG.pa.happy, h = Math.max(0, p.z), fb = skFb(), ph = h * fb * skS(b.v) * SK_LIFT;
+  if (!im || p.a <= 0) return;
+  /* the shadow stays on the surface while the ball rises, slides away from the light, and softens as it climbs */
+  if (b.st !== 'gut' && b.st !== 'drain') drawShadow(p.x + ph * 0.45, p.gy + p.R * 0.22, p.R * (1.05 + h * 0.5), Math.min(0.95, 0.9 / (1 + h * 2.2)) * p.a);
   ctx.save(); ctx.globalAlpha = p.a; ctx.translate(p.x, p.y - p.R * 0.3); ctx.rotate(b.rot || 0); ctx.drawImage(im, -p.R * 1.35, -p.R * 1.35, p.R * 2.7, p.R * 2.7); ctx.restore();
 }
 /* a raised ring: a shadow on the felt, the ring's front wall, its bright top, then the dark hole */
@@ -1035,7 +1043,7 @@ function skQuad(g, u0, v0, u1, v1, fill) {
 }
 function buildSkeeBg() {
   skBg = document.createElement('canvas'); skBg.width = cv.width; skBg.height = cv.height;
-  var g = skBg.getContext('2d'), i, side, yT = skY(SK_VMAX), yB = skY(0), yH = skY(SK_HUMP), lg, yW = H * 0.3;
+  var g = skBg.getContext('2d'), i, side, yT = skY(SK_VMAX), yB = skY(0), yH = skY(SK_HUMP), lg, yW = H * 0.26;
   g.scale(DPR, DPR);
   lg = g.createLinearGradient(0, 0, 0, yW); lg.addColorStop(0, '#1d1636'); lg.addColorStop(1, '#40306b'); g.fillStyle = lg; g.fillRect(0, 0, W, yW);
   lg = g.createLinearGradient(0, yW, 0, H); lg.addColorStop(0, '#33295a'); lg.addColorStop(1, '#1a1433'); g.fillStyle = lg; g.fillRect(0, yW, W, H - yW);
@@ -1051,9 +1059,12 @@ function buildSkeeBg() {
   for (side = -1; side <= 1; side += 2) {
     skQuad(g, side * 1, 0, side * 1.12, SK_VMAX, '#c9a23a'); skQuad(g, side * 1, SK_V0 - 0.6, side * 1.12, SK_HUMP, '#1f8a4d'); skQuad(g, side * 1, SK_V0 - 0.6, side * 1.05, SK_HUMP, '#34b86e');
   }
-  /* the slot between the hop and the board, where a miss drops out of view */
-  lg = g.createLinearGradient(0, yH, 0, yB); lg.addColorStop(0, '#0b0710'); lg.addColorStop(1, '#241a38'); skQuad(g, -1.12, SK_HUMP, 1.12, 0, lg);
+  /* the catch trough between the hop and the board: a dark curved gutter with a drain at each end and a raised front wall */
+  lg = g.createLinearGradient(0, yH, 0, yB); lg.addColorStop(0, '#2f2350'); lg.addColorStop(0.45, '#0b0710'); lg.addColorStop(1, '#241a38'); skQuad(g, -1.12, SK_HUMP, 1.12, 0, lg);
+  for (side = -1; side <= 1; side += 2) { g.fillStyle = '#05030a'; g.beginPath(); g.ellipse(skX(side * SK_DRN, SK_GV), skY(SK_GV), 0.12 * skFb() * skS(SK_GV), 0.07 * skFb() * skS(SK_GV), 0, 0, 6.3); g.fill(); g.strokeStyle = '#8d7b9f'; g.lineWidth = 2; g.stroke(); }
   g.fillStyle = '#e8d48a'; g.fillRect(skX(-1.12, 0), yB - 3, skX(1.12, 0) - skX(-1.12, 0), 5);
+  lg = g.createLinearGradient(0, yH - (yH - yB) * 0.36, 0, yH); lg.addColorStop(0, '#9b89b3'); lg.addColorStop(0.18, '#6b5a8a'); lg.addColorStop(1, '#3c2f5c'); skQuad(g, -1.12, SK_HUMP, 1.12, SK_HUMP + (0 - SK_HUMP) * 0.36, lg);
+  g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(skX(-1.12, SK_HUMP * 0.64), yH - (yH - yB) * 0.36, skX(1.12, SK_HUMP * 0.64) - skX(-1.12, SK_HUMP * 0.64), 2);
   /* lane (wood) and the launch ramp */
   lg = g.createLinearGradient(0, yH, 0, H); lg.addColorStop(0, '#caa06a'); lg.addColorStop(1, '#efca8e'); skQuad(g, -1, SK_V0 - 0.6, 1, SK_HUMP, lg);
   g.strokeStyle = 'rgba(90,50,20,.16)'; g.lineWidth = 2;
@@ -1070,10 +1081,18 @@ function led(txt, x, y, w, h) {
   ctx.fillStyle = 'rgba(255,40,40,.35)'; ctx.fillText(txt, x + 1, y + 2); ctx.fillStyle = '#ff3b3b'; ctx.fillText(txt, x, y + 1);
 }
 /* the crowd stands on the floor beside the machine */
+/* a crowd member's spot: packed against the machine's edge, each one overlapping the next, never over the lane or board */
+function skCrowdPos(c) {
+  var y = H * c.y, s = W * c.k, edge, sp, x;
+  edge = skX(-1.12, skCl(skV(y - s * 0.4), SK_V0, SK_VMAX)) - 3;
+  s = Math.min(s, edge / 1.55); sp = s * 0.55;
+  x = edge - s * 0.42 - (2 - c.c) * sp - (c.r % 2) * s * 0.22;
+  return { x: x, y: y, s: s };
+}
 function drawCrowd(left) {
-  var i, c, y, s, x, ct = left ? K.cl : K.cr, amp = left ? K.clA : 1, kind, mood, im, hop, rot, sq, t = calm ? 0 : S.t, e, f, bu, step, dir;
+  var i, c, y, s, x, ct = left ? K.cl : K.cr, amp = left ? K.clA : 1, kind, mood, im, hop, rot, sq, t = calm ? 0 : S.t, e, f, bu, step, dir, P, Q;
   for (i = 0; i < SK_CROWD.length; i++) {
-    c = SK_CROWD[i]; x = W * (left ? c.x : 1 - c.x); y = H * c.y + H * 0.04; s = W * c.s;
+    c = SK_CROWD[i]; P = skCrowdPos(c); x = left ? P.x : W - P.x; y = P.y; s = P.s;
     e = ct - c.r * 0.04 - c.c * 0.02; kind = left ? (i % 3 === 1 ? 'pl' : 'pa') : (i % 3 === 1 ? 'ad' : 'rh');
     hop = 0; rot = 0; sq = 1;
     if (e >= 0 && e < 1.4) { mood = 'giggle'; if (!calm) { f = 1 - e / 1.4; hop = Math.abs(Math.sin(e * 13 + i)) * s * 0.4 * f * amp; rot = Math.sin(e * 18 + i) * 0.2 * f; sq = 1 + 0.08 * Math.sin(e * 26) * f; } }
@@ -1081,7 +1100,7 @@ function drawCrowd(left) {
     /* a 100 sends neighbors into a leaping chest bump: they hop toward each other, meet, squash, and bounce apart */
     bu = left ? K.bt - c.r * 0.04 : -1;
     if (bu >= 0 && bu < 1.3) {
-      mood = 'giggle'; step = W * 0.5 * Math.abs(SK_CROWD[c.c === 0 ? i + 1 : i - 1].x - c.x); dir = c.c === 0 ? 1 : -1;
+      mood = 'giggle'; Q = skCrowdPos(SK_CROWD[c.c === 0 ? i + 1 : i - 1]); step = Math.abs(Q.x - P.x) * 0.5; dir = c.c === 0 ? 1 : -1;
       f = bu < 0.28 ? bu / 0.28 : bu < 0.5 ? 1 : Math.max(0, 1 - (bu - 0.5) / 0.3);
       if (!calm) { x += dir * step * 0.95 * f; hop = s * 0.55 * Math.sin(Math.min(1, bu / 0.5) * Math.PI) * (bu < 0.5 ? 1 : 0.25 * Math.max(0, 1 - (bu - 0.5) / 0.8)); rot = dir * 0.35 * f * (bu < 0.5 ? 1 : 0.3); sq = bu > 0.26 && bu < 0.42 ? 1.18 : 1; }
       if (bu > 0.26 && bu < 0.34 && !calm && c.c === 0) { ctx.save(); ctx.fillStyle = '#fff3a8'; ctx.beginPath(); ctx.arc(x + s * 0.25, y - s * 0.45, s * 0.22, 0, 6.3); ctx.fill(); ctx.restore(); }
@@ -1097,7 +1116,7 @@ function drawSkee() {
   var t = calm ? 0 : S.t, i, b = K.ball, fb = skFb();
   if ((drag || hs) && !elHint.hidden) elHint.hidden = true;
   /* marquee */
-  var bx = W * 0.5, by = H * 0.205, bw = W * 0.88, bh = H * 0.082, fl = calm ? 1 : 0.9 + 0.1 * Math.sin(t * 3);
+  var bx = W * 0.5, by = H * 0.125, bw = W * 0.88, bh = H * 0.082, fl = calm ? 1 : 0.9 + 0.1 * Math.sin(t * 3);
   ctx.fillStyle = '#c8cdd4'; ctx.fillRect(bx - bw / 2 - 3, by - bh / 2 - 3, bw + 6, bh + 6); ctx.fillStyle = '#0c0c10'; ctx.fillRect(bx - bw / 2, by - bh / 2, bw, bh);
   ctx.font = '800 ' + Math.round(bh * 0.36) + 'px "Bricolage Grotesque",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,60,90,' + (0.7 * fl) + ')'; ctx.strokeText('PINEAPPLE ROLL', bx, by - bh * 0.25); ctx.fillStyle = '#fff'; ctx.fillText('PINEAPPLE ROLL', bx, by - bh * 0.25);
@@ -1106,7 +1125,7 @@ function drawSkee() {
   drawCrowd(true); drawCrowd(false);
   for (i = 0; i < SK_HOLES.length; i++) drawHoleB(SK_HOLES[i]);
   if (b) drawSkeeBall(b);
-  if (b && (b.st === 'drop')) { var yF = skY(b.cut); ctx.drawImage(skBg, 0, yF * DPR, skBg.width, skBg.height - yF * DPR, 0, yF, W, H - yF); }
+  if (b && (b.st === 'gut' || b.st === 'drain')) { var yF = skY(SK_HUMP) - (skY(SK_HUMP) - skY(0)) * 0.36, yE = skY(SK_HUMP) + 2; ctx.drawImage(skBg, 0, yF * DPR, skBg.width, (yE - yF) * DPR, 0, yF, W, yE - yF); }
   drawStand();
   if (!b && !K.over && K.balls > 0) {
     var R = SK_RB * fb * skS(SK_V0) * 1.6 * 1.15, bob = calm ? 0 : Math.sin(t * 3) * 2, im = IMG.pa.happy, yy = skY(SK_V0);
