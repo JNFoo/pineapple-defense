@@ -971,7 +971,7 @@ function skStep(b, h) {
     }
   }
   if (b.v >= 0 && b.z <= 0 && b.vz < 0) { b.z = 0; if (b.vz < -0.6) { b.vz = -b.vz * 0.42; b.vu *= 0.88; b.vv *= 0.88; } else b.vz = 0; }
-  if (b.v < 0) { b.st = 'out'; b.t = 0; b.z = Math.max(0, b.z); b.vz = Math.min(b.vz, 0.4); skCheer(false); }
+  if (b.v < 0 && b.vv < 0) { b.st = 'out'; b.t = 0; b.z = Math.max(0, b.z); b.vz = Math.min(b.vz, 0.4); skCheer(false); }
 }
 function updateSkee(dt) {
   S.t += dt; fxUpdate(dt);
