@@ -70,16 +70,29 @@ function updateFish(dt) {
 
 /* ---------- drawing ---------- */
 function drawFishBody(x, y, s, flap, ang, face) {
+  var gr, fy = flap * s * 0.1;
   ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
-  ctx.fillStyle = '#ff7a3a'; ctx.beginPath(); ctx.moveTo(-s * 0.42, 0); ctx.lineTo(-s * 0.78, -s * 0.24 + flap * s * 0.1); ctx.lineTo(-s * 0.74, s * 0.26 + flap * s * 0.1); ctx.closePath(); ctx.fill();
-  var gr = ctx.createLinearGradient(0, -s * 0.3, 0, s * 0.3); gr.addColorStop(0, '#ffb066'); gr.addColorStop(1, '#ff7a3a');
-  ctx.fillStyle = gr; ctx.strokeStyle = '#b84a12'; ctx.lineWidth = Math.max(1.3, s * 0.05);
-  ctx.beginPath(); ctx.ellipse(0, 0, s * 0.5, s * 0.3, 0, 0, 6.3); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.ellipse(s * 0.02, s * 0.14, s * 0.3, s * 0.1, 0, 0, 6.3); ctx.fill();
-  ctx.fillStyle = '#ffd7a8'; ctx.beginPath(); ctx.moveTo(-s * 0.05, -s * 0.28); ctx.lineTo(s * 0.02, -s * 0.5 + flap * s * 0.04); ctx.lineTo(s * 0.2, -s * 0.26); ctx.closePath(); ctx.fill();
+  /* tail with two lobes and a lighter rim */
+  gr = ctx.createLinearGradient(-s * 0.8, 0, -s * 0.4, 0); gr.addColorStop(0, '#ff9a4a'); gr.addColorStop(1, '#e8601e');
+  ctx.fillStyle = gr; ctx.strokeStyle = '#b84a12'; ctx.lineWidth = Math.max(1.2, s * 0.04); ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(-s * 0.4, 0); ctx.quadraticCurveTo(-s * 0.62, -s * 0.06 + fy * 0.5, -s * 0.8, -s * 0.26 + fy); ctx.quadraticCurveTo(-s * 0.7, fy * 0.3, -s * 0.76, s * 0.28 + fy); ctx.quadraticCurveTo(-s * 0.6, s * 0.06 + fy * 0.5, -s * 0.4, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  /* top fin and belly fin */
+  ctx.fillStyle = '#ffd7a8'; ctx.beginPath(); ctx.moveTo(-s * 0.12, -s * 0.27); ctx.quadraticCurveTo(-s * 0.02, -s * 0.56 + flap * s * 0.04, s * 0.22, -s * 0.25); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-s * 0.02, s * 0.27); ctx.quadraticCurveTo(s * 0.04, s * 0.44, s * 0.16, s * 0.28); ctx.closePath(); ctx.fill(); ctx.stroke();
+  /* body: orange on top, cream belly, a glossy shine */
+  gr = ctx.createLinearGradient(0, -s * 0.3, 0, s * 0.3); gr.addColorStop(0, '#ffc07a'); gr.addColorStop(0.55, '#ff8a42'); gr.addColorStop(1, '#e8601e');
+  ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(0, 0, s * 0.5, s * 0.3, 0, 0, 6.3); ctx.fill(); ctx.stroke();
+  ctx.save(); ctx.beginPath(); ctx.ellipse(0, 0, s * 0.5, s * 0.3, 0, 0, 6.3); ctx.clip();
+  ctx.fillStyle = 'rgba(255,240,214,.8)'; ctx.beginPath(); ctx.ellipse(s * 0.02, s * 0.3, s * 0.56, s * 0.17, 0, 0, 6.3); ctx.fill();
+  ctx.strokeStyle = 'rgba(184,74,18,.35)'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.beginPath();
+  for (var i = 0; i < 4; i++) { var sx = -s * 0.22 + i * s * 0.13; ctx.moveTo(sx, -s * 0.26); ctx.quadraticCurveTo(sx + s * 0.05, 0, sx, s * 0.12); }
+  ctx.stroke(); ctx.restore();
+  ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.beginPath(); ctx.ellipse(s * 0.04, -s * 0.15, s * 0.28, s * 0.06, -0.08, 0, 6.3); ctx.fill();
   if (face) {
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s * 0.28, -s * 0.06, s * 0.1, 0, 6.3); ctx.fill();
-    ctx.fillStyle = '#2a120d'; ctx.beginPath(); ctx.arc(s * 0.31, -s * 0.06, s * 0.055, 0, 6.3); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#b84a12'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.beginPath(); ctx.arc(s * 0.28, -s * 0.06, s * 0.105, 0, 6.3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#2a120d'; ctx.beginPath(); ctx.arc(s * 0.31, -s * 0.06, s * 0.058, 0, 6.3); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s * 0.33, -s * 0.085, s * 0.02, 0, 6.3); ctx.fill();
+    ctx.fillStyle = 'rgba(255,111,143,.5)'; ctx.beginPath(); ctx.ellipse(s * 0.3, s * 0.06, s * 0.06, s * 0.035, 0, 0, 6.3); ctx.fill();
     ctx.strokeStyle = '#2a120d'; ctx.lineWidth = Math.max(1.2, s * 0.045); ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(s * 0.4, s * 0.06, s * 0.1, 0.3, 2.2); ctx.stroke();
   }
   ctx.restore();

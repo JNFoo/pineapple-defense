@@ -91,13 +91,14 @@ function igloo(g, x, y, s) {
 function snowfall(t, n, col, speed) {
   var i, x, y, r;
   if (qLevel >= 2) n = Math.ceil(n * 0.4);
-  ctx.fillStyle = col;
+  ctx.fillStyle = col; ctx.beginPath();
   for (i = 0; i < n; i++) {
     r = (1.2 + (i % 3) * 0.9) * Math.max(1, H / 640);
     y = ((i * 97 + t * H * speed * (0.5 + (i % 4) * 0.18)) % (H * 0.95));
     x = ((i * 53.7) % 100) / 100 * W + Math.sin(t * 0.9 + i) * W * 0.02;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, 6.3); ctx.fill();
+    ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, 6.3);
   }
+  ctx.fill();
 }
 function flag(x, y, s, t, c1, c2) {
   var i, n = 8, w = s * 0.9, h = s * 0.55;

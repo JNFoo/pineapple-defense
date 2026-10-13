@@ -16,7 +16,7 @@ Copyright (c) 2026 JNFoo. All rights reserved.
 
 ## What it checks
 - All five stages start and run with the auto-player; no NaN positions, cheer in range, bank a whole non-negative number, particle and shot lists bounded.
-- Combo calls, paper umbrellas (no cheer loss, stock counts), Air Raid (stock, one at a time), gulls (grab and leave), run speed math and its cap.
+- Lime Launcher (no missiles without it; with it, shield snowballs pop before the Champion loses health; missiles in flight stay bounded), combo calls, paper umbrellas (no cheer loss, stock counts), Air Raid (stock, one at a time), gulls (grab and leave), run speed math and its cap.
 - Card flows: stage clear cards, the run-end card (Save and restart, Reset completely, the confirm step, trophies kept), pause keys.
 - Random-action fuzzing of raids, pickups, gulls, combos, pauses, taps and zones across every stage, clicking through win and lose cards.
 - Layout at 360x640, 412x915, 1280x720 and 820x1180: no sideways scroll, HUD pills do not overlap, the raid button clears the cheer bar and the picks, cards fit the screen.

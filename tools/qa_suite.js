@@ -20,6 +20,7 @@ function inv(tag) {
   if (!isFinite(sv.bank) || sv.bank < 0 || sv.bank % 1) bad.push('bank ' + sv.bank);
   if (P.bits > 400) bad.push('bits ' + P.bits); if (P.shots > 60) bad.push('shots ' + P.shots); if (P.rings > 90) bad.push('rings ' + P.rings);
   if (S.gulls && S.gulls.length > 6) bad.push('gulls ' + S.gulls.length); if (S.umb && S.umb.length > 5) bad.push('umb ' + S.umb.length);
+  if (S.ms && S.ms.length > 12) bad.push('missiles ' + S.ms.length);
   if (S.umL < 0 || S.raL < 0) bad.push('negative stock');
   if (bad.length) throw new Error(tag + ': ' + bad.join('; '));
 }
@@ -31,7 +32,7 @@ async function T(name, fn) {
 }
 async function go(st, w) { P.go(st, w); if (!await wf(() => P.S && P.S.stage === st && P.penguins !== undefined && !$('game').hidden, 4000)) throw new Error('go timeout'); await wait(80); P.bot = false; }
 
-await T('load', async () => { if (!P) throw new Error('no __pd'); const sv = P.sv(); ['stage', 'wave', 'bank', 'ach', 'ac2', 'gu', 'um', 'ra', 'run', 'cd'].forEach(k => { if (!isFinite(sv[k])) throw new Error('save field ' + k + ' = ' + sv[k]); }); });
+await T('load', async () => { if (!P) throw new Error('no __pd'); const sv = P.sv(); ['stage', 'wave', 'bank', 'ach', 'ac2', 'gu', 'um', 'ra', 'run', 'cd', 'lm'].forEach(k => { if (!isFinite(sv[k])) throw new Error('save field ' + k + ' = ' + sv[k]); }); });
 
 for (let st = 1; st <= 5; st++) await T('stage ' + st + ' runs', async () => { await go(st, 0); P.bot = true; P.step(25, 0.033, 40); inv('stage' + st); P.bot = false; });
 
@@ -59,6 +60,20 @@ await T('air raid', async () => {
   await go(2, 3); P.st('ra', 2); const S = P.S; P.step(2, 0.033);
   P.raid(); if (S.raL !== 1 || !S.raid) throw new Error('raid did not start'); P.raid(); if (S.raL !== 1) throw new Error('second raid allowed while one is active');
   P.step(3, 0.033, 6); if (S.raid) throw new Error('raid never ended'); P.raid(); if (S.raL !== 0) throw new Error('second raid'); P.step(3, 0.033); P.raid(); if (S.raL !== 0) throw new Error('over-stock raid'); inv('raid');
+});
+
+await T('lime launcher: shield first, then Champion', async () => {
+  const sv = P.sv(); sv.lm = 0; await go(2, 8);
+  const S = P.S; let sawM = 0, t = 0; while (S.mode !== 'boss' || !S.boss || S.boss.st !== 'hold') { P.step(0.1, 0.05); if ((t += 0.1) > 30) throw new Error('boss never held'); }
+  P.step(9, 0.05); sawM = S.ms.length; if (sawM || S.boss.hp !== S.bossMax) throw new Error('missiles fired without the launcher');
+  sv.lm = 3; S.boss.shield = S.boss.shield || 3; let popped = 0, hurt = 0, maxM = 0, hp = S.boss.hp, sh = S.boss.shield, first = '';
+  for (let i = 0; i < 1600 && S.boss && S.mode === 'boss'; i++) {
+    P.step(0.05, 0.05); maxM = Math.max(maxM, S.ms.length); if (!S.boss) break;
+    if (S.boss.shield < sh && !first) first = 'pop'; if (S.boss.hp < hp && !first) first = 'hurt'; if (S.boss.hp < hp) hurt++; if (S.boss.shield < sh) popped++;
+    hp = S.boss.hp; sh = S.boss.shield; if (S.boss.st === 'hold' && S.boss.shield > S.boss.hp + 10) break;
+  }
+  if (first !== 'pop') throw new Error('first effect was ' + first); if (!hurt || !popped) throw new Error('popped ' + popped + ' hurt ' + hurt); if (maxM > 8) throw new Error('too many missiles ' + maxM);
+  sv.lm = 0; inv('lime'); return 'popped ' + popped + ', hurt ' + hurt + ', max in flight ' + maxM;
 });
 
 await T('gull grabs fish', async () => {

@@ -100,6 +100,8 @@ function drawGull(x, y, s, dir, fl, fish) {
       ctx.fillStyle = bg; ctx.strokeStyle = '#7e93a6'; ctx.lineWidth = c; ctx.beginPath(); ctx.ellipse(0, 0, s * 0.42, s * 0.2, 0, 0, 6.3); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#e2eaf0'; ctx.beginPath(); ctx.moveTo(-s * 0.36, -s * 0.04); ctx.lineTo(-s * 0.66, -s * 0.12); ctx.lineTo(-s * 0.62, s * 0.08); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(s * 0.4, -s * 0.12, s * 0.15, 0, 6.3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,140,150,.5)'; ctx.beginPath(); ctx.ellipse(s * 0.38, -s * 0.05, s * 0.06, s * 0.035, 0, 0, 6.3); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.beginPath(); ctx.ellipse(-s * 0.08, -s * 0.1, s * 0.22, s * 0.04, -0.08, 0, 6.3); ctx.fill();
       ctx.fillStyle = '#ffb02e'; ctx.strokeStyle = '#b86e00'; ctx.beginPath(); ctx.moveTo(s * 0.52, -s * 0.17); ctx.lineTo(s * 0.8, -s * 0.09); ctx.lineTo(s * 0.52, -s * 0.05); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#d6372a'; ctx.beginPath(); ctx.arc(s * 0.76, -s * 0.07, s * 0.022, 0, 6.3); ctx.fill();
       ctx.fillStyle = '#1c1410'; ctx.beginPath(); ctx.arc(s * 0.45, -s * 0.15, s * 0.034, 0, 6.3); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(s * 0.46, -s * 0.16, s * 0.012, 0, 6.3); ctx.fill();
@@ -164,22 +166,42 @@ function drawBrolly(x, y, r, open, col, rot) {
   }
   ctx.restore();
 }
+/* the open canopy is painted once per colour and size; opening is a scale about the foot of the stick */
+var BROLLY = {};
+function drawBrollyCached(x, y, r, open, ci, rot, alpha) {
+  var key = ci + 'x' + Math.round(r) + 'x' + DPR, c = BROLLY[key], g, c0, pw = Math.ceil(r * 2.5), ph = Math.ceil(r * 2.9), pa = ctx.globalAlpha;
+  if (!c) {
+    if (Object.keys(BROLLY).length > 9) BROLLY = {};
+    c = BROLLY[key] = document.createElement('canvas'); c.width = Math.ceil(pw * DPR); c.height = Math.ceil(ph * DPR); g = c.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, pw / 2 * DPR, (ph - r * 0.2) * DPR);
+    c0 = ctx; ctx = g; drawBrolly(0, 0, r, 1, UMB_COL[ci], 0); ctx = c0;
+  }
+  ctx.globalAlpha = pa * alpha; ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(open, open);
+  ctx.drawImage(c, -pw / 2, -(ph - r * 0.2), pw, ph); ctx.restore(); ctx.globalAlpha = pa;
+}
+var CLOSED = {};
+function closedUmb(ci) {
+  var key = ci + 'x' + W + 'x' + DPR, c = CLOSED[key], g, c0, L = W * 0.1, col = UMB_COL[ci];
+  if (c) return c;
+  if (Object.keys(CLOSED).length > 8) CLOSED = {};
+  c = CLOSED[key] = document.createElement('canvas'); c.width = Math.ceil(L * 1.3 * DPR); c.height = Math.ceil(W * 0.05 * DPR); g = c.getContext('2d');
+  g.setTransform(DPR, 0, 0, DPR, c.width / 2, c.height / 2); c0 = ctx; ctx = g;
+  ctx.strokeStyle = '#a8793e'; ctx.lineWidth = Math.max(2, W * 0.006); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-L * 0.5, 0); ctx.lineTo(L * 0.5, 0); ctx.stroke();
+  ctx.fillStyle = col[0]; ctx.strokeStyle = col[2]; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(L * 0.5, 0); ctx.lineTo(-L * 0.12, -W * 0.014); ctx.lineTo(-L * 0.2, 0); ctx.lineTo(-L * 0.12, W * 0.014); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = col[1]; ctx.lineWidth = Math.max(1, W * 0.003); ctx.beginPath(); ctx.moveTo(L * 0.3, -W * 0.004); ctx.lineTo(-L * 0.1, -W * 0.01); ctx.moveTo(L * 0.3, W * 0.004); ctx.lineTo(-L * 0.1, W * 0.01); ctx.stroke();
+  ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(L * 0.52, 0, W * 0.006, 0, 6.3); ctx.fill();
+  ctx = c0; return c;
+}
 function drawUmbrellas() {
   var i, u, o, e, s, al, op, wob;
   for (i = 0; i < S.umL; i++) {
-    /* closed umbrellas lie on the table next to the sling */
-    var x = W * (0.285 + i * 0.045), y = H * 0.881, L = W * 0.1, c = UMB_COL[i % 3];
-    ctx.save(); ctx.translate(x, y); ctx.rotate(-0.09 + i * 0.05);
-    ctx.strokeStyle = '#a8793e'; ctx.lineWidth = Math.max(2, W * 0.006); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-L * 0.5, 0); ctx.lineTo(L * 0.5, 0); ctx.stroke();
-    ctx.fillStyle = c[0]; ctx.strokeStyle = c[2]; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(L * 0.5, 0); ctx.lineTo(-L * 0.12, -W * 0.014); ctx.lineTo(-L * 0.2, 0); ctx.lineTo(-L * 0.12, W * 0.014); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.strokeStyle = c[1]; ctx.lineWidth = Math.max(1, W * 0.003); ctx.beginPath(); ctx.moveTo(L * 0.3, -W * 0.004); ctx.lineTo(-L * 0.1, -W * 0.01); ctx.moveTo(L * 0.3, W * 0.004); ctx.lineTo(-L * 0.1, W * 0.01); ctx.stroke();
-    ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(L * 0.52, 0, W * 0.006, 0, 6.3); ctx.fill();
-    ctx.restore();
+    /* closed umbrellas lie on the table next to the sling: one small cached sprite per colour */
+    var x = W * (0.345 + i * 0.04), y = H * 0.881, cu = closedUmb(i % 3);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-0.09 + i * 0.05); ctx.drawImage(cu, -cu.width / DPR / 2, -cu.height / DPR / 2, cu.width / DPR, cu.height / DPR); ctx.restore();
   }
   for (i = 0; i < S.umb.length; i++) {
     u = S.umb[i]; s = psz(0.95); op = u.t < 0.12 ? u.t / 0.12 : 1; op = op < 1 ? 1.18 * Math.sin(op * 1.4) : 1 + (calm ? 0 : Math.sin(u.t * 22) * 0.03 * (1 - u.t));
     al = u.t > 0.6 ? Math.max(0, 1 - (u.t - 0.6) / 0.5) : 1;
-    ctx.save(); ctx.globalAlpha = al; drawBrolly(u.x, u.y, s * 1.05, Math.min(1.15, op), UMB_COL[u.c], calm ? 0 : Math.sin(u.t * 16) * 0.05 * (1 - u.t)); ctx.restore();
+    drawBrollyCached(u.x, u.y, s * 1.05, Math.min(1.15, op), u.c, calm ? 0 : Math.sin(u.t * 16) * 0.05 * (1 - u.t), al);
   }
 }
 
@@ -249,12 +271,101 @@ function introFx(o, rgb, cols, label) {
   S.gl = Math.max(S.gl, 0.3);
 }
 /* a slow spinning halo with orbiting sparkles, brighter and bigger while the special is brand new */
+var STARIMG = null;
+function starImg() { if (!STARIMG) { STARIMG = document.createElement('canvas'); STARIMG.width = STARIMG.height = 64; star(STARIMG.getContext('2d'), 32, 32, 26); } return STARIMG; }
 function drawHalo(o, rgb, t, age) {
   var fresh = Math.max(0, 1 - age / 1.2), i, a, rr = o.s * (1.15 + 0.5 * fresh), n = 10, rot = calm ? 0 : t * 0.8;
   ctx.save(); ctx.translate(o.x, o.cy); ctx.globalAlpha = 0.2 + 0.25 * fresh + (calm ? 0 : 0.05 * Math.sin(t * 5));
-  ctx.fillStyle = 'rgb(' + rgb + ')';
-  for (i = 0; i < n; i++) { a = rot + i * Math.PI * 2 / n; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a - 0.09) * rr * 1.5, Math.sin(a - 0.09) * rr * 1.5); ctx.lineTo(Math.cos(a + 0.09) * rr * 1.5, Math.sin(a + 0.09) * rr * 1.5); ctx.fill(); }
+  ctx.fillStyle = 'rgb(' + rgb + ')'; ctx.beginPath();
+  for (i = 0; i < n; i++) { a = rot + i * Math.PI * 2 / n; ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a - 0.09) * rr * 1.5, Math.sin(a - 0.09) * rr * 1.5); ctx.lineTo(Math.cos(a + 0.09) * rr * 1.5, Math.sin(a + 0.09) * rr * 1.5); ctx.closePath(); }
+  ctx.fill();
   ctx.globalAlpha = 1; ctx.fillStyle = '#fff7e3';
-  if (!calm) for (i = 0; i < 4; i++) { a = t * 2.2 + i * 1.57; star(ctx, Math.cos(a) * o.s * 0.62, Math.sin(a) * o.s * 0.5 - o.s * 0.05, o.s * (0.05 + 0.03 * Math.sin(t * 6 + i))); }
+  if (!calm) for (i = 0; i < 4; i++) { a = t * 2.2 + i * 1.57; var sr = o.s * (0.05 + 0.03 * Math.sin(t * 6 + i)) * 1.15; ctx.drawImage(starImg(), Math.cos(a) * o.s * 0.62 - sr, Math.sin(a) * o.s * 0.5 - o.s * 0.05 - sr, sr * 2, sr * 2); }
   ctx.restore();
+}
+
+/* ---------- Lime Launcher: a small green helper for Champion fights. Its lime missiles pop the Champion's snowballs first; leftovers hit the Champion ---------- */
+var LM = { cost: [80, 100, 150], rate: [4.2, 3.0], vol: [2, 4] };
+var LIME_COL = ['#d8ff7a', '#a6e34a', '#5cb82a', '#fff7e3'], limeImg = null, LIME_TY = null, LIME_GAP = 0.14, LIME_T = 0.55;
+function limeInt() { return LM.rate[sv.lm >= 2 ? 1 : 0] * (S.fx.zip > 0 ? 0.5 : 1); }
+function limeVol() { return LM.vol[sv.lm >= 3 ? 1 : 0]; }
+function limeGeom() { var s = slingGeom(); return { x: W * 0.255, base: s.base, f: s.f * 0.46, ps: s.f * 0.46 * 0.62 }; }
+function limeReady() { var L = S.lm; return L.q > 0 ? 1 : 1 - Math.max(0, L.cd) / limeInt(); }
+function limeTy() { return LIME_TY || (LIME_TY = { img: 'pa', size: 0.95, pic: limeSprite() }); }
+/* the missile, drawn once and reused: nose up, a slice of lime in its window */
+function limeSprite() {
+  if (limeImg) return limeImg;
+  var c = document.createElement('canvas'), g, bg, i, a, cy = 62; c.width = c.height = 128; g = c.getContext('2d');
+  g.translate(64, 0); g.lineJoin = 'round'; g.strokeStyle = '#143d09'; g.lineWidth = 4;
+  g.fillStyle = '#2f7a12';
+  g.beginPath(); g.moveTo(-16, 80); g.quadraticCurveTo(-36, 88, -34, 116); g.lineTo(-14, 104); g.closePath(); g.fill(); g.stroke();
+  g.beginPath(); g.moveTo(16, 80); g.quadraticCurveTo(36, 88, 34, 116); g.lineTo(14, 104); g.closePath(); g.fill(); g.stroke();
+  bg = g.createLinearGradient(-20, 0, 20, 0); bg.addColorStop(0, '#9be03a'); bg.addColorStop(0.35, '#d8ff7a'); bg.addColorStop(0.72, '#7fcf3a'); bg.addColorStop(1, '#3f8f1d');
+  g.fillStyle = bg; g.beginPath(); g.moveTo(-20, 100); g.lineTo(-20, 46); g.quadraticCurveTo(-20, 12, 0, 4); g.quadraticCurveTo(20, 12, 20, 46); g.lineTo(20, 100); g.quadraticCurveTo(0, 110, -20, 100); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = '#e9ffb0'; g.beginPath(); g.arc(0, cy, 13, 0, 6.3); g.fill(); g.stroke();
+  g.fillStyle = '#8fd83e'; g.beginPath(); g.arc(0, cy, 9.5, 0, 6.3); g.fill();
+  g.strokeStyle = '#e9ffb0'; g.lineWidth = 2; g.beginPath();
+  for (i = 0; i < 6; i++) { a = i * Math.PI / 3; g.moveTo(0, cy); g.lineTo(Math.cos(a) * 9.5, cy + Math.sin(a) * 9.5); }
+  g.stroke();
+  g.fillStyle = 'rgba(255,255,255,.62)'; g.beginPath(); g.ellipse(-10, 36, 3.5, 18, 0.06, 0, 6.3); g.fill();
+  g.fillStyle = 'rgba(20,61,9,.35)'; g.fillRect(-20, 88, 40, 5);
+  limeImg = c; return c;
+}
+function limeTgt(m) {
+  var b = S.boss, n, j, a, s;
+  if (!b || b.st === 'slide' || b.st === 'gone') return { x: m.tx, y: m.ty };
+  s = psz(b.p) * b.big; n = b.shield | 0;
+  if (n > 0 && b.st === 'hold') { j = m.i % n; a = (calm ? 0 : b.sp * 0.9) + j * 6.283 / n; m.tx = px(b.xn, b.p) + Math.cos(a) * s * 0.66; m.ty = py(b.p) - s * 0.16 + Math.sin(a) * s * 0.09; }
+  else { var c = penCenter(b); m.tx = c.x; m.ty = c.y - c.s * 0.05; }
+  return { x: m.tx, y: m.ty };
+}
+function launchLime(i) {
+  var po = pouchPos(limeGeom(), S.lm.a), c = penCenter(S.boss);
+  S.ms.push({ i: i, t: 0, x0: po.x, y0: po.y, x: po.x, y: po.y, tx: c.x, ty: c.y, side: i % 2 ? 1 : -1, h: [], ang: -1.57 });
+  burst(po.x, po.y, 4, LIME_COL);
+}
+function limeHit(m) {
+  var b = S.boss, tp = limeTgt(m);
+  curSrc = 1;
+  if (b && b.st === 'hold') hitBoss(1, penCenter(b));
+  burst(tp.x, tp.y, 9, LIME_COL); sparkBurst(tp.x, tp.y, 4, LIME_COL);
+  if (!calm) rings.push({ x: tp.x, y: tp.y, t: 0, ttl: 0.35, r: psz(0.4) * 0.35, c: '166,227,74' });
+}
+function updateLime(dt) {
+  var L = S.lm, b = S.boss, can, i, m, tp, u, uu, p, ta = 0, c, po;
+  for (i = S.ms.length - 1; i >= 0; i--) {
+    m = S.ms[i]; m.t += dt; tp = limeTgt(m); u = Math.min(1, m.t / LIME_T); uu = 0.3 * u + 0.7 * u * u;
+    var cx = m.x0 + (tp.x - m.x0) * 0.3 + m.side * W * 0.07, cy = Math.min(m.y0, tp.y) - H * 0.1, k = 1 - uu;
+    if (m.h.length > 7) m.h.shift(); m.h.push(m.x, m.y);
+    m.x = k * k * m.x0 + 2 * k * uu * cx + uu * uu * tp.x; m.y = k * k * m.y0 + 2 * k * uu * cy + uu * uu * tp.y;
+    m.ang = Math.atan2(2 * k * (cy - m.y0) + 2 * uu * (tp.y - cy), 2 * k * (cx - m.x0) + 2 * uu * (tp.x - cx));
+    if (m.t >= LIME_T) { limeHit(m); S.ms.splice(i, 1); }
+  }
+  if (!sv.lm) return;
+  can = !!b && b.st === 'hold' && S.mode === 'boss' && !S.over;
+  L.cd = Math.max(0, L.cd - dt);
+  if (can && L.q === 0 && L.cd <= 0) { L.q = limeVol(); L.qt = 0; L.n = 0; }
+  if (L.q > 0) {
+    L.qt -= dt;
+    if (L.qt <= 0) { if (can) launchLime(L.n++); L.q--; L.qt = LIME_GAP; if (L.q === 0) L.cd = limeInt(); }
+  }
+  if (can || L.q > 0) { c = penCenter(b); po = pouchPos(limeGeom(), L.a); ta = Math.max(-0.3, Math.min(0.3, Math.atan2(c.x - po.x, po.y - c.y))); }
+  L.a += (ta - L.a) * Math.min(1, dt * 9);
+}
+function drawMissiles() {
+  var i, j, m, sz = Math.max(30, Math.min(W, H) * 0.075), h, n, fl;
+  if (!S.ms.length) return;
+  var im = limeSprite();
+  for (i = 0; i < S.ms.length; i++) {
+    m = S.ms[i]; h = m.h; n = h.length / 2;
+    if (!calm) for (j = 0; j < n; j++) {
+      ctx.globalAlpha = 0.5 * (j + 1) / (n + 1); ctx.fillStyle = j & 1 ? '#d8ff7a' : '#a6e34a';
+      ctx.beginPath(); ctx.arc(h[j * 2], h[j * 2 + 1], sz * 0.2 * (j + 1) / (n + 1), 0, 6.3); ctx.fill();
+    }
+    ctx.globalAlpha = 1; ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.ang + Math.PI / 2);
+    fl = calm ? 1 : 0.8 + 0.3 * Math.sin(m.t * 60 + i);
+    ctx.fillStyle = '#ff9f3a'; ctx.beginPath(); ctx.ellipse(0, sz * 0.62, sz * 0.12, sz * 0.24 * fl, 0, 0, 6.3); ctx.fill();
+    ctx.fillStyle = '#fff2a8'; ctx.beginPath(); ctx.ellipse(0, sz * 0.58, sz * 0.06, sz * 0.14 * fl, 0, 0, 6.3); ctx.fill();
+    ctx.drawImage(im, -sz / 2, -sz / 2, sz, sz); ctx.restore();
+  }
 }

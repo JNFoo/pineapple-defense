@@ -341,3 +341,10 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.2223: harder Champions, Champion health bar, new lanes, secret spots, Toasty!, P to pause.
 - 2026.10.12.2253: gulls, paper umbrellas, Air Raid, combo calls, run speed streak, challenges, 11 new trophies, better slingshot, faceless projectile, bigger special entrances.
 - 2026.10.12.2306: run-end Save and restart / Reset completely, one-command QA and release tools, small fixes.
+- 2026.10.12.2343: Lime Launcher (3 tiers), polished sprites and icons, canvas caching and batching (about 47% fewer canvas calls per frame), ideas file.
+
+### Round 29: Lime Launcher and polish
+- **Lime Launcher (save field `lm`, 0 to 3):** costs 80 / 100 / 150. Tier 1 owns it, tier 2 (Rapid Limes) shortens the volley gap from 4.2 s to 3.0 s, tier 3 (Lime Volley) raises the volley from 2 to 4 missiles. Independent of the Auto Slingshot. Active only while a Champion holds its lane.
+- Missiles home on a snowball of the Champion's shield (pop one each); when the shield is gone they hit the Champion for one health. A missile that arrives while the Champion is recovering or leaving fizzles into a lime puff. Hits use the Auto source in the combo counter, so lime hits chain with slingshot and Auto hits.
+- The sling is drawn with the same code as the others using a green palette; its pouch holds a cached lime missile sprite. The Paper Umbrella shelf moved right to make room.
+- Performance: see docs/ideas-qol-and-performance.md for what was done and what is open.
