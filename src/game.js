@@ -971,7 +971,7 @@ function skStep(b, h) {
     }
   }
   if (b.v >= 0 && b.z <= 0 && b.vz < 0) { b.z = 0; if (b.vz < -0.6) { b.vz = -b.vz * 0.42; b.vu *= 0.88; b.vv *= 0.88; } else b.vz = 0; }
-  if (b.v < 0 && b.z <= 0 && b.vz <= 0) { b.st = 'out'; b.t = 0; b.z = 0; b.vz = 0; skCheer(false); }
+  if (b.v < 0) { b.st = 'out'; b.t = 0; b.z = Math.max(0, b.z); b.vz = Math.min(b.vz, 0.4); skCheer(false); }
 }
 function updateSkee(dt) {
   S.t += dt; fxUpdate(dt);
@@ -1012,8 +1012,8 @@ function skUpdBall(b, dt) {
   } else if (b.st === 'out') {
     n = Math.max(1, Math.ceil(dt * 120)); h = dt / n;
     for (i = 0; i < n && b.st === 'out'; i++) {
-      b.vz -= SK_G * h; b.z += b.vz * h; b.v += b.vv * h; b.u = skCl(b.u + b.vu * h, -0.89, 0.89); b.rot -= 0.3;
-      if (b.v <= SK_HUMP + 0.04 || b.z < -0.08 || b.t > 1.6) { b.st = 'gut'; b.t = 0; b.z = 0; b.vu = (Math.abs(b.u) < 0.03 ? (Math.random() < 0.5 ? 1 : -1) : (b.u > 0 ? 1 : -1)) * (0.7 + Math.min(0.8, Math.abs(b.vu))); b.vv = 0; }
+      b.vz -= SK_G * h; b.z += b.vz * h; b.vv *= 1 - 9 * h; b.vv = Math.max(b.vv, -0.9); b.v += b.vv * h; b.u = skCl(b.u + b.vu * h, -0.89, 0.89);
+      if (b.v <= SK_HUMP + 0.03 || b.z < -0.08 || b.t > 1.6) { b.st = 'gut'; b.t = 0; b.z = 0; b.vu = (Math.abs(b.u) < 0.03 ? (Math.random() < 0.5 ? 1 : -1) : (b.u > 0 ? 1 : -1)) * (0.7 + Math.min(0.8, Math.abs(b.vu))); b.vv = 0; }
     }
   } else if (b.st === 'gut') {
     /* the catch trough tips every miss toward a drain at the end: it gathers speed along the curve and drops out of sight */
@@ -1085,13 +1085,54 @@ function drawHoleB(h) {
 function skQuad(g, u0, v0, u1, v1, fill) {
   g.fillStyle = fill; g.beginPath(); g.moveTo(skX(u0, v0), skY(v0)); g.lineTo(skX(u1, v0), skY(v0)); g.lineTo(skX(u1, v1), skY(v1)); g.lineTo(skX(u0, v1), skY(v1)); g.closePath(); g.fill();
 }
+/* the arcade hall behind the machine: striped wall, bunting, posters, a tiled floor, and wooden bleachers for the crowds */
+function skHall(g, yW) {
+  var i, j, k, lg, x, y, y0, y1, n = 9, sc0, sc1, side, e, py, wd = W / 12;
+  lg = g.createLinearGradient(0, 0, 0, yW); lg.addColorStop(0, '#241a48'); lg.addColorStop(1, '#4a3a84'); g.fillStyle = lg; g.fillRect(0, 0, W, yW);
+  for (i = 0; i < 12; i++) { g.fillStyle = i % 2 ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.1)'; g.fillRect(i * wd, 0, wd, yW); }
+  g.fillStyle = '#392b6b'; g.fillRect(0, yW - H * 0.04, W, H * 0.04); g.fillStyle = '#7762b4'; g.fillRect(0, yW - H * 0.04, W, 3); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, yW - 3, W, 3);
+  /* posters in the upper corners */
+  for (side = 0; side < 2; side++) {
+    x = side ? W * 0.9 : W * 0.04; y = H * 0.175; g.fillStyle = '#e8d9b0'; g.fillRect(x - 3, y - 3, W * 0.07 + 6, H * 0.062 + 6); g.fillStyle = side ? '#2b7fb8' : '#e0472f'; g.fillRect(x, y, W * 0.07, H * 0.062);
+    g.fillStyle = '#ffe680'; g.beginPath(); g.arc(x + W * 0.035, y + H * 0.03, W * 0.019, 0, 6.3); g.fill(); g.fillStyle = '#2f9a4a'; g.fillRect(x + W * 0.03, y + H * 0.005, W * 0.01, H * 0.012);
+  }
+  /* bunting across each side of the wall */
+  for (side = 0; side < 2; side++) {
+    var x0 = side ? W : 0, x1 = side ? W * 0.74 : W * 0.26, ya = H * 0.158, yb = H * 0.135;
+    g.strokeStyle = '#d8c9a0'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0, ya); g.quadraticCurveTo((x0 + x1) / 2, ya + H * 0.045, x1, yb); g.stroke();
+    for (i = 0; i < 9; i++) {
+      var tt = (i + 0.5) / 9, bx = x0 + (x1 - x0) * tt, by = (1 - tt) * (1 - tt) * ya + 2 * (1 - tt) * tt * (ya + H * 0.045) + tt * tt * yb;
+      g.fillStyle = ['#e0472f', '#ffd23f', '#2b9fd8', '#3fbf6a'][i % 4]; g.beginPath(); g.moveTo(bx - 8, by); g.lineTo(bx + 8, by); g.lineTo(bx, by + 17); g.closePath(); g.fill();
+    }
+  }
+  /* floor: dark checker tiles in perspective */
+  lg = g.createLinearGradient(0, yW, 0, H); lg.addColorStop(0, '#2d2358'); lg.addColorStop(1, '#171030'); g.fillStyle = lg; g.fillRect(0, yW, W, H - yW);
+  for (k = 0; k < n; k++) {
+    y0 = yW + (H - yW) * Math.pow(k / n, 1.6); y1 = yW + (H - yW) * Math.pow((k + 1) / n, 1.6);
+    sc0 = W * 0.1 * (1 + 2.6 * (y0 - yW) / (H - yW)); sc1 = W * 0.1 * (1 + 2.6 * (y1 - yW) / (H - yW));
+    for (j = -9; j < 9; j++) {
+      if ((j + k) & 1) continue;
+      g.fillStyle = 'rgba(255,255,255,.045)'; g.beginPath(); g.moveTo(W / 2 + j * sc0, y0); g.lineTo(W / 2 + (j + 1) * sc0, y0); g.lineTo(W / 2 + (j + 1) * sc1, y1); g.lineTo(W / 2 + j * sc1, y1); g.closePath(); g.fill();
+    }
+  }
+  /* wooden bleachers beside the machine, a step for each row of the crowd */
+  for (side = 0; side < 2; side++) {
+    var top = H * 0.255, prev = top; g.save(); if (side) { g.translate(W, 0); g.scale(-1, 1); }
+    e = function (yy) { return skX(-1.12, skCl(skV(yy), SK_V0, SK_VMAX)) - 2; };
+    g.fillStyle = '#3a2516'; g.beginPath(); g.moveTo(0, top); g.lineTo(e(top), top); g.lineTo(e(H * 0.88), H * 0.88); g.lineTo(0, H * 0.88); g.closePath(); g.fill();
+    for (i = 0; i < 12; i++) {
+      py = H * (0.27 + i * 0.0525) + H * 0.004; var ph = H * 0.017;
+      g.fillStyle = '#7b5232'; g.fillRect(0, py, e(py), ph); g.fillStyle = '#a9754a'; g.fillRect(0, py, e(py), 2); g.fillStyle = '#5a3a21'; g.fillRect(0, py + ph, e(py), 3);
+    }
+    g.fillStyle = '#d6b04a'; g.fillRect(0, top - 4, e(top), 4);
+    g.restore();
+  }
+}
 function buildSkeeBg() {
   skBg = document.createElement('canvas'); skBg.width = cv.width; skBg.height = cv.height;
   var g = skBg.getContext('2d'), i, side, yT = skY(SK_VMAX), yB = skY(0), yH = skY(SK_HUMP), lg, yW = H * 0.26;
   g.scale(DPR, DPR);
-  lg = g.createLinearGradient(0, 0, 0, yW); lg.addColorStop(0, '#1d1636'); lg.addColorStop(1, '#40306b'); g.fillStyle = lg; g.fillRect(0, 0, W, yW);
-  lg = g.createLinearGradient(0, yW, 0, H); lg.addColorStop(0, '#33295a'); lg.addColorStop(1, '#1a1433'); g.fillStyle = lg; g.fillRect(0, yW, W, H - yW);
-  g.fillStyle = '#5a4a8c'; g.fillRect(0, yW - 2, W, 4);
+  skHall(g, yW);
   /* the machine's cabinet under the lane */
   skQuad(g, -1.2, SK_V0 - 0.6, 1.2, 0.0, '#2b1f44');
   /* board: red felt, brighter toward the player */

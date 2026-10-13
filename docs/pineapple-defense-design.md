@@ -296,3 +296,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.2002: more polish.
 - 2026.10.12.2006: more polish.
 - 2026.10.12.2015: more polish.
+- 2026.10.12.2020: more polish.
