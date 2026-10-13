@@ -24,7 +24,8 @@ function tryDrop() {
   }
   if (!c.length) return false;
   c = c[Math.floor(Math.random() * c.length)];
-  S.fish.push({ isFish: true, st: 'fall', t: 0, T: T, xn: c.pg.xn, p: pL, pg: null, hop: Math.random() * 6 });
+  var nf = { isFish: true, st: 'fall', t: 0, T: T, xn: c.pg.xn, p: pL, pg: null, hop: Math.random() * 6 };
+  S.fish.push(nf); gullFor(nf);
   return true;
 }
 function startEvolve(pg, f) {

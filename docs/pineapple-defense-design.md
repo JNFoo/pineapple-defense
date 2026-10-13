@@ -300,6 +300,17 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Fish timing:** the fish lands mid-field, only in front of penguins that have not passed that spot yet, so there is time to eat, level up and keep walking.
 - **Pause:** the P key pauses and resumes, like Escape and the pause button.
 
+## Decisions, round 27: shop extras, runs, combos (Oct 12)
+- **Gull Pals (3 tiers, 60 / 100 / 150):** a gull swoops across the screen and snatches the falling fish before it lands, so fewer penguins level up. Chance per fish: 50%, 80%, 100%.
+- **Paper Umbrellas (3 tiers, 50 / 80 / 120):** the tier is how many umbrellas you get per stage. They lie on the fruit stand table. When a penguin is about to knock the cheer down, one snaps open by itself and flings him away, costing no cheer.
+- **Air Raid (2 tiers, 250 / 400):** one Raid button under the cheer bar (or R). A warning line shows where, then a row of classic pineapples falls across all lanes where the most penguins are. Tier 1 gives 1 raid per stage, tier 2 gives 2. A Champion can only be hit once per raid.
+- **Combos:** every hit within a second and a half chains, from the slingshot, the auto slingshot, a splash or a raid. Calls grow with the chain (Double, Triple, Quadruple, Mega, Super, Ultra, Incredible, Unreal, LEGENDARY) with bigger text, rays, rings, confetti and shake. Mixed slingshot and auto chains are called Team and say you + auto.
+- **Runs:** clearing all five stages is a run. Each finished run makes every penguin and Champion 10% faster (compounding, capped at double speed). Losing a wave and trying again keeps the streak; quitting the run and starting over from stage 1 resets it.
+- **Challenges and trophies:** each run carries one new challenge (+100 Golden Pineapples) and there are 11 more trophies, 21 in all. The Cups counter on the HUD counts trophies, now shown with a trophy icon.
+- **HUD:** the stage pineapple counter duplicated the bank, so it is gone; one bank counter remains.
+- **Fanfare:** pickups and trophies on the table arrive with rings, a spinning halo, sparkles and a label.
+- **Look:** the projectile shows its back (no face) as it flies at the penguins; the slingshot has a wrapped grip, brass caps, a shaded fork and a stitched pouch.
+
 ## Change log
 - 2026.10.12.1556: first title screen, logo and original pineapple and Rockhopper sprites.
 - 2026.10.12.1620: story card text approved; stage titles, Champion names and rosters decided.
@@ -325,3 +336,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.2112: five stages of 5 waves, stage scenery and five Champions.
 - 2026.10.12.2205: live bank and costs, Champion lane blocking, parachute fish and evolving penguins.
 - 2026.10.12.2223: harder Champions, Champion health bar, new lanes, secret spots, Toasty!, P to pause.
+- 2026.10.12.2253: gulls, paper umbrellas, Air Raid, combo calls, run speed streak, challenges, 11 new trophies, better slingshot, faceless projectile, bigger special entrances.
