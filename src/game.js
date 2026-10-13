@@ -865,9 +865,9 @@ function draw() {
 /* ---------- bonus game: a long lane, a hop, and a small 35 degree board of raised rings ---------- */
 var K = null, skBg = null, HINT_TXT = elHint.lastChild ? elHint.lastChild.textContent : '';
 /* world units: the board is 2 wide (u in -1..1); v runs up the incline from its front edge (v=0); the lane is below zero and the hop sits at SK_HUMP */
-var SK_BALLS = 9, SK_RIM = 0.45, SK_WALL = 1.45, SK_G = 10, SK_KZ = 0.7, SK_INC = 35, SK_RB = 0.11, SK_DIN = 0.9, SK_ZC = 0.12;
+var SK_BALLS = 9, SK_RIM = 0.45, SK_WALL = 1.45, SK_G = 10, SK_KZ = 0.7, SK_INC = 35, SK_RB = 0.09, SK_DIN = 0.9, SK_ZC = 0.12;
 var SK_V0 = -2.2, SK_HUMP = -0.2, SK_VMAX = 2.0, SK_K = 0.12, SK_RAT = 0.75, SK_LIFT = 0.55, SK_LFR = 0.5, SK_AIM = 0.7, SK_FL0 = 2.0, SK_FL1 = 2.9, SK_GV = -0.1, SK_DRN = 0.9;
-var SK_HOLES = [{ v: 50, u: 0, c: 1.72, r: 0.14 }, { v: 40, u: 0, c: 1.3, r: 0.16 }, { v: 30, u: 0, c: 0.86, r: 0.18 }, { v: 10, u: -0.66, c: 0.55, r: 0.22 }, { v: 10, u: 0.66, c: 0.55, r: 0.22 }, { v: 20, u: 0, c: 0.38, r: 0.2 }, { v: 100, u: -0.74, c: 1.72, r: 0.1 }, { v: 100, u: 0.74, c: 1.72, r: 0.1 }];
+var SK_HOLES = [{ v: 50, u: 0, c: 1.6, r: 0.12 }, { v: 40, u: 0, c: 1.25, r: 0.14 }, { v: 30, u: 0, c: 0.86, r: 0.16 }, { v: 10, u: -0.6, c: 0.55, r: 0.16 }, { v: 10, u: 0.6, c: 0.55, r: 0.16 }, { v: 20, u: 0, c: 0.38, r: 0.17 }, { v: 100, u: -0.66, c: 1.62, r: 0.11 }, { v: 100, u: 0.66, c: 1.62, r: 0.11 }];
 var SK_CROWD = (function () { var a = [], r, c; for (r = 0; r < 12; r++) for (c = 0; c < 3; c++) a.push({ y: 0.27 + r * 0.0525 + (c % 2) * 0.008, k: 0.085 + 0.04 * r / 11, r: r, c: c }); return a; }());
 function skCl(x, a, b) { return Math.max(a, Math.min(b, x)); }
 function skFb() { return W * 0.29; }
@@ -988,7 +988,7 @@ function updateSkee(dt) {
     n = Math.max(1, Math.ceil(dt * 120)); h = dt / n;
     for (i = 0; i < n && b.st === 'play'; i++) skStep(b, h);
     if (b.st === 'play') {
-      if (Math.hypot(b.vu, b.vv) < 0.25 && b.z < 0.12) { b.still += dt; if (b.still > 0.3) { b.vu = (b.u >= 0 ? 1 : -1) * 0.7; b.vv = -1; b.vz = 1; b.z = Math.max(b.z, 0.02); b.still = 0; } } else b.still = 0;
+      if (Math.hypot(b.vu, b.vv) < 0.25 && b.z < 0.12) { b.still += dt; if (b.still > 0.3) { b.vu = (b.u >= 0 ? 1 : -1) * 0.7; b.vv = -1; b.vz = 1; b.z = Math.max(b.z, 0.02); b.still = 0; K.kick = (K.kick || 0) + 1; } } else b.still = 0;
       if (b.t > 6) { b.vv = -1.5; b.vu = (b.u >= 0 ? 1 : -1) * 0.5; b.vz = 1; b.t = 3; }
     }
   } else if (b.st === 'out') {
@@ -1007,7 +1007,7 @@ function updateSkee(dt) {
 function skBallPose(b) {
   var v = b.v, u = b.u, z = b.z, s, R, a = 1, y, x, fb = skFb(), e = 0, gt = b.st === 'gut' || b.st === 'drain';
   if (b.st === 'sink') { e = Math.min(1, b.t / 0.6); e = e * e * (3 - 2 * e); u = b.u0 + (b.hole.u - b.u0) * e; v = b.v0 + (b.hole.c - b.v0) * e; z = 0; a = 1 - Math.max(0, (b.t - 0.3) / 0.3); }
-  s = skS(v); R = SK_RB * fb * s * (v < 0 ? 1 + 0.6 * (v / SK_V0) : 1) * (1 - 0.55 * e);
+  s = skS(v); R = SK_RB * 1.1 * fb * s * (v < 0 ? 1 + 0.6 * (v / SK_V0) : 1) * (1 - 0.55 * e);
   if (gt) { z = -0.05; R *= 0.82; if (b.st === 'drain') { e = Math.min(1, b.t / 0.32); R *= 1 - 0.85 * e; a = 1 - e * e; } }
   x = skX(u, v); y = skY(v) - z * fb * s * SK_LIFT;
   if (gt && b.st === 'drain') y += e * R * 1.4;
@@ -1128,7 +1128,7 @@ function drawSkee() {
   if (b && (b.st === 'gut' || b.st === 'drain')) { var yF = skY(SK_HUMP) - (skY(SK_HUMP) - skY(0)) * 0.36, yE = skY(SK_HUMP) + 2; ctx.drawImage(skBg, 0, yF * DPR, skBg.width, (yE - yF) * DPR, 0, yF, W, yE - yF); }
   drawStand();
   if (!b && !K.over && K.balls > 0) {
-    var R = SK_RB * fb * skS(SK_V0) * 1.6 * 1.15, bob = calm ? 0 : Math.sin(t * 3) * 2, im = IMG.pa.happy, yy = skY(SK_V0);
+    var R = SK_RB * 1.1 * fb * skS(SK_V0) * 1.6 * 1.15, bob = calm ? 0 : Math.sin(t * 3) * 2, im = IMG.pa.happy, yy = skY(SK_V0);
     drawShadow(W / 2, yy + 3, R * 0.9, 0.55);
     if (im) ctx.drawImage(im, W / 2 - R * 1.35, yy - R * 1.65 + bob, R * 2.7, R * 2.7);
   }
