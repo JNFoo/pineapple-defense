@@ -6,7 +6,7 @@ var root = document.documentElement;
 var titleEl = $('title'), gameEl = $('game'), cv = $('cv'), ctx = cv.getContext('2d');
 
 /* ---------- settings ---------- */
-var NWAVES = 8, WAVE_N = [4, 5, 6, 7, 8, 9, 10, 12];
+var NWAVES = 5, WAVE_N = [4, 5, 6, 7, 8], NSTAGES = 5;
 var TAP_MIN = 0.03, FLICK_MIN = 0.025, COOLDOWN = 0.42;
 var TYPES = {
   classic: { cd: 0.42, arc: 1, T: 1, rad: 0.55, splash: 0, size: 1, img: 'pa' },
@@ -22,7 +22,7 @@ function py(p) { return hy + (gy - hy) * p; }
 function psz(p) { return size0 * sc(p); }
 
 /* ---------- sprites ---------- */
-var SZ = 384, IMG = { pa: {}, rh: {}, ad: {}, pl: {}, cw: {}, pz: {}, pm: {}, ph: {}, pf: {} }, PROP = {}, assets = null;
+var SZ = 384, IMG = { pa: {}, rh: {}, ad: {}, pl: {}, cw: {}, c2: {}, c3: {}, c4: {}, c5: {}, pz: {}, pm: {}, ph: {}, pf: {} }, PROP = {}, assets = null;
 var VARS = ':root{--pa-hi:#ffeaa0;--pa-mid:#f8bd1c;--pa-lo:#a85a07;--pg-hi:#6b6aab;--pg-mid:#383767;--pg-lo:#171538;--ad-hi:#6a6677;--ad-mid:#34303f;--ad-lo:#15121d}.m-o,.m-grin,.m-pout,.brow{display:none}';
 var MOOD = {
   happy: '',
@@ -46,7 +46,7 @@ function toImage(svg, size) {
 var TINT = { pl: ['#ffd9a8', '#f2862a', '#9a3a07'], pz: ['#e0ffb8', '#5cc84a', '#1f6a1c'], pm: ['#ecd8ff', '#9b5de5', '#4a1f8a'], ph: ['#ffd6e4', '#ff6f9c', '#9a1f4f'], pf: ['#e0f6ff', '#5bb8f0', '#1d5c99'] };
 var MOODS_FOR = { pz: ['happy'], ph: ['happy'], pf: ['happy'], pm: ['happy', 'wow'] };
 function spriteSvg(markup, mood, tint) {
-  var vars = tint ? VARS.replace('--pa-hi:#ffeaa0;--pa-mid:#f8bd1c;--pa-lo:#a85a07', '--pa-hi:' + tint[0] + ';--pa-mid:' + tint[1] + ';--pa-lo:' + tint[2]) : VARS;
+  var vars = typeof tint === 'string' ? VARS + ':root{' + tint + '}' : tint ? VARS.replace('--pa-hi:#ffeaa0;--pa-mid:#f8bd1c;--pa-lo:#a85a07', '--pa-hi:' + tint[0] + ';--pa-mid:' + tint[1] + ';--pa-lo:' + tint[2]) : VARS;
   var clean = markup.replace(/\sstyle="transform[^"]*"/g, '');
   return clean.replace(/^[\s\S]*?<svg[^>]*>/, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="' + SZ + '" height="' + SZ + '"><style>' + vars + MOOD[mood] + '</style>');
 }
@@ -58,6 +58,7 @@ function loadAssets() {
     ad: $('spr-ad').innerHTML,
     cw: $('spr-cw').innerHTML
   };
+  ['c2', 'c3', 'c4', 'c5'].forEach(function (k) { src[k] = champSvg(src.cw, k); TINT[k] = CHAMP_LOOK[k].vars; });
   src.pl = src.pz = src.pm = src.ph = src.pf = src.pa;
   var jobs = [];
   Object.keys(src).forEach(function (k) {
@@ -80,9 +81,9 @@ var sv = kit.load() || kit.validate({});
 sv.ach = sv.ach | 0; sv.au = sv.au | 0; sv.ar = sv.ar | 0; sv.ap = sv.ap | 0;
 var btnCont = $('bCont');
 function updateContinue() {
-  var can = sv.wave > 0;
+  var can = sv.wave > 0 || sv.stage > 1;
   btnCont.disabled = !can;
-  btnCont.textContent = can ? (sv.wave >= NWAVES ? 'Continue: boss' : 'Continue: wave ' + (sv.wave + 1)) : 'Continue';
+  btnCont.textContent = can ? 'Continue: ' + (sv.stage > 1 ? 'stage ' + sv.stage + (sv.wave > 0 ? ', ' : '') : '') + (sv.wave >= NWAVES ? 'boss' : sv.wave > 0 ? 'wave ' + (sv.wave + 1) : '') : 'Continue';
   btnCont.title = can ? 'Pick up where you left off' : 'No saved game yet';
 }
 updateContinue();
@@ -95,7 +96,7 @@ var gov = new QualityGovernor({ levels: 3, onChange: function (l) { qLevel = l; 
 
 function newState() {
   S = { wave: 0, spawned: 0, toSpawn: 0, spawnT: 0, mode: 'intro', modeT: 0, cheer: 100, golden: 0, bumps: 0,
-        cd: 0, cdMax: 0.42, t: 0, wob: 0, thrown: false, over: false, paused: false, id: 0, lastLane: -1, boss: null, inBoss: false, bossHp: 3, sa: 0,
+        cd: 0, cdMax: 0.42, t: 0, wob: 0, thrown: false, over: false, paused: false, id: 0, lastLane: -1, boss: null, inBoss: false, bossHp: 3, bossMax: 3, stage: 1, sa: 0,
         puT: 9, pu: null, lastPu: '', fx: { zip: 0, mega: 0, frost: 0 }, tro: null, tq: [], earned: 0, streak: 0, allBumps: 0, toast: null, au: { cd: 1.5, tgt: null, a: 0 } };
   penguins = []; shots = []; bits = []; pops = [];
 }
@@ -107,7 +108,7 @@ var elLeft = $('leftTxt'), elCombo = $('comboTxt'), elBank = $('bankTxt'), elCup
 function popcount(n) { var c = 0; while (n) { c += n & 1; n >>= 1; } return c; }
 function setTxt(el, key, v) { if (shown[key] !== v) { shown[key] = v; el.textContent = String(v); } }
 function hud() {
-  var w = S.inBoss ? 'Coach Waddles: ' + S.bossHp + ' / 3' : 'Wave ' + Math.max(1, S.wave) + ' / ' + NWAVES;
+  var w = S.inBoss ? CHAMP[S.stage].s + ': ' + S.bossHp + ' / ' + S.bossMax : (S.stage > 1 ? 'S' + S.stage + ' · ' : '') + 'Wave ' + Math.max(1, S.wave) + ' / ' + NWAVES;
   if (w !== shown.wave) { shown.wave = w; elWave.textContent = w; }
   if (S.golden !== shown.gold) { shown.gold = S.golden; elGold.textContent = String(S.golden); }
   var c = Math.round(S.cheer);
@@ -119,7 +120,7 @@ function hud() {
 }
 var bannerT = 0;
 function banner(text, ms) {
-  elBanner.textContent = text;
+  elBanner.textContent = text; elBanner.classList.toggle('ml', text.indexOf('\n') >= 0);
   try { StickerText.apply(elBanner, { outline: '#fff7e3' }); } catch (e) {}
   elBanner.hidden = false;
   clearTimeout(bannerT);
@@ -150,6 +151,7 @@ function peaks(g, base, ph, arr, color) {
   g.lineTo(W, base); g.closePath(); g.fillStyle = color; g.fill();
 }
 function buildBg() {
+  if (stageNo() > 1) { buildStageBg(); return; }
   bg = document.createElement('canvas');
   bg.width = cv.width; bg.height = cv.height;
   var g = bg.getContext('2d'); g.scale(DPR, DPR);
@@ -185,8 +187,8 @@ function buildBg() {
 var dyn = {};
 function buildDyn(sx, sy, sr) {
   dyn = { sx: sx, sy: sy, sr: sr };
-  if (PROP.palm) { var ph = Math.min(H * 0.3, W * 0.45), pw = ph * 100 / 130; dyn.palm = { x: W * 0.015, y: hy + H * 0.075 - ph * 0.954, w: pw, h: ph }; }
-  if (PROP.plant) { var qs = Math.min(H * 0.1, W * 0.17), by = hy + H * 0.07; dyn.pl = [{ x: W * 0.13, y: by - qs * 0.92, s: qs }, { x: W * 0.2, y: by + H * 0.012 - qs * 0.78 * 0.92, s: qs * 0.78 }]; }
+  if (PROP.palm && stageNo() === 1) { var ph = Math.min(H * 0.3, W * 0.45), pw = ph * 100 / 130; dyn.palm = { x: W * 0.015, y: hy + H * 0.075 - ph * 0.954, w: pw, h: ph }; }
+  if (PROP.plant && stageNo() === 1) { var qs = Math.min(H * 0.1, W * 0.17), by = hy + H * 0.07; dyn.pl = [{ x: W * 0.13, y: by - qs * 0.92, s: qs }, { x: W * 0.2, y: by + H * 0.012 - qs * 0.78 * 0.92, s: qs * 0.78 }]; }
   var hc = document.createElement('canvas'); hc.width = hc.height = 128;
   var hg = hc.getContext('2d'), gr = hg.createRadialGradient(64, 64, 0, 64, 64, 64);
   gr.addColorStop(0, 'rgba(255,236,160,.9)'); gr.addColorStop(0.35, 'rgba(255,224,138,.35)'); gr.addColorStop(1, 'rgba(255,224,138,0)');
@@ -197,6 +199,7 @@ function sway(img, x, y, w, h, px0, py0, ang) {
 }
 function drawScenery(t) {
   var q = qLevel;
+  if (stageNo() > 1) { STAGES[stageNo()].anim(t); return; }
   if (dyn.halo) { var hs = dyn.sr * (4.4 + 0.5 * Math.sin(t * 1.1)); ctx.globalAlpha = 0.5 + 0.22 * Math.sin(t * 1.1 + 1); ctx.drawImage(dyn.halo, dyn.sx - hs / 2, dyn.sy - hs / 2, hs, hs); ctx.globalAlpha = 1; }
   /* sea: moving ripples, bobbing icebergs, twinkles */
   var sb = H * 0.035, i;
@@ -230,6 +233,8 @@ function drawScenery(t) {
     }
   }
 }
+
+/*{{STAGES_JS}}*/
 
 /* ---------- particles ---------- */
 var PINE_COL = ['#f8bd1c', '#ffe58a', '#7fd68f'], SNOW_COL = ['#ffffff', '#cfe9f5', '#a8d6ec'];
@@ -366,13 +371,15 @@ function drawAutoMark() {
 }
 
 /* ---------- waves and penguins ---------- */
+function effW() { return S.wave + (S.stage - 1) * 2; }
 function beginWave(n) {
   S.wave = n; S.spawned = 0; S.toSpawn = WAVE_N[n - 1]; S.spawnT = 0.6; S.bumps = 0;
   S.mode = 'intro'; S.modeT = 0;
-  banner(n === NWAVES ? 'Final wave!' : 'Wave ' + n, 1500);
+  if (n === 1 && S.stage > 1) banner('Stage ' + S.stage + '\n' + STAGES[S.stage].title, 2300);
+  else banner(n === NWAVES ? 'Final wave!' : 'Wave ' + n, 1500);
 }
 function spawn() {
-  var w = S.wave, lane;
+  var w = effW(), lane;
   do { lane = Math.floor(Math.random() * 5); } while (lane === S.lastLane);
   S.lastLane = lane;
   var pAd = w < 3 ? 0 : Math.min(0.5, 0.12 * (w - 2));
@@ -436,7 +443,7 @@ function throwAt(ox, oy, dx, dy, spd, tapPoint) {
   if (best) {
     ttf = (0.42 + 0.38 * (1 - best.p)) * ty.T;
     pEnd = Math.min(0.94, best.p + (best.st === 'walk' ? best.v * slowK : 0) * ttf);
-    xE = px(best.xn, pEnd); yE = py(pEnd) - psz(pEnd) * (best.big || 1) * 0.42;
+    xE = px(best.xn + (best.vx || 0) * ttf, pEnd); yE = py(pEnd) - psz(pEnd) * (best.big || 1) * 0.42;
   } else {
     pEnd = tapPoint ? Math.max(0.12, Math.min(0.92, (tapPoint.y - hy) / (gy - hy))) : Math.max(0.25, Math.min(0.92, 0.25 + (spd - 0.8) * 0.2));
     yE = py(pEnd) - psz(pEnd) * 0.3;
@@ -492,16 +499,17 @@ function updateShot(s, dt) {
 
 /* ---------- stage flow ---------- */
 function startStage(from) {
-  newState();
+  var st = from && from.stage >= 1 && from.stage <= NSTAGES ? from.stage : 1;
+  newState(); S.stage = st; buildBg();
   S.t = 0;
   elBanner.hidden = true;
-  elHint.hidden = !!(from && from.wave > 0);
+  elHint.hidden = !!(from && (from.wave > 0 || from.stage > 1));
   if (from) { S.golden = from.golden; S.cheer = Math.max(60, from.cheer); }
   hud();
   if (from && from.wave >= NWAVES) startBoss(); else beginWave(from ? from.wave + 1 : 1);
 }
 function continueGame() { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage(sv); run(); }); }
-function retryWave() { var w = S.inBoss ? NWAVES : S.wave - 1, g = S.golden; startStage({ wave: w, golden: g, cheer: 60 }); run(); }
+function retryWave() { var w = S.inBoss ? NWAVES : S.wave - 1, g = S.golden; startStage({ stage: S.stage, wave: w, golden: g, cheer: 60 }); run(); }
 function endStage(win) {
   S.over = true;
   if (win) {
@@ -509,9 +517,11 @@ function endStage(win) {
     if (S.allBumps === 0) award(9);
     if (S.tro) collectTro(true);
     while (S.tq.length) { S.tro = { id: S.tq.shift(), t: 0 }; collectTro(true); }
-    sv.bank = Math.min(999999, sv.bank + S.golden); sv.golden = 0; sv.wave = 0; sv.cheer = 100; sv.cleared = Math.max(sv.cleared, 1);
+    var st = S.stage, last = st >= NSTAGES, CH = CHAMP[st];
+    sv.bank = Math.min(999999, sv.bank + S.golden); sv.golden = 0; sv.wave = 0; sv.cheer = 100; sv.cleared = Math.max(sv.cleared, st); sv.stage = last ? 1 : st + 1;
     kit.save(sv); updateContinue();
-    showCard('Stage 1 clear!', 'Coach Waddles is giggling! You collected ' + S.golden + ' Golden Pineapples. Spend them in the Shop on the title screen. Stage 2 is coming soon!', 'Play again', startAgain);
+    if (last) showCard('You did it!', CH.n + ' is giggling and every stage is clear! You collected ' + S.golden + ' Golden Pineapples. Spend them in the Shop on the title screen.', 'Play again', startAgain);
+    else showCard('Stage ' + st + ' clear!', CH.n + ' is giggling! You collected ' + S.golden + ' Golden Pineapples. Next up: ' + STAGES[st + 1].title.replace('\n', ' ') + '.', 'Next stage', function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
   } else {
     showCard('The stand needs a break!', 'Everyone is giggling. Let us try this wave again!', 'Try again', retryWave);
   }
@@ -523,24 +533,38 @@ function waveClear() {
   S.cheer = Math.min(100, S.cheer + 15);
   S.golden += 1 + (S.bumps === 0 ? 1 : 0);
   banner(S.bumps === 0 ? 'Perfect wave!' : 'Wave clear!', 1300);
-  sv.wave = S.wave; sv.golden = S.golden; sv.cheer = Math.round(S.cheer); kit.save(sv); updateContinue();
+  sv.stage = S.stage; sv.wave = S.wave; sv.golden = S.golden; sv.cheer = Math.round(S.cheer); kit.save(sv); updateContinue();
 }
 
 /* ---------- boss: Coach Waddles ---------- */
 function startBoss() {
-  S.inBoss = true; S.mode = 'bossIntro'; S.modeT = 0; S.bossHp = 3; S.boss = null; S.spawnT = 2.5; S.wave = NWAVES;
-  banner('Boss: Coach Waddles!', 2000);
+  var CH = CHAMP[S.stage];
+  S.inBoss = true; S.mode = 'bossIntro'; S.modeT = 0; S.bossHp = CH.hp; S.bossMax = CH.hp; S.boss = null; S.spawnT = 2.5; S.wave = NWAVES;
+  banner(CH.rank + ' Champion\n' + CH.n.replace('Grand Champion ', '') + '!', 2300);
 }
 function spawnBoss() {
-  S.boss = { id: ++S.id, kind: 'cw', xn: 0, p: 0.05, v: 0.07, st: 'walk', t: 0, mood: 'happy', ph: 0, hat: false, a: 1, big: 1.35, hp: 3, shield: 4, sp: 0, puff: 0 };
+  var CH = CHAMP[S.stage];
+  S.boss = { id: ++S.id, kind: CH.kind, xn: 0, p: 0.05, v: 0.07, st: 'walk', t: 0, mood: 'happy', ph: 0, hat: false, a: 1, big: CH.big, hp: CH.hp, shield: CH.shield || 0, sp: 0, puff: 0, vx: 0, dph: 0, nd: CH.slide || 0, tele: false, x0: 0, x1: 0 };
 }
 function updateBoss(b, dt) {
-  b.t += dt; b.ph += dt * 5; b.sp += dt;
+  var CH = CHAMP[S.stage];
+  b.t += dt; b.ph += dt * 5; b.sp += dt; b.vx = 0;
   if (b.st === 'walk') { b.p += b.v * dt * slowK; if (b.p >= 0.4) { b.p = 0.4; b.st = 'hold'; b.t = 0; } }
+  else if (b.st === 'hold') {
+    if (CH.dodge) { var om = CH.om; b.dph += dt * om * slowK; b.xn = Math.sin(b.dph) * CH.dodge; b.vx = Math.cos(b.dph) * CH.dodge * om * slowK; }
+    if (CH.slide) {
+      b.nd -= dt * slowK; b.tele = b.nd < 0.55 && b.nd > 0;
+      if (b.nd <= 0) { var da = CH.dodge || 0.62; b.st = 'dash'; b.t = 0; b.tele = false; b.vx = 0; b.x0 = b.xn; b.x1 = b.xn > 0.05 ? -da : b.xn < -0.05 ? da : (Math.random() < 0.5 ? -da : da); }
+    }
+  } else if (b.st === 'dash') {
+    var u = Math.min(1, b.t / 0.8); u = u * u * (3 - 2 * u); b.xn = b.x0 + (b.x1 - b.x0) * u; b.puff -= dt;
+    if (b.puff <= 0) { b.puff = 0.06; burst(px(b.xn, b.p), py(b.p), 2, SNOW_COL); }
+    if (b.t >= 0.8) { b.st = 'hold'; b.t = 0; b.nd = CH.slide; if (CH.dodge) b.dph = Math.asin(Math.max(-1, Math.min(1, b.xn / CH.dodge))); }
+  }
   else if (b.st === 'hit') {
     if (b.t > 1.0) {
       if (b.hp <= 0) { b.st = 'slide'; b.t = 0; b.mood = 'giggle'; b.shield = 0; }
-      else { b.st = 'hold'; b.mood = 'happy'; b.hat = false; b.shield = b.hp + 1; b.t = 0; }
+      else { b.st = 'hold'; b.mood = 'happy'; b.hat = false; b.shield = CH.kind === 'cw' ? b.hp + 1 : (CH.shield || 0); b.t = 0; b.nd = Math.max(b.nd, 2.2); }
     }
   } else if (b.st === 'slide') {
     b.p -= (0.35 + b.t * 1.1) * dt; b.puff -= dt;
@@ -550,7 +574,7 @@ function updateBoss(b, dt) {
 }
 function bossDefeated() {
   S.mode = 'bossWin'; S.modeT = 0; S.golden += 3; S.cheer = Math.min(100, S.cheer + 15);
-  banner('Coach Waddles giggles!', 1900);
+  banner(CHAMP[S.stage].n.replace('Grand Champion ', '') + '\ngiggles!', 1900);
 }
 function drawShield(b) {
   if (b.shield <= 0 || b.st === 'slide') return;
@@ -586,7 +610,7 @@ function update(dt) {
   if (S.mode === 'intro' && S.modeT > 1.2) { S.mode = 'run'; S.modeT = 0; }
   if (S.mode === 'run') {
     S.spawnT -= dt;
-    if (S.spawned < S.toSpawn && S.spawnT <= 0) { spawn(); S.spawnT = Math.max(0.7, 1.9 - 0.12 * S.wave); }
+    if (S.spawned < S.toSpawn && S.spawnT <= 0) { spawn(); S.spawnT = Math.max(0.7, 1.9 - 0.12 * effW()); }
   }
   for (i = penguins.length - 1; i >= 0; i--) { updatePenguin(penguins[i], dt); if (penguins[i].st === 'gone') penguins.splice(i, 1); }
   if (S.over) return;
@@ -597,7 +621,7 @@ function update(dt) {
   if (S.mode === 'bossIntro' && S.modeT > 1.9) { spawnBoss(); S.mode = 'boss'; S.modeT = 0; }
   if (S.mode === 'boss') {
     S.spawnT -= dt;
-    if (S.boss && S.boss.st === 'hold' && S.spawnT <= 0 && penguins.length < 3) { spawn(); S.spawnT = 3.6; }
+    if (S.boss && S.boss.st === 'hold' && S.spawnT <= 0 && penguins.length < (CHAMP[S.stage].call ? 4 : 3)) { spawn(); S.spawnT = CHAMP[S.stage].help; if (CHAMP[S.stage].call === 2) popText(px(S.boss.xn, S.boss.p), py(S.boss.p) - psz(S.boss.p) * 1.5, 'Squad up!', '#9b3fd0'); }
     if (S.boss) { updateBoss(S.boss, dt); if (S.boss.st === 'gone') { S.boss = null; bossDefeated(); } }
   }
   if (S.mode === 'bossWin' && S.modeT > 2.2) endStage(true);
@@ -633,9 +657,11 @@ function drawPenguin(pg) {
   if (pg.st === 'walk' || pg.st === 'hold' || (pg.st === 'bump' && pg.t > 0.9)) { if (!calm) { rot = Math.sin(pg.ph) * 0.1; hop = Math.abs(Math.sin(pg.ph)) * s * 0.03; } }
   else if (pg.st === 'hit') { rot = calm ? 0 : Math.sin(pg.t * 30) * 0.05; }
   else if (pg.st === 'slide') { sx = 1.15; sy = 0.62; rot = 0.1; }
+  else if (pg.st === 'dash') { sx = 1.2; sy = 0.64; rot = 0.1 * (pg.x1 > pg.x0 ? 1 : -1); }
+  if (pg.tele && !calm) rot = Math.sin(S.t * 44) * 0.14;
   var lift = hop / (s * 0.03 || 1);
   drawShadow(x + s * 0.05, y - s * 0.015, s * 0.34 * sx * (1 - 0.16 * lift), 1 - 0.25 * lift);
-  if (pg.st !== 'slide') {
+  if (pg.st !== 'slide' && pg.st !== 'dash') {
     ctx.fillStyle = 'rgba(42,18,13,' + (0.28 - 0.14 * lift) + ')';
     ctx.beginPath(); ctx.ellipse(x - s * 0.17, y - s * 0.01, s * 0.1, s * 0.025, 0, 0, 6.3); ctx.ellipse(x + s * 0.17, y - s * 0.01, s * 0.1, s * 0.025, 0, 0, 6.3); ctx.fill();
   }
@@ -730,7 +756,7 @@ function drawSling(s, ang, r, et, c1, c2) {
   ctx.restore();
 }
 function drawCloud(x, y, s) {
-  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.fillStyle = stageNo() > 1 ? STAGES[S.stage].cloud : 'rgba(255,255,255,.85)';
   ctx.beginPath(); ctx.ellipse(x, y + s * 0.2, s * 0.9, s * 0.2, 0, 0, 6.3); ctx.arc(x - s * 0.35, y, s * 0.3, 0, 6.3); ctx.arc(x + s * 0.05, y - s * 0.12, s * 0.38, 0, 6.3); ctx.arc(x + s * 0.5, y + s * 0.02, s * 0.25, 0, 6.3); ctx.fill();
 }
 
@@ -818,7 +844,9 @@ function drawFx(fs) {
   if (S.toast) {
     var tt = S.toast, u = tt.t / tt.ttl, a = u < 0.1 ? u / 0.1 : u > 0.8 ? (1 - u) / 0.2 : 1, ty = H * 0.335 - (calm ? 0 : u * 8);
     ctx.save(); ctx.globalAlpha = a; ctx.font = '800 ' + Math.round(fs * 0.62) + 'px "Bricolage Grotesque",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    var tw = ctx.measureText(tt.txt).width + fs * 1.1; pill(W / 2, ty, tw, fs * 1.15, 'rgba(255,247,227,.96)'); ctx.fillStyle = '#7a4a12'; ctx.fillText(tt.txt, W / 2, ty + 1);
+    var tw = ctx.measureText(tt.txt).width + fs * 1.1;
+    if (tw > W * 0.76) { ctx.font = '800 ' + Math.max(8, Math.floor(fs * 0.62 * (W * 0.76 - fs * 1.1) / (tw - fs * 1.1))) + 'px "Bricolage Grotesque",sans-serif'; tw = ctx.measureText(tt.txt).width + fs * 1.1; }
+    pill(W / 2, ty, tw, fs * 1.15, 'rgba(255,247,227,.96)'); ctx.fillStyle = '#7a4a12'; ctx.fillText(tt.txt, W / 2, ty + 1);
     ctx.restore();
   }
 }
@@ -1450,7 +1478,7 @@ $('bShop').addEventListener('click', fillShop);
 /* test hook, only with #qa in the address */
 var qa = null;
 if (location.hash === '#qa') {
-  qa = window.__pd = { bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
+  qa = window.__pd = { go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
     give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
 }
 /*{{LAB_JS}}*/

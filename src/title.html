@@ -137,6 +137,7 @@ body{height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-righ
 .pause:active{transform:translateY(.15em)}
 .pause:focus-visible{outline:3px solid #1f6feb;outline-offset:3px}
 .banner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);z-index:4;font:800 clamp(2.4rem,9cqmin,5rem)/1 var(--display);pointer-events:none;--st-fill:linear-gradient(180deg,#fff2a8 0%,#f8bd1c 46%,#b3600a 100%);--st-edge:#7a3a05}
+.banner.ml{font-size:clamp(1.7rem,6.6cqmin,3.6rem);text-align:center;white-space:pre}.banner.ml::before,.banner.ml::after{white-space:pre;text-align:center}
 .banner[hidden],.hint[hidden]{display:none}
 .hint{position:absolute;left:50%;bottom:36cqh;transform:translateX(-50%);z-index:3;pointer-events:none;width:max-content;display:flex;align-items:center;gap:.6rem;padding:.55em 1.1em;border-radius:999px;background:rgba(255,247,227,.94);font:800 clamp(1rem,3.4cqmin,1.4rem)/1.1 var(--display);color:#4a2b0f;box-shadow:0 .16em 0 #b79a63,0 .35em .5em rgba(0,0,0,.18);animation:nudge 1.6s ease-in-out infinite;text-align:center;max-width:92cqw}
 .hint svg{width:2em;height:2em;flex:none}

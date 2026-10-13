@@ -25,6 +25,7 @@ def game_js():
     g = (S / "game.js").read_text(encoding="utf-8")
     if LAB:
         g = g.replace("key: 'pd-save'", "key: 'pd-lab-save'")  # the tester keeps its own save
+    g = g.replace("/*{{STAGES_JS}}*/", (S / "stages.js").read_text(encoding="utf-8"))
     return g.replace("/*{{LAB_JS}}*/", (S / "lab" / "lab.js").read_text(encoding="utf-8") if LAB else "")
 
 def main():

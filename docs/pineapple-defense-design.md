@@ -63,7 +63,7 @@ Bosses: one Penguin Champion per stage (Bronze, Silver, Gold, Platinum, Grand), 
 ## Decisions made, round 2 (2026.10.12.1527)
 - Setting: a sunny tropical fruit stand on a sandy strip with a glacier shelf behind it; penguins march in from the ice.
 - Art: reuse the JS-modules sprite kits (cartoon-3d-kit and sprite-baker first, then frame-kit, fx-governor and others as they fit). Check `modules.json` and the public page before writing any reusable code. Apple Press style guide to be attached by the owner so the penguins match.
-- First beta: 5 stages (four themed plus a final boss stage), about 8 waves each.
+- First beta: 5 stages (four themed plus a final boss stage), 5 waves each (4, 5, 6, 7 and 8 penguins), then the stage's Champion.
 - Saving: copy/paste save code and save file, like Fancy (save-kit from JS-modules). No sound or music in the first alpha; added later only with approval.
 - Repo: https://github.com/JNFoo/pineapple-defense created by the owner on Oct 12 and attached to this session with push access.
 
@@ -275,6 +275,17 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Menu:** Play (shows a "coming soon" card with the envy premise), Continue (greyed until saves exist), How to play, Settings (future items greyed), Calm mode (saved; also follows the device's reduced-motion setting).
 - **Tech:** one offline file, strict CSP, subsetted fonts (Bricolage Grotesque and Figtree, SIL OFL, licenses in `src/fonts/`), vendored `sticker-text` from JS-modules (MIT).
 
+## Decisions, round 24: five stages (Oct 12)
+- **Waves:** every stage is 5 waves of 4, 5, 6, 7 and 8 penguins (one more penguin each wave), then that stage's Champion. Speed and Adélie share rise a little each stage.
+- **Flow:** after a Champion giggles, a stage-clear card offers "Next stage" (a title banner announces it). After stage 5 the card says "You did it!" and Play again starts at stage 1. Continue remembers the stage and wave.
+- **Scenery, warm on the pineapple side (left), cool on the penguin side (right):**
+  - Stage 2 Flip-Flop Flats: peach sunset over ice flats; giant faced flip-flops, an igloo, a seal that pops up and waves, a gliding flip-flop sled, snowflakes.
+  - Stage 3 Iceberg Harbor Hullabaloo: golden dock with a lighthouse (sweeping beam) and fruit crates melting into blue icebergs; bobbing pineapple sailboat, bell buoy, whale spout, gulls.
+  - Stage 4 Stormy Splash Sea: violet storm to teal sea; a faced storm cloud that grumbles then giggles, rolling waves, a bobbing rubber duck, rain and a gentle flash (no rain or flash in calm mode).
+  - Stage 5 Glacier Giggle Fortress: rose-gold dusk to aurora teal; ice wall and towers with flapping flags, silly "no pineapples" posters, a penguin cheerleader with pom-poms, shimmering aurora, snow.
+- **Champions:** each has its own look and gimmick, and a two-line announcement sized to fit the screen: Coach Waddles (red cap, snowball shield), Captain Flipper (navy captain cap, dodges sideways; shots lead him), Sir Slidealot (aviator goggles and orange scarf, belly-slides across after a wiggle warning), Madame Mohawk (pink mohawk, calls helpers often), Grand Champion Bernard (laurel wreath, purple cape, big medal; a little shield, a small dodge, slides and helpers).
+- **Tester:** the test build can start at any stage and wave, or at that stage's Champion.
+
 ## Change log
 - 2026.10.12.1556: first title screen, logo and original pineapple and Rockhopper sprites.
 - 2026.10.12.1620: story card text approved; stage titles, Champion names and rosters decided.
@@ -297,3 +308,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.2006: more polish.
 - 2026.10.12.2015: more polish.
 - 2026.10.12.2020: more polish.
+- 2026.10.12.2112: five stages of 5 waves, stage scenery and five Champions.
