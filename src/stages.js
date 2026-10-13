@@ -150,7 +150,7 @@ var STAGES = [null,
   { title: 'Stormy\nSplash Sea', cloud: 'rgba(78,48,100,.78)',
     sky: ['#7d3c8a', '#264a66', '#e47a8e', '#5aa3a8'], gnd: ['#c07894', '#418da0', '#8a4a6c', '#2a6075'],
     draw: function (g) { sceneStorm(g); }, anim: function (t) { animStorm(t); } },
-  { title: 'Glacier Giggle\nFortress', cloud: 'rgba(255,228,218,.72)',
+  { title: 'Glacier Party\nFortress', cloud: 'rgba(255,228,218,.72)',
     sky: ['#ff8f78', '#1f8f9e', '#ffd5a4', '#8fd6e8'], gnd: ['#ffe5d4', '#cdeff6', '#f5c9b0', '#9fd4e6'],
     draw: function (g) { sceneFort(g); }, anim: function (t) { animFort(t); } }
 ];
@@ -299,14 +299,14 @@ function sceneStorm(g) {
     g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 3; g.lineCap = 'round'; g.beginPath(); g.moveTo(x + s * ww * 0.1, wy - hh * 1.0); g.quadraticCurveTo(x + s * ww * 0.5, wy - hh * 1.1, x + s * ww * 0.8, wy - hh * 0.62); g.stroke();
   });
 }
-function stormCloud(x, y, s, t, giggle) {
+function stormCloud(x, y, s, t, smile) {
   ctx.save(); ctx.translate(x, y + Math.sin(t * 0.9) * s * 0.04);
   var gr = gk('storm' + Math.round(s), function () { var g = ctx.createLinearGradient(0, -s * 0.5, 0, s * 0.5); g.addColorStop(0, '#6a5a8a'); g.addColorStop(1, '#3f3560'); return g; });
   ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(0, s * 0.18, s * 0.95, s * 0.3, 0, 0, 6.3); ctx.arc(-s * 0.5, 0, s * 0.34, 0, 6.3); ctx.arc(-s * 0.1, -s * 0.22, s * 0.46, 0, 6.3); ctx.arc(s * 0.42, -s * 0.02, s * 0.36, 0, 6.3); ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,.14)'; ctx.beginPath(); ctx.ellipse(-s * 0.25, -s * 0.34, s * 0.22, s * 0.08, -0.3, 0, 6.3); ctx.fill();
   var blink = (t % 3.3) < 0.12;
   ctx.fillStyle = '#fff'; if (!blink) { ctx.beginPath(); ctx.ellipse(-s * 0.2, s * 0.02, s * 0.1, s * 0.12, 0, 0, 6.3); ctx.ellipse(s * 0.16, s * 0.02, s * 0.1, s * 0.12, 0, 0, 6.3); ctx.fill(); dot(ctx, -s * 0.18, s * 0.04, s * 0.05, '#2a1a40'); dot(ctx, s * 0.18, s * 0.04, s * 0.05, '#2a1a40'); } else { ctx.fillRect(-s * 0.3, s * 0.02, s * 0.2, 3); ctx.fillRect(s * 0.06, s * 0.02, s * 0.2, 3); }
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(2, s * 0.04); ctx.lineCap = 'round'; ctx.beginPath(); if (giggle) ctx.arc(0, s * 0.12, s * 0.12, 0.2, 2.94); else ctx.arc(0, s * 0.3, s * 0.11, 3.5, 5.9); ctx.stroke();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(2, s * 0.04); ctx.lineCap = 'round'; ctx.beginPath(); if (smile) ctx.arc(0, s * 0.12, s * 0.12, 0.2, 2.94); else ctx.arc(0, s * 0.3, s * 0.11, 3.5, 5.9); ctx.stroke();
   ctx.fillStyle = 'rgba(255,111,143,.5)'; ctx.beginPath(); ctx.ellipse(-s * 0.36, s * 0.14, s * 0.07, s * 0.045, 0, 0, 6.3); ctx.ellipse(s * 0.32, s * 0.14, s * 0.07, s * 0.045, 0, 0, 6.3); ctx.fill();
   ctx.restore();
 }
@@ -318,7 +318,7 @@ function duck(x, y, s, t) {
 }
 function animStorm(t) {
   var i, u = H / 640, wy = hy + H * 0.07;
-  /* a stormy cloud with a face: grumpy, then it giggles and a rainbow-ish sparkle pops */
+  /* a stormy cloud with a face: grumpy, then it smiles and a rainbow-ish sparkle pops */
   var cyc = t % 9, gig = cyc > 6.5 && cyc < 8.2;
   stormCloud(W * (0.72 + Math.sin(t * 0.12) * 0.05), hy * 0.4, Math.min(H * 0.1, W * 0.2), t, gig);
   /* the rolling swell */
@@ -337,7 +337,7 @@ function animStorm(t) {
   }
 }
 
-/* stage 5: Glacier Giggle Fortress. Sunset-coral on the left, aurora-teal on the right, ice walls with silly posters. */
+/* stage 5: Glacier Party Fortress. Sunset-coral on the left, aurora-teal on the right, ice walls with silly posters. */
 function sceneFort(g) {
   var i, wy = hy + 2, wh = H * 0.15, bw = W * 0.09, bh = H * 0.03, x, y;
   var wg = g.createLinearGradient(0, hy - wh, 0, wy); wg.addColorStop(0, '#f2fcff'); wg.addColorStop(1, '#a9d6e8');
@@ -386,7 +386,7 @@ function animFort(t) {
   /* flags on both towers */
   flag(W * 0.09, hy - H * 0.27 - H * 0.1, H * 0.08, t, '#ffd23f', '#e0472f'); flag(W * 0.91, hy - H * 0.27 - H * 0.1, H * 0.08, t + 1, '#ff6f9c', '#fff7e3');
   /* a penguin cheerleader on the wall waves pom-poms and hops */
-  var cp = cheerPos(), cx = cp.x, cy = cp.y + cp.s * 0.45, s = cp.s, hop = Math.abs(Math.sin(t * 4)) * s * 0.25, age = S.t - S.chT, vis = true, ox = 0, oy = 0, rot = 0, al = 1, sc = 1, im = IMG.ad && (age < 0.9 ? IMG.ad.wow : IMG.ad.giggle);
+  var cp = cheerPos(), cx = cp.x, cy = cp.y + cp.s * 0.45, s = cp.s, hop = Math.abs(Math.sin(t * 4)) * s * 0.25, age = S.t - S.chT, vis = true, ox = 0, oy = 0, rot = 0, al = 1, sc = 1, im = IMG.ad && (age < 0.9 ? IMG.ad.wow : IMG.ad.smile);
   if (age < 0.9) { ox = age * s * 1.6; oy = age * age * s * 3 - age * s * 1.2; rot = age * 11; al = 1 - age / 0.9; }
   else if (age < 5.6) vis = false;
   else if (age < 6.4) { var u = (age - 5.6) / 0.8; sc = 1 + Math.sin(u * Math.PI) * 0.35; al = u; }

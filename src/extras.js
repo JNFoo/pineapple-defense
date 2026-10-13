@@ -7,13 +7,13 @@ function runPct() { return Math.round((runK() - 1) * 100); }
 var ACH2 = [
   { n: 'Gull Pals', d: 'A gull swoops in and snatches a fish.' },
   { n: 'Brolly Boss', d: 'Fling a penguin with a paper drink umbrella.' },
-  { n: 'Air Raid!', d: 'Call in an air raid.' },
-  { n: 'Carpet Bombing', d: 'Hit 4 penguins with one air raid.' },
+  { n: 'Pineapple Rain!', d: 'Make it rain pineapples.' },
+  { n: 'Big Rain', d: 'Hit 4 penguins with one Pineapple Rain.' },
   { n: 'Team Spirit', d: 'Chain a combo with both slingshots.' },
   { n: 'Combo Master', d: 'Reach a 6-hit combo.' },
-  { n: 'Whole Shebang', d: 'Clear all five stages in one run.' },
-  { n: 'Faster Fun', d: 'Win a run when penguins are 30% faster.' },
-  { n: 'Top Speed', d: 'Win a run when penguins are nearly twice as fast.' },
+  { n: 'All Five!', d: 'Clear all five stages in one run.' },
+  { n: 'Faster Fun', d: 'Win a run when the penguins are a lot faster.' },
+  { n: 'Top Speed', d: 'Win a run when the penguins are super fast.' },
   { n: 'Challenger', d: 'Finish a run challenge.' },
   { n: 'Grand Finale', d: 'End Pineapple Roll on a 100.' }
 ];
@@ -45,7 +45,7 @@ function extrasWin(st, last) {
   if (last) {
     var k = runK(); award(16); if (k >= 1.3) award(17); if (k >= 1.9) award(18);
     sv.run = Math.min(99, (sv.run | 0) + 1); sv.cd = 0; sv.rl = 0;
-    out += ' Run ' + sv.run + ' complete! Next run the penguins are ' + runPct() + '% faster' + (runK() >= RUN_MAX ? ' (the top speed).' : '.') + ' New challenge: ' + chal().d;
+    out += ' Run ' + sv.run + ' is done! Next time the penguins are ' + runPct() + '% faster' + (runK() >= RUN_MAX ? ' (the top speed).' : '.') + ' New challenge: ' + chal().d;
   }
   return out;
 }
@@ -225,7 +225,7 @@ function callRaid() {
   if (!S || S.over || S.paused || S.raid || !(S.raL > 0) || !(S.mode === 'run' || S.mode === 'boss')) return;
   var p = raidBand(), n = Math.max(7, Math.min(12, Math.round(1.9 * FW * sc(p) / (psz(p) * 0.85))));
   S.raL--; S.raid = { t: 0, p: p, n: n, hits: 0, bossHit: false, done: 0 };
-  S.call = { txt: 'AIR RAID!', sub: 'Incoming pineapples!', tier: 4, t: 0, ttl: 1.6, n: 0 };
+  S.call = { txt: 'PINEAPPLE RAIN!', sub: 'Here they come!', tier: 4, t: 0, ttl: 1.6, n: 0 };
   S.gl = Math.max(S.gl, 0.45); S.shk = Math.max(S.shk, 0.5);
   award(12);
 }
@@ -406,7 +406,7 @@ function champUpdate(b, dt) {
   if (m === 'peek') {
     b.pt -= dt * slowK;
     if (b.pk === 'hid' && b.pt <= 0) { do { np = (Math.random() * 3) | 0; } while (np === b.slot); b.slot = np; b.xn = SLOT_X[np]; b.pk = 'tell'; b.pt = 0.85; }
-    else if (b.pk === 'tell' && b.pt <= 0) { b.pk = 'up'; b.pt = 2.4; b.mood = 'giggle'; burst(px(b.xn, b.p), py(b.p) - psz(b.p) * 0.6, 8, SNOW_COL); }
+    else if (b.pk === 'tell' && b.pt <= 0) { b.pk = 'up'; b.pt = 2.4; b.mood = 'glad'; burst(px(b.xn, b.p), py(b.p) - psz(b.p) * 0.6, 8, SNOW_COL); }
     else if (b.pk === 'up' && b.pt <= 0) { b.pk = 'hid'; b.pt = 1.0; b.mood = 'happy'; burst(px(b.xn, b.p), py(b.p) - psz(b.p) * 0.4, 6, SNOW_COL); }
     b.safe = b.pk !== 'up'; b.lift = b.pk === 'up' ? Math.min(0.3, (2.4 - b.pt) * 2) : 0;
   } else if (m === 'charge') {
@@ -501,4 +501,85 @@ function drawChampArt(b) {
     ctx.globalAlpha = 0.85; ctx.strokeStyle = '#d63a8a'; ctx.lineWidth = Math.max(2, c.s * 0.025); ctx.setLineDash([c.s * 0.08, c.s * 0.05]); ctx.lineDashOffset = calm ? 0 : -S.t * 20; ctx.stroke(); ctx.setLineDash([]);
     ctx.globalAlpha = 0.6; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(c.x - bs * 0.4, c.y - bs * 0.55, bs * 0.16, bs * 0.08, -0.6, 0, 6.3); ctx.fill(); ctx.restore();
   }
+}
+
+/* ---------- atmosphere: sun rays, cloud shadows, ground glints, drifting motes, stormy rain and a soft flash ----------
+   Everything is cheap on purpose: a few sprites made once, a handful of image draws per frame, and one batched path for the rain.
+   It thins out with the quality governor (qLevel) and stops moving in Calm mode. */
+var ATM = { rays: null, cs: null };
+var MOTE_COL = ['', '255,226,140', '190,232,255', '255,214,150', '210,170,255', '140,245,225'];
+function raySprite() {
+  if (ATM.rays) return ATM.rays;
+  var c = document.createElement('canvas'), g, i, a0;
+  c.width = c.height = 256; g = c.getContext('2d'); g.translate(128, 128);
+  for (i = 0; i < 14; i++) {
+    a0 = i * Math.PI * 2 / 14; var gr = g.createRadialGradient(0, 0, 8, 0, 0, 128);
+    gr.addColorStop(0, 'rgba(255,244,190,.9)'); gr.addColorStop(1, 'rgba(255,244,190,0)');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 128, a0, a0 + Math.PI / 14 * (0.55 + 0.25 * (i % 3) / 2)); g.closePath(); g.fill();
+  }
+  return (ATM.rays = c);
+}
+function cloudShadowSprite() {
+  if (ATM.cs) return ATM.cs;
+  var c = document.createElement('canvas'), g, gr;
+  c.width = 256; c.height = 96; g = c.getContext('2d'); g.translate(128, 48); g.scale(1, 0.375);
+  gr = g.createRadialGradient(0, 0, 0, 0, 0, 128); gr.addColorStop(0, 'rgba(28,48,86,.55)'); gr.addColorStop(0.6, 'rgba(28,48,86,.28)'); gr.addColorStop(1, 'rgba(28,48,86,0)');
+  g.fillStyle = gr; g.beginPath(); g.arc(0, 0, 128, 0, 6.3); g.fill();
+  return (ATM.cs = c);
+}
+/* behind the penguins: sun rays, cloud shadows sliding over the ground, twinkles on ice and tiles */
+function drawAtmos(t) {
+  var st = stageNo(), q = qLevel, i, x, y, w, a, r;
+  if (st === 1 && dyn.sx && q < 2) {
+    r = dyn.sr * 12; ctx.save(); ctx.globalAlpha = 0.17 + (calm ? 0 : 0.05 * Math.sin(t * 0.9)); ctx.globalCompositeOperation = 'lighter';
+    ctx.translate(dyn.sx, dyn.sy); ctx.rotate(t * 0.04); ctx.drawImage(raySprite(), -r / 2, -r / 2, r, r); ctx.restore();
+  }
+  if (q < 2) {
+    var cs = cloudShadowSprite(), sh = st === 4 ? 0.16 : 0.1;
+    ctx.globalAlpha = sh;
+    for (i = 0; i < 2; i++) { w = W * (0.85 - i * 0.2); x = ((t * W * (0.018 + i * 0.01) + W * (0.1 + i * 0.5)) % (W * 1.7)) - W * 0.5; y = hy + (H - hy) * (0.2 + i * 0.28); ctx.drawImage(cs, x, y, w, w * 0.375); }
+    ctx.globalAlpha = 1;
+  }
+  if (st >= 2 && st !== 4 && q < 2) {
+    ctx.strokeStyle = '#fff'; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(1.4, H * 0.0024);
+    for (i = 0; i < 7; i++) {
+      a = Math.pow(Math.max(0, Math.sin(t * 1.7 + i * 2.3)), 8); if (a < 0.08) continue;
+      x = W * (0.08 + ((i * 0.151 + st * 0.07) % 0.84)); y = hy + (H - hy) * (0.16 + ((i * 0.23) % 0.5)); r = H * 0.014 * (0.4 + a);
+      ctx.globalAlpha = a; ctx.beginPath(); ctx.moveTo(x - r, y); ctx.lineTo(x + r, y); ctx.moveTo(x, y - r); ctx.lineTo(x, y + r); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+/* in front of everything on the field: floating motes, the storm's rain, and one soft flash every so often */
+function drawAtmosTop(t) {
+  var st = stageNo(), q = qLevel, n = q === 0 ? 10 : q === 1 ? 5 : 0, i, x, y, s, a, g;
+  if (calm) return;
+  if (n) {
+    g = glowFor(MOTE_COL[st] || MOTE_COL[1]); ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (i = 0; i < n; i++) {
+      y = H * (0.08 + 0.8 * (1 - (((i * 0.37 + t * (0.012 + (i % 3) * 0.006)) % 1))));
+      x = W * ((i * 0.173 + 0.07) % 1) + Math.sin(t * 0.5 + i * 1.9) * W * 0.03;
+      s = H * 0.017 * (0.7 + (i % 3) * 0.3); a = 0.4 + 0.4 * Math.sin(t * 1.3 + i * 2.1);
+      ctx.globalAlpha = Math.max(0, a) * (st === 4 ? 0.5 : 1); ctx.drawImage(g, x - s, y - s, s * 2, s * 2);
+    }
+    ctx.restore();
+  }
+  if (st === 4 && q < 2) {
+    n = q === 0 ? 30 : 14; ctx.strokeStyle = 'rgba(225,235,255,.4)'; ctx.lineWidth = Math.max(1.2, W * 0.0035); ctx.lineCap = 'round'; ctx.beginPath();
+    for (i = 0; i < n; i++) {
+      x = ((i * 41.3 + t * W * 0.22) % (W * 1.15)) - W * 0.05; y = ((i * 67.9 + t * H * (1.5 + (i % 3) * 0.25)) % (H * 1.06)) - H * 0.03;
+      ctx.moveTo(x, y); ctx.lineTo(x - W * 0.012, y + H * 0.032);
+    }
+    ctx.stroke();
+    var ph = t % 12; if (ph > 11.3 && ph < 11.65) { a = Math.max(0, 1 - Math.abs(ph - 11.45) / 0.2); ctx.fillStyle = 'rgba(255,255,255,' + (0.18 * a) + ')'; ctx.fillRect(0, 0, W, H); }
+  }
+}
+/* little puffs of sand or snow kicked up by walking penguins (not in Calm mode, not on slow devices) */
+function stepPuff(pg, dt) {
+  if (calm || qLevel > 0 || pg.p < 0.18 || bits.length > 110) return;
+  pg.fs = (pg.fs || 0) - dt * (0.6 + pg.v * 9);
+  if (pg.fs > 0) return;
+  pg.fs = 0.5 + Math.random() * 0.2;
+  var s = psz(pg.p), x = px(pg.xn, pg.p) + (Math.random() - 0.5) * s * 0.3, y = py(pg.p) - s * 0.02, c = stageNo() === 1 ? '#f1e0b0' : '#ffffff', j;
+  for (j = 0; j < 2; j++) addBit(x, y, (j ? 1 : -1) * (14 + Math.random() * 18), -26 - Math.random() * 20, Math.random() * 6, 0, Math.max(3, s * 0.07), Math.max(3, s * 0.07), 0, c, 0.4);
 }

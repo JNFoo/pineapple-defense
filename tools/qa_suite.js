@@ -94,6 +94,50 @@ await T('auto slingshot only turns slightly', async () => {
   sv.au = 0; if (mx > 0.125) throw new Error('auto slingshot leaned ' + mx.toFixed(2)); return 'max turn ' + mx.toFixed(2) + ' rad';
 });
 
+await T('auto slingshot is slower and sometimes misses', async () => {
+  const sv = P.sv(); sv.au = 1; sv.ar = 3; sv.ap = 0; let n = 0, miss = 0, minGap = 99;
+  try {
+    for (let r = 0; r < 4; r++) {
+      await go(1, 3); P.bot = false; P.S.pt = true; const seen = new Map();
+      for (let i = 0; i < 300; i++) { P.step(0.1, 0.05); P.S.cheer = 100; P.sh.forEach(q => { if (q.auto && !seen.has(q)) seen.set(q, P.S.t); }); }
+      const ts = [...seen.values()].sort((x, y) => x - y); for (let k = 1; k < ts.length; k++) minGap = Math.min(minGap, ts[k] - ts[k - 1]);
+      n += seen.size; miss += [...seen.keys()].filter(q => q.miss).length;
+    }
+  } finally { sv.au = 0; sv.ar = 0; }
+  if (n < 4) throw new Error('auto barely fired: ' + n); if (minGap < 2.7) throw new Error('two auto tosses only ' + minGap.toFixed(2) + ' s apart at the fastest tier (needs >= 2.8)');
+  if (miss / n < 0.05 || miss / n > 0.6) throw new Error('auto missed ' + miss + ' of ' + n + ' (expected about 28%)');
+  return n + ' tosses, ' + miss + ' missed, shortest gap ' + minGap.toFixed(2) + ' s';
+});
+
+await T('mecha penguins: a Gentoo that eats a fish is tougher than a normal penguin', async () => {
+  await go(2, 2); P.bot = false; P.step(4, 0.05); const S = P.S, L = P.penguins; if (!L.length) throw new Error('no penguins');
+  L.forEach(pg => { if (pg.st === 'walk') { pg.kind = 'gt'; pg.hp = 2; pg.big = 1.12; pg.p = 0.18; pg.v = Math.min(pg.v, 0.02); } });
+  let mc = null; for (let k = 0; k < 14 && !mc; k++) { P.fish(); P.step(4.5, 0.05); mc = P.penguins.find(pg => pg.kind === 'mc'); if (!mc) L.forEach(pg => { if (pg.st === 'walk' && pg.kind === 'ad') { pg.kind = 'gt'; pg.hp = 2; } }); }
+  if (!mc) throw new Error('no Gentoo ever became a mecha penguin');
+  if (mc.hp !== 3) throw new Error('mecha hp ' + mc.hp + ', wanted 3'); if (!(mc.hp > 2 && mc.hp < 8)) throw new Error('mecha toughness out of range');
+  const hits0 = mc.hp; P.penguins.forEach(pg => { if (pg !== mc) pg.p = -9; }); return 'mecha with ' + hits0 + ' hits';
+});
+
+await T('stage progress bar fills with each wave and lights the Champion medal', async () => {
+  await go(1, 0); P.bot = false; const bar = $('prog'); if (!bar || bar.querySelectorAll('.seg').length !== 5) throw new Error('bar missing or not 5 segments');
+  P.step(0.2, 0.05, 1); const f0 = [...bar.querySelectorAll('.seg i')].map(i => i.style.transform);
+  await go(1, 3); P.step(0.2, 0.05, 1); const f3 = [...bar.querySelectorAll('.seg i')].map(i => i.style.transform);
+  if (f0.join() === f3.join()) throw new Error('bar did not change between wave 1 and wave 4: ' + f3.join());
+  if (bar.getAttribute('data-boss') !== '0') throw new Error('medal lit too early');
+  await go(1, 8); P.step(0.3, 0.05, 1); if (bar.getAttribute('data-boss') !== '1') throw new Error('medal not lit in the Champion fight: ' + bar.getAttribute('data-boss'));
+  return f3.join(' ');
+});
+
+await T('more fish fall in the last two waves', async () => {
+  const count = async (w) => { let tot = 0; for (let k = 0; k < 3; k++) { await go(2, w); P.bot = true; const S = P.S, seen = new Set(), wave = S.wave; for (let i = 0; i < 1000 && S.wave === wave && S.mode !== 'boss' && S.mode !== 'bossIntro' && !S.over; i++) { P.step(0.05, 0.05); S.fish.forEach(f => seen.add(f)); } tot += seen.size; } P.bot = false; return tot; };
+  const early = await count(1), late = await count(3); if (late < 1 || late <= early) throw new Error('only ' + late + ' fish in 3 late-wave tries (early ' + early + ')');
+  return 'fish in 3 tries: waves 2 = ' + early + ', wave 4 = ' + late;
+});
+
+await T('no giggling anywhere in the page text', async () => {
+  const html = document.documentElement.innerHTML; if (/giggl/i.test(html)) throw new Error('found giggl in ' + html.match(/.{30}giggl.{30}/i)[0]);
+});
+
 /* Champion fights: every Champion after Coach Waddles plays a different way */
 const fightSim = async (st, rule) => {
   await go(st, 8); const S = P.S; P.bot = true; let t = 0, prevHp = null, prevSafe = false, prevP = 0, seen = {};
@@ -229,6 +273,27 @@ await T('bonus game: a human-sized flick wobble still sinks often', async () => 
   let h = 0; const n = 400; for (let i = 0; i < n; i++) { const q = good[Math.floor(Math.random() * good.length)], a = (q[0] + rnd() * 6) * Math.PI / 180, s = q[1] * (1 + rnd() * 0.12); if (P.sim(Math.sin(a), -Math.cos(a), s, 0, 0)) h++; }
   if (h / n < 0.4) throw new Error('only ' + Math.round(100 * h / n) + '% sink with a 6 degree, 12% wobble'); P.endSk(0); P.step(0.2, 0.033); await wait(50); $('gBtn1').click(); await wait(50); sv.rl = 0;
   return Math.round(100 * h / n) + '% sink with a 6 degree, 12% wobble';
+});
+
+await T('bonus game: the last ball gets a chase camera with slow-mo at the hole', async () => {
+  const sv = P.sv(); sv.rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('no minigame'); await wait(200);
+  let f = null; for (let a = -10; a <= 10 && !f; a++) for (let s = 2.5; s <= 8.5 && !f; s += 0.1) if (P.sim(Math.sin(a * Math.PI / 180), -Math.cos(a * Math.PI / 180), s, 0, 0) === 40) f = [a, s];
+  if (!f) throw new Error('no flick sinks the 40'); const K = P.K;
+  /* a ball with others still to throw is not chased */
+  K.balls = 2; P.roll(Math.sin(f[0] * Math.PI / 180), -Math.cos(f[0] * Math.PI / 180), f[1]); P.step(0.3, 0.016); if (K.cam.z > 1.01) throw new Error('camera moved with balls left: ' + K.cam.z);
+  K.cool = 0; K.balls = 1; P.roll(Math.sin(f[0] * Math.PI / 180), -Math.cos(f[0] * Math.PI / 180), f[1]); let zMax = 1, tsMin = 1;
+  for (let i = 0; i < 160; i++) { P.step(0.016, 0.016); zMax = Math.max(zMax, K.cam.z); tsMin = Math.min(tsMin, K.ts); if (!K.bl.length) break; }
+  if (zMax < 1.3) throw new Error('chase cam never zoomed in: ' + zMax.toFixed(2)); if (tsMin > 0.5) throw new Error('no slow-mo at the hole: ' + tsMin.toFixed(2));
+  P.step(3, 0.033, 6); if (K.cam.z > 1.05 || K.ts < 0.95) throw new Error('view did not ease back: z ' + K.cam.z.toFixed(2) + ' ts ' + K.ts.toFixed(2));
+  P.endSk(0); P.step(0.2, 0.033); await wait(50); if (cardUp()) $('gBtn1').click(); await wait(50); sv.rl = 0;
+  return 'zoom up to ' + zMax.toFixed(2) + 'x, slow to ' + tsMin.toFixed(2);
+});
+
+await T('bonus game: the ball rolls at real-feeling speed', async () => {
+  const sv = P.sv(); sv.rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('no minigame'); await wait(200); const K = P.K; K.balls = 3;
+  P.roll(0, -1, 6); const b = K.ball; let t = 0; while (b.st === 'lane' && t < 3) { P.step(0.01, 0.01); t += 0.01; } const tl = t;
+  if (tl > 0.7) throw new Error('lane took ' + tl.toFixed(2) + ' s; the ball is rolling in molasses'); if (tl < 0.12) throw new Error('lane took only ' + tl.toFixed(2) + ' s');
+  P.endSk(0); P.step(0.2, 0.033); await wait(50); if (cardUp()) $('gBtn1').click(); await wait(50); sv.rl = 0; return 'lane in ' + tl.toFixed(2) + ' s at a strong flick';
 });
 
 await T('grand finale fireworks delay the card', async () => {

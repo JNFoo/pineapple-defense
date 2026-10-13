@@ -1,7 +1,7 @@
 /* ---------- parachute fish and penguin evolution. Copyright (c) 2026 JNFoo. All rights reserved. ---------- */
 /* every so often a fish floats down on a handkerchief parachute and lands in front of a walking penguin; the penguin eats it
-   and levels up: Rockhopper -> Adelie (faster) -> Gentoo (faster and takes two hits). A hit at any moment still counts. */
-var LEVEL = { rh: 'ad', ad: 'gt' }, LMULT = { rh: 1, ad: 1.3, gt: 1.5 }, LHP = { rh: 1, ad: 1, gt: 2 }, LNAME = { ad: 'Adélie!', gt: 'Gentoo!' };
+   and levels up: Rockhopper -> Adelie (faster) -> Gentoo (faster and takes two hits) -> Mecha (a robot suit: takes three hits, a little slower than a Gentoo). A hit at any moment still counts. */
+var LEVEL = { rh: 'ad', ad: 'gt', gt: 'mc' }, LMULT = { rh: 1, ad: 1.3, gt: 1.5, mc: 1.35 }, LHP = { rh: 1, ad: 1, gt: 2, mc: 3 }, LNAME = { ad: 'Adélie!', gt: 'Gentoo!', mc: 'MECHA!' };
 var EVT = 1.15, EV_SWAP = 0.62;
 var TINT_GT = '--ad-hi:#5d6d86;--ad-mid:#243148;--ad-lo:#0b1220';
 function gtSvg(markup) {
@@ -11,10 +11,25 @@ function gtSvg(markup) {
   return s.replace(/<\/svg>\s*$/, extra + '</svg>');
 }
 
+/* the mecha penguin: a Gentoo in a steel suit (armor band, bolts, an antenna with a red light and a glowing chest core) */
+var TINT_MC = '--ad-hi:#c3d3e3;--ad-mid:#5d738c;--ad-lo:#1c2938';
+function mechaSvg(markup) {
+  var s = markup.replace('#ffc872', '#fff1b0').replace('#ff9a2f', '#e6b93a').replace('#c4560a', '#8a6414').replace(/#ffc0b0/, '#d4dde6').replace(/#f08f7c/, '#8da0b4').replace(/#c8584a/, '#4c5d70');
+  var extra = '<defs><radialGradient id="mc-core" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#9ff4ff"/><stop offset="1" stop-color="#1aa7d6"/></radialGradient><linearGradient id="mc-plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9f0f7"/><stop offset="1" stop-color="#8fa3b8"/></linearGradient></defs>' +
+    '<path d="M56 62C78 40 122 40 144 62" fill="none" stroke="#33465a" stroke-width="12" stroke-linecap="round"/><path d="M56 62C78 40 122 40 144 62" fill="none" stroke="url(#mc-plate)" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="55" r="3" fill="#33465a"/><circle cx="136" cy="55" r="3" fill="#33465a"/>' +
+    '<path d="M84 46L76 20" stroke="#33465a" stroke-width="4" stroke-linecap="round"/><circle cx="75" cy="17" r="6" fill="#ff4a3a" stroke="#7a1f14" stroke-width="2"/><circle cx="73" cy="15" r="2" fill="#fff" opacity=".8"/>' +
+    '<rect x="74" y="126" width="52" height="42" rx="10" fill="url(#mc-plate)" stroke="#33465a" stroke-width="3"/><circle cx="100" cy="147" r="13" fill="#223347" stroke="#33465a" stroke-width="2"/><circle cx="100" cy="147" r="10" fill="url(#mc-core)"/><circle cx="96" cy="143" r="3" fill="#fff" opacity=".8"/>' +
+    '<circle cx="80" cy="132" r="2.4" fill="#33465a"/><circle cx="120" cy="132" r="2.4" fill="#33465a"/><circle cx="80" cy="162" r="2.4" fill="#33465a"/><circle cx="120" cy="162" r="2.4" fill="#33465a"/>' +
+    '<rect x="26" y="136" width="24" height="12" rx="5" transform="rotate(-24 38 142)" fill="url(#mc-plate)" stroke="#33465a" stroke-width="2.4"/><rect x="150" y="134" width="24" height="12" rx="5" transform="rotate(24 162 140)" fill="url(#mc-plate)" stroke="#33465a" stroke-width="2.4"/>' +
+    '<circle cx="50" cy="122" r="6" fill="#aebccb" stroke="#33465a" stroke-width="2.4"/><circle cx="150" cy="120" r="6" fill="#aebccb" stroke="#33465a" stroke-width="2.4"/>' +
+    '<path d="M52 176h44v10H52zM104 176h44v10h-44z" fill="url(#mc-plate)" stroke="#33465a" stroke-width="2.4" stroke-linejoin="round" opacity=".92"/>';
+  return s.replace(/<\/svg>\s*$/, extra + '</svg>');
+}
+
 /* ---------- the fish ---------- */
-function fishFree(pg) { return pg.st === 'walk' && !(pg.ev > 0) && pg.kind !== 'gt' && pg.p > 0.12; }
+function fishFree(pg) { return pg.st === 'walk' && !(pg.ev > 0) && pg.kind !== 'mc' && pg.p > 0.12; }
 function tryDrop() {
-  var c = [], i, pg, T = 2.6, pL = 0.36 + Math.random() * 0.18, b = S.boss, ok;
+  var late = S.mode === 'run' && S.wave >= NWAVES - 1, c = [], i, pg, T = late ? 2.0 : 2.6, pL = late ? 0.44 + Math.random() * 0.2 : 0.36 + Math.random() * 0.18, b = S.boss, ok;   /* late waves: a quicker fall and a farther landing spot, so more penguins qualify */
   /* the fish lands mid-field, so the penguin still has room to eat it and walk on; only penguins that will not have passed that spot by then qualify */
   for (i = 0; i < penguins.length; i++) {
     pg = penguins[i]; if (!fishFree(pg) || pg.p + pg.v * T + 0.05 > pL) continue;
@@ -30,19 +45,19 @@ function tryDrop() {
 }
 function startEvolve(pg, f) {
   var to = LEVEL[pg.kind]; if (!to) return;
-  pg.ev = EVT; pg.evT = 0; pg.evTo = to; pg.evDone = false; pg.vs = pg.v; pg.v = 0; pg.mood = 'giggle';
+  pg.ev = EVT; pg.evT = 0; pg.evTo = to; pg.evDone = false; pg.vs = pg.v; pg.v = 0; pg.mood = 'glad';
   f.st = 'eaten'; f.t = 0; f.pg = pg;
   popText(px(pg.xn, pg.p), py(pg.p) - psz(pg.p) * 1.15, 'Yum!', '#2f8fbf', 0);
 }
 function evolveStep(pg, dt) {
   pg.evT += dt; pg.ev -= dt;
   if (!pg.evDone && pg.evT >= EV_SWAP) {
-    pg.evDone = true; pg.kind = pg.evTo; pg.hp = LHP[pg.kind]; pg.vs = pg.base * LMULT[pg.kind]; pg.big = pg.kind === 'gt' ? 1.12 : 1; pg.pop = 0.4; pg.hat = false;
-    var x = px(pg.xn, pg.p), y = py(pg.p) - psz(pg.p) * (pg.big || 1) * 0.45, gt = pg.kind === 'gt';
+    pg.evDone = true; pg.kind = pg.evTo; pg.hp = LHP[pg.kind]; pg.vs = pg.base * LMULT[pg.kind]; pg.big = pg.kind === 'mc' ? 1.2 : pg.kind === 'gt' ? 1.12 : 1; pg.pop = 0.4; pg.hat = false;
+    var x = px(pg.xn, pg.p), y = py(pg.p) - psz(pg.p) * (pg.big || 1) * 0.45, gt = pg.kind === 'gt' || pg.kind === 'mc';
     sparkBurst(x, y, gt ? 26 : 16, gt ? ['#ffd23f', '#fff7e3', '#ff6fa8', '#8fe0ff'] : ['#8fe0ff', '#fff7e3', '#c9b8ff']);
     rings.push({ x: x, y: y, t: 0, ttl: 0.7, r: psz(pg.p) * (gt ? 1.7 : 1.3), c: gt ? '255,111,168' : '120,200,255' });
     rings.push({ x: x, y: y, t: -0.1, ttl: 0.7, r: psz(pg.p) * (gt ? 1.2 : 0.9), c: '255,230,120' });
-    popText(x, y - psz(pg.p) * 0.35, LNAME[pg.kind], gt ? '#d9007a' : '#2f8fbf', 1);
+    popText(x, y - psz(pg.p) * 0.35, LNAME[pg.kind], pg.kind === 'mc' ? '#1d7fa8' : gt ? '#d9007a' : '#2f8fbf', 1);
     if (gt && !calm) S.gl = Math.max(S.gl, 0.45);
   }
   if (pg.ev <= 0) { pg.ev = 0; pg.v = pg.vs; pg.mood = 'happy'; }
@@ -52,7 +67,9 @@ function updateFish(dt) {
   if (S.over) return;
   if ((S.mode === 'run' || (S.mode === 'boss' && S.boss && S.boss.st === 'hold')) && !S.paused) {
     S.fishT -= dt;
-    if (S.fishT <= 0 && S.fish.length === 0) S.fishT = tryDrop() ? 9 + Math.random() * 5 : 1.5;
+    /* the last two waves of a stage (waves 4 and 5) rain fish more often, and two can be on the way at once */
+    var late = S.mode === 'run' && S.wave >= NWAVES - 1;
+    if (S.fishT <= 0 && S.fish.length < (late ? 2 : 1)) S.fishT = tryDrop() ? (late ? 3.5 + Math.random() * 2.5 : 9 + Math.random() * 5) : late ? 0.6 : 1.5;
   }
   for (i = S.fish.length - 1; i >= 0; i--) {
     f = S.fish[i]; f.t += dt;
@@ -156,7 +173,7 @@ function drawEvolveGlow(pg, x, y, s) {
   if (pg.ev <= 0 || calm) return;
   g = evolveLook(pg).glow; if (g <= 0) return;
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = Math.min(1, g * 0.8);
-  var gs = s * (1.4 + 0.5 * g); ctx.drawImage(glowFor(pg.evTo === 'gt' ? '255,150,200' : '140,210,255'), x - gs / 2, y - s * 0.5 - gs / 2, gs, gs);
+  var gs = s * (1.4 + 0.5 * g); ctx.drawImage(glowFor(pg.evTo === 'mc' ? '120,235,255' : pg.evTo === 'gt' ? '255,150,200' : '140,210,255'), x - gs / 2, y - s * 0.5 - gs / 2, gs, gs);
   ctx.restore();
   if (qLevel < 2 && pg.evT > 0.28) {
     for (i = 0; i < 5; i++) { var a = pg.evT * 7 + i * 1.257, rr = s * (0.5 - 0.15 * u); star(ctx, x + Math.cos(a) * rr, y - s * 0.5 + Math.sin(a) * rr * 0.55, s * 0.06); }

@@ -2,6 +2,18 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.13.1452
+- **Auto Slingshot is a helper, not a replacement.** It tosses slower (every 5.2, 4.2, 3.4 and 2.8 seconds by Faster Fling tier) and sometimes misses, landing just beside the penguin (28% of tosses, 20% with Better Pineapples 1, 12% with tier 2). The shop says so.
+- **Stage progress bar** across the top of the game: one segment per wave that fills as the wave is cleared, and a Champion medal that lights up for the Champion fight (like Apple Press).
+- **Mecha penguins:** a Gentoo that eats another fish becomes a mecha penguin: steel armor, antenna, glowing chest core, 3 hits to defeat (a Gentoo takes 2, a Champion much more) and a "Clang!" when it is hit. Mecha penguins walk a little slower than Gentoos and are worth more.
+- **More fish in waves 4 and 5 of every stage:** the fish falls faster and lands farther, the first fish comes sooner, and two can be on the field at once, so most players will see a few fish every stage.
+- **Graphics pass on the main game:** drifting light rays, cloud shadows and floating motes on every stage, puffs of snow behind walking penguins, a squash when a penguin is hit, a sparkling sun on the title screen, a shimmering sea and a shiny Play button.
+- **Kid-friendly words everywhere:** how to play, about, cards, trophies and challenges are written for kids, and nothing giggles any more (penguins are now "happy", "glad" or "smile").
+- **Pineapple Roll feel:** the ball now rolls 1.7 times faster (the game clock inside the minigame runs 1.7x, which makes gravity feel like the real thing instead of rolling in molasses). The landing spots are unchanged, so every flick lands where it did before, just sooner. Also more realistic: rolling resistance with a speed-dependent part, a hard landing bounces higher than a soft one, walls take a little speed from a sliding ball, and the ball squashes on landing.
+- **Pineapple Roll chase camera:** on your last ball the view glides after it up the lane and over the board, leans in near the rings, slows to about 0.3x speed for the drop into a hole, shakes a little on rim and wall knocks, then eases back out for the end card. Calm mode keeps the view still.
+- **Pineapple Roll graphics:** a dusk fairground with a turning Ferris wheel, circus tents, pennants, party lights, floodlights and sweeping light beams; a marquee with chasing bulbs and a neon glow; brass rails, felt grain, a warm light pool, lacquered wood grain; color-coded glowing rings (the 100s pulse); a shinier pineapple ball with a trail, a glow on the felt and dust when it lands; light columns, ring bursts and sparks when it sinks; livelier crowd with a wave and camera flashes.
+- Speed: about 6% more canvas calls per frame than the previous build for everything above (951 against 894 on the audit scenes); the minigame costs about 0.3 ms more per frame in the test browser.
+
 ## 2026.10.13.1405
 - **Ready, Set, Go!** While a Champion strolls out to the table, the banner now says Ready..., then Set..., then GO! when he stops. He cannot be hurt until GO!.
 - **The helpers wait for you.** The Auto Slingshot and the Lime Launcher now stay quiet each round (every wave and every Champion fight) until you throw your first pineapple; then they join in after a short beat. A one-line hint explains this at the start of a stage (twice per visit at most). The shop demos still start them at once.

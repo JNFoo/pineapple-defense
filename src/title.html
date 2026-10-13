@@ -73,10 +73,10 @@ body{height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-righ
 .flip-up{transform-box:fill-box;transform-origin:90% 90%;animation:wave 2.6s ease-in-out infinite alternate}
 .crest-r{transform-origin:132px 70px}
 .face .m-o,.face .m-grin,.face .m-pout{display:none}
-.char[data-mood="wow"] .m-smile,.char[data-mood="giggle"] .m-smile{display:none}
+.char[data-mood="wow"] .m-smile,.char[data-mood="glad"] .m-smile{display:none}
 .char[data-mood="wow"] .m-o{display:block}
-.char[data-mood="giggle"] .m-grin{display:block}
-.char[data-mood="giggle"] .cheek,.char[data-mood="wow"] .cheek{opacity:.75}
+.char[data-mood="glad"] .m-grin{display:block}
+.char[data-mood="glad"] .cheek,.char[data-mood="wow"] .cheek{opacity:.75}
 .ring{position:absolute;inset:6%;border:4px solid var(--glow);border-radius:50%;pointer-events:none}
 .pop{position:absolute;pointer-events:none;z-index:5;white-space:nowrap;font:800 clamp(1.3rem,4cqmin,2.3rem)/1 var(--display);color:var(--c);text-shadow:-2px 0 var(--cream),2px 0 var(--cream),0 -2px var(--cream),0 2px var(--cream),-2px -2px var(--cream),2px 2px var(--cream),-2px 2px var(--cream),2px -2px var(--cream),0 0 16px var(--glow)}
 .bit{position:absolute;pointer-events:none;z-index:5}
@@ -90,6 +90,11 @@ body{height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-righ
 .btn[disabled]{opacity:.55;filter:saturate(.5);cursor:default}
 .btn[disabled]:active{transform:none}
 .btn-play{font-size:clamp(1.5rem,5cqmin,2.3rem);min-height:4.75rem;padding:.5em 1.9em .58em;color:#fff;letter-spacing:.06em;background:linear-gradient(180deg,#62c981,#2c8a49);box-shadow:0 .16em 0 #1b5c32,0 .4em .6em rgba(0,0,0,.25),inset 0 .1em 0 rgba(255,255,255,.35);text-shadow:0 .06em 0 rgba(0,0,0,.28)}
+.sun::before{content:"";position:absolute;inset:-150%;border-radius:50%;background:repeating-conic-gradient(rgba(255,244,190,.5) 0 6deg,transparent 6deg 20deg);-webkit-mask:radial-gradient(circle,#000 6%,transparent 66%);mask:radial-gradient(circle,#000 6%,transparent 66%);animation:spin 80s linear infinite;pointer-events:none;z-index:-1}
+.shim{position:absolute;left:0;right:0;bottom:calc(var(--floor-h) + 1.3cqh);height:2.4cqh;pointer-events:none;opacity:.9;background:radial-gradient(ellipse 4cqw .35cqh at 6cqw 35%,rgba(255,255,255,.95),transparent),radial-gradient(ellipse 3cqw .3cqh at 17cqw 70%,rgba(255,255,255,.8),transparent),radial-gradient(ellipse 2.4cqw .28cqh at 11cqw 8%,rgba(255,255,255,.7),transparent);background-size:23cqw 100%;animation:shim 16s linear infinite}
+@keyframes shim{to{background-position:-23cqw 0}}
+.btn-play{position:relative;overflow:hidden}.btn-play::after{content:"";position:absolute;top:-20%;bottom:-20%;left:-40%;width:28%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);animation:sweep 5s ease-in-out infinite;pointer-events:none}
+@keyframes sweep{0%,62%{left:-40%}100%{left:130%}}
 .btn-play:active{box-shadow:0 .04em 0 #1b5c32,0 .2em .4em rgba(0,0,0,.25),inset 0 .1em 0 rgba(255,255,255,.35)}
 .dot{width:.7em;height:.7em;border-radius:50%;background:#b9c4c8;box-shadow:inset 0 .1em .15em rgba(0,0,0,.25)}
 #bCalm[aria-pressed="true"] .dot{background:#3fbf68;box-shadow:0 0 .5em #7ee89c}
@@ -124,6 +129,16 @@ body{height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-righ
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .hud{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;gap:.4rem;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left));pointer-events:none;z-index:3}
 .hrow{display:flex;align-items:center;gap:.4rem}
+.prog{display:flex;align-items:center;gap:.28rem;height:1.5rem;padding:0 .45rem 0 .4rem;border-radius:999px;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .14em 0 #b79a63,0 .3em .45em rgba(0,0,0,.18),inset 0 .1em 0 rgba(255,255,255,.7);margin-bottom:.1rem}
+.prog .seg{flex:1;height:.62rem;border-radius:999px;background:rgba(122,90,50,.24);overflow:hidden;position:relative;box-shadow:inset 0 .08em .14em rgba(90,60,20,.4)}
+.prog .seg i{position:absolute;inset:0;border-radius:inherit;transform-origin:left center;transform:scaleX(0);background:linear-gradient(180deg,#b6ec8c,#2fa84a 60%,#23863a);transition:transform .35s ease-out}
+.prog .seg[data-now="1"]{box-shadow:inset 0 .08em .14em rgba(90,60,20,.4),0 0 0 .13rem #ffd23f}
+.prog svg{width:1.3rem;height:1.3rem;flex:none;filter:grayscale(1) opacity(.55);transition:filter .3s}
+.prog[data-boss="1"] svg{filter:none;animation:medalPulse 1s ease-in-out infinite}
+@keyframes medalPulse{50%{transform:scale(1.22) rotate(-6deg)}}
+html[data-calm="1"] .prog svg,html[data-calm="1"] .prog .seg i{animation:none;transition:none}
+html[data-hc="1"] .prog{box-shadow:0 0 0 2.5px #1c0f06}html[data-hc="1"] .prog .seg{box-shadow:inset 0 0 0 2px #1c0f06}
+.game[data-bonus] .prog{display:none}
 .pill{display:inline-flex;align-items:center;gap:.35em;min-height:2.3rem;padding:.25em .75em;border-radius:999px;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .14em 0 #b79a63,0 .3em .45em rgba(0,0,0,.18),inset 0 .1em 0 rgba(255,255,255,.7);font:800 .95rem/1 var(--display);color:#4a2b0f;white-space:nowrap}
 .pill[hidden]{display:none}.pill small{font:800 .68rem/1 var(--body);color:#8a6a3c;text-transform:uppercase;letter-spacing:.04em}.pill b{font:800 1rem/1 var(--display)}
 .pill svg{width:1.7em;height:1.7em;flex:none;overflow:visible}
@@ -211,6 +226,7 @@ html[data-lt="1"] .hrow{flex-wrap:wrap}html[data-lt="1"] .pill{font-size:1.1rem;
 <svg class="cloud c3" viewBox="0 0 120 50" aria-hidden="true"><ellipse cx="60" cy="38" rx="52" ry="10" fill="#fff"/><circle cx="42" cy="28" r="16" fill="#fff"/><circle cx="68" cy="24" r="20" fill="#fff"/><circle cx="92" cy="32" r="12" fill="#fff"/></svg>
 <div class="floor"></div>
 <!--{{land}}-->
+<div class="shim" aria-hidden="true"></div>
 <div class="gull g1" aria-hidden="true"><svg viewBox="0 0 40 20"><path d="M2 14Q11 1 20 12Q29 1 38 14"/></svg></div><div class="gull g2" aria-hidden="true"><svg viewBox="0 0 40 20"><path d="M2 14Q11 1 20 12Q29 1 38 14"/></svg></div><div class="gull g3" aria-hidden="true"><svg viewBox="0 0 40 20"><path d="M2 14Q11 1 20 12Q29 1 38 14"/></svg></div><i class="flake" style="left:52cqw;width:5px;height:5px;animation-duration:12s;animation-delay:-1s"></i><i class="flake" style="left:60cqw;width:7px;height:7px;animation-duration:15s;animation-delay:-6s"></i><i class="flake" style="left:68cqw;width:4px;height:4px;animation-duration:11s;animation-delay:-3s"></i><i class="flake" style="left:75cqw;width:6px;height:6px;animation-duration:14s;animation-delay:-9s"></i><i class="flake" style="left:82cqw;width:5px;height:5px;animation-duration:10s;animation-delay:-2s"></i><i class="flake" style="left:89cqw;width:8px;height:8px;animation-duration:16s;animation-delay:-12s"></i><i class="flake" style="left:95cqw;width:4px;height:4px;animation-duration:12s;animation-delay:-5s"></i><i class="flake" style="left:57cqw;width:4px;height:4px;animation-duration:13s;animation-delay:-10s"></i><i class="flake" style="left:72cqw;width:5px;height:5px;animation-duration:17s;animation-delay:-14s"></i><i class="ember" style="left:5cqw;width:7px;height:7px;animation-duration:9s;animation-delay:-1s"></i><i class="ember" style="left:14cqw;width:5px;height:5px;animation-duration:12s;animation-delay:-5s"></i><i class="ember" style="left:24cqw;width:8px;height:8px;animation-duration:10s;animation-delay:-3s"></i><i class="ember" style="left:33cqw;width:5px;height:5px;animation-duration:13s;animation-delay:-8s"></i><i class="ember" style="left:40cqw;width:6px;height:6px;animation-duration:11s;animation-delay:-6s"></i><i class="ember" style="left:10cqw;width:5px;height:5px;animation-duration:14s;animation-delay:-10s"></i>
 <h1 class="logo" aria-label="Pineapple Defense">
 <svg class="mini mini-l" viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg>
@@ -278,11 +294,12 @@ html[data-lt="1"] .hrow{flex-wrap:wrap}html[data-lt="1"] .pill{font-size:1.1rem;
 <section class="game" id="game" hidden aria-label="Stage 1, Sandy Snack Shore">
 <canvas id="cv" aria-hidden="true"></canvas>
 <div class="hud">
+<div class="prog" id="prog" role="img" aria-label="Stage progress"><span class="seg"><i></i></span><span class="seg"><i></i></span><span class="seg"><i></i></span><span class="seg"><i></i></span><span class="seg"><i></i></span><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#ic-medal"/></svg></div>
 <div class="hrow"><span class="pill" id="waveBox"><span id="waveTxt">Wave 1 / 8</span></span><span class="pill sm" id="leftPill" title="Penguins left"><small>Left</small><b id="leftTxt">0</b></span><span class="pill sm" id="comboPill" title="Hits in a row"><small>Combo</small><b id="comboTxt">0</b></span><button class="pause" id="bPause" type="button" aria-label="Pause"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-pause"/></svg></button></div>
 <div class="hrow"><span class="pill sm" id="credPill" title="Credits you have won this roll" hidden><small>Won</small><b id="goldTxt">0</b></span><span class="pill sm" title="Your Golden Pineapples"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg><b id="bankTxt">0</b></span><span class="pill sm" title="Trophies collected"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#ic-trophy"/></svg><b id="cupsTxt">0/10</b></span></div>
 </div>
 <div class="cheer" role="img" aria-label="Stand cheer"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ic-heart"/></svg><div class="bar" data-low="0"><i id="cheerFill"></i></div></div>
-<button class="raid" id="bRaid" type="button" hidden aria-label="Air raid: pineapples fall across the lanes (R)"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#ic-raid"/></svg><b id="raidN">0</b></button>
+<button class="raid" id="bRaid" type="button" hidden aria-label="Pineapple Rain: pineapples fall across the lane (R)"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#ic-raid"/></svg><b id="raidN">0</b></button>
 <div class="bossbar" id="bossBar" hidden role="img" aria-label="Champion health"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#ic-medal"/></svg><div class="bar"><i id="bossFill"></i></div></div>
 <div class="banner" id="banner" hidden></div>
 <div class="demo" id="demoBar" hidden><span id="demoTxt"></span><button class="btn" id="demoX" type="button">Back to shop</button></div>
@@ -309,12 +326,12 @@ html[data-lt="1"] .hrow{flex-wrap:wrap}html[data-lt="1"] .pill{font-size:1.1rem;
 <template id="spr-plant"><!--{{plant}}--></template>
 <template id="t-play">
 <p>The penguins can&rsquo;t eat tropical fruit, and they can&rsquo;t visit the tropics. So they&rsquo;re a little jealous!</p>
-<p>Flick pineapples to send them home giggling. Nobody gets hurt!</p>
+<p>Flick pineapples at the penguins. They slide home wearing a pineapple hat. Nobody gets hurt!</p>
 </template>
 <template id="t-how">
 <div class="steps">
 <div class="step"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 56C16 40 24 24 44 12" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round"/><path d="M34 10l14 0-2 14" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>Flick up from the bottom toward a penguin</div>
-<div class="step"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg>A pineapple flies and sends it home giggling</div>
+<div class="step"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg>A pineapple flies, and the penguin slides home in a pineapple hat</div>
 <div class="step"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ic-heart"/></svg>Keep your fruit stand cheerful!</div>
 </div>
 <h3 class="lg">Your pineapples (pick them at the bottom left)</h3>
@@ -388,7 +405,7 @@ var POP={pa:['wheee!','hehe!','yay!'],pg:['no thanks!','brrr!','hee hee!']};
 var COL={pa:{c:'#b86e00',bits:['#f8bd1c','#ffe58a','#7fd68f']},pg:{c:'#3b3a78',bits:['#ffffff','#cfe9f5','#8fc6e4']}};
 function press(c,e){
   var o=chars[1-chars.indexOf(c)];
-  setMood(c,'giggle',650);setMood(o,'wow',700);
+  setMood(c,'glad',650);setMood(o,'wow',700);
   if(calm)return;
   var tr=title.getBoundingClientRect(),r=c.el.getBoundingClientRect();
   var cx=(e&&e.clientX!=null)?e.clientX:r.left+r.width/2,cy=(e&&e.clientY!=null)?e.clientY:r.top+r.height*.4;
