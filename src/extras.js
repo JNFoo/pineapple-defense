@@ -191,7 +191,7 @@ function raidBand() {
     if (S.boss && S.boss.st === 'hold' && Math.abs(S.boss.p - p) < 0.06) n += 2;
     if (n > bn || (n === bn && p > best)) { bn = n; best = p; }
   }
-  return best;
+  return bn <= 0 ? 0.5 : best;
 }
 function callRaid() {
   if (!S || S.over || S.paused || S.raid || !(S.raL > 0) || !(S.mode === 'run' || S.mode === 'boss')) return;

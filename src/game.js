@@ -611,6 +611,15 @@ function startStage(from) {
 }
 function continueGame() { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage(sv); run(); }); }
 function retryWave() { var w = S.inBoss ? NWAVES : S.wave - 1, g = S.golden; startStage({ stage: S.stage, wave: w, golden: g, cheer: 60 }); run(); }
+/* after a finished run: keep everything and go again, or wipe the save (trophies stay) */
+var runEndText = '';
+function confirmReset() {
+  showCard('Reset everything?', 'This erases your upgrades, Golden Pineapples, run streak and progress. Your trophies stay. It cannot be undone.', 'Keep my stuff', function () { showCard('You did it!', runEndText, 'Save and restart', startAgain, 'Reset completely', confirmReset); }, 'Yes, reset', doReset);
+}
+function doReset() {
+  sv.bank = 0; sv.au = 0; sv.ar = 0; sv.ap = 0; sv.gu = 0; sv.um = 0; sv.ra = 0; sv.run = 0; sv.cd = 0; sv.stage = 1; sv.wave = 0; sv.golden = 0; sv.cheer = 100; sv.cleared = 0;
+  kit.save(sv); updateContinue(); startAgain();
+}
 function endStage(win) {
   S.over = true;
   if (win) {
@@ -621,8 +630,9 @@ function endStage(win) {
     while (S.tq.length) { S.tro = { id: S.tq.shift(), t: 0 }; collectTro(true); }
     sv.golden = 0; sv.wave = 0; sv.cheer = 100; sv.cleared = Math.max(sv.cleared, st); sv.stage = last ? 1 : st + 1;
     kit.save(sv); updateContinue();
-    if (last) showCard('You did it!', CH.n + ' is giggling and every stage is clear! You collected ' + S.golden + ' Golden Pineapples.' + more + ' Spend them in the Shop on the title screen.', 'Play again', startAgain);
-    else if (st === NSTAGES - 1) showCard('Stage ' + st + ' clear!', CH.n + ' is giggling! You collected ' + S.golden + ' Golden Pineapples.' + more + ' A bonus game is open before the last stage: Pineapple Roll!', 'Roll for bonus credits', function () { rollFromRun = true; startSkee(); }, 'Skip to stage ' + (st + 1), function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
+    if (last) runEndText = CH.n + ' is giggling and every stage is clear! You collected ' + S.golden + ' Golden Pineapples.' + more + ' Keep your upgrades and credits for the next run, or start over from nothing?';
+    if (last) showCard('You did it!', runEndText, 'Save and restart', startAgain, 'Reset completely', confirmReset);
+    else if (st === NSTAGES - 1) showCard('Stage ' + st + ' clear!', CH.n + ' is giggling! You collected ' + S.golden + ' Golden Pineapples.' + more + ' A bonus game is open before the last stage: Pineapple Roll!', 'Roll for bonus credits', function () { startSkee(true); }, 'Skip to stage ' + (st + 1), function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
     else showCard('Stage ' + st + ' clear!', CH.n + ' is giggling! You collected ' + S.golden + ' Golden Pineapples.' + more + ' Next up: ' + STAGES[st + 1].title.replace('\n', ' ') + '.', 'Next stage', function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
   } else {
     showCard('The stand needs a break!', 'Everyone is giggling. Let us try this wave again!', 'Try again', retryWave);
@@ -1118,8 +1128,8 @@ function skLabels(on) {
   var a = elLeft.previousElementSibling, c = elCombo.previousElementSibling; elCred.hidden = !on;
   if (a) a.textContent = on ? 'Balls' : 'Left'; if (c) c.textContent = on ? 'Score' : 'Combo';
 }
-function startSkee() {
-  if (K) return;
+function startSkee(fr) {
+  if (K) return; rollFromRun = fr === true;
   titleEl.hidden = true; gameEl.hidden = false; gameEl.setAttribute('data-bonus', '1');
   loadAssets().then(function () { newSkee(); skLabels(true); resize(); run(); });
 }
@@ -1736,7 +1746,9 @@ $('bShop').addEventListener('click', fillShop);
 var qa = null;
 if (location.hash === '#qa') {
   qa = window.__pd = { zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
-    win: function () { endStage(true); }, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src || 2; for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
+    /* fast-forward without waiting for frames: sec game seconds in steps of dt, drawing every `every` steps (0 = never, one final draw) */
+    step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
+    win: function () { endStage(true); }, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
 }
 /*{{LAB_JS}}*/
 }());

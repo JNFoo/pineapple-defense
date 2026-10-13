@@ -311,6 +311,10 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Fanfare:** pickups and trophies on the table arrive with rings, a spinning halo, sparkles and a label.
 - **Look:** the projectile shows its back (no face) as it flies at the penguins; the slingshot has a wrapped grip, brass caps, a shaded fork and a stitched pouch.
 
+## Decisions, round 28: run end and QA (Oct 12)
+- **Run-end card:** after the last stage you choose Save and restart (keeps upgrades, credits, trophies and the run speed streak) or Reset completely. Reset asks "Reset everything?" first and then erases upgrades, Golden Pineapples, run streak and progress; trophies stay.
+- **QA process:** one command now runs the checks (see docs/qa-process.md).
+
 ## Change log
 - 2026.10.12.1556: first title screen, logo and original pineapple and Rockhopper sprites.
 - 2026.10.12.1620: story card text approved; stage titles, Champion names and rosters decided.
@@ -337,3 +341,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.2205: live bank and costs, Champion lane blocking, parachute fish and evolving penguins.
 - 2026.10.12.2223: harder Champions, Champion health bar, new lanes, secret spots, Toasty!, P to pause.
 - 2026.10.12.2253: gulls, paper umbrellas, Air Raid, combo calls, run speed streak, challenges, 11 new trophies, better slingshot, faceless projectile, bigger special entrances.
+- 2026.10.12.2306: run-end Save and restart / Reset completely, one-command QA and release tools, small fixes.

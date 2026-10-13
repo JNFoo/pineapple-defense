@@ -1,0 +1,15 @@
+#!/usr/bin/env python3 -I
+"""Release in one command. Copyright (c) 2026 JNFoo. All rights reserved.
+   python3 -I tools/release.py [--ff] [--force]   QA (skipped when nothing changed), then both packed files, old dist files pruned."""
+import glob, os, re, subprocess, sys
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); py = [sys.executable, '-I']
+def run(*a):
+    r = subprocess.run(py + list(a), cwd=ROOT, capture_output=True, text=True); sys.stdout.write(r.stdout); sys.stderr.write(r.stderr)
+    if r.returncode: sys.exit(r.returncode)
+run('tools/qa.py', *[a for a in sys.argv[1:] if a in ('--ff', '--force', '--fuzz') or a.isdigit()])
+run('build.py', '--lab'); run('tools/pack.py'); run('tools/pack.py', '--lab')
+files = sorted(glob.glob(os.path.join(ROOT, 'dist/pineapple-defense*-20*.html')))
+vers = sorted({re.search(r'(20\d\d\.\d+\.\d+\.\d+)', f).group(1) for f in files})
+for f in files:                      # keep only the newest two versions
+    if re.search(r'(20\d\d\.\d+\.\d+\.\d+)', f).group(1) not in vers[-2:]: os.remove(f)
+print('release ready:', *[os.path.basename(f) for f in sorted(glob.glob(os.path.join(ROOT, 'dist/pineapple-defense*-' + vers[-1] + '.html')))])

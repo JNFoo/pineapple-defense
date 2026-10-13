@@ -32,6 +32,7 @@ A free, silly browser game for kids of all ages: flick pineapples at penguins wh
 - Design brief: [docs/pineapple-defense-design.md](docs/pineapple-defense-design.md)
 - Build: `python3 build.py` makes the single-file `index.html` from `src/` (needs `fonttools`). Don't edit `index.html` by hand.
 - Packed single file: `python3 tools/pack.py` makes one smaller, self-unpacking `.html` in `dist/`.
+- Checks: `python3 -I tools/qa.py` (add `--ff` for Firefox). Release: `python3 -I tools/release.py`. See `docs/qa-process.md`.
 - Tested in Chromium. Targets: Android Chrome, Firefox and Chromium-based desktop browsers.
 
 Copyright © 2026 JNFoo. All rights reserved.

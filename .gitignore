@@ -1,2 +1,4 @@
 private/
 dist/
+.qa-cache
+.qa-syntax.js

@@ -1,0 +1,29 @@
+# QA and build process
+
+Copyright (c) 2026 JNFoo. All rights reserved.
+
+## One command
+- `python3 -I tools/qa.py` builds, syntax-checks every inline script, then runs the in-page suite in Chromium (about 10 seconds).
+- `--ff` also runs it in Firefox 158 (the stress test, about 25 seconds). `--lab` tests the tester build. `--fuzz N` fuzzes N game seconds per stage (default 60). `--force` ignores the cache. `--shots DIR` saves screenshots.
+- `python3 -I tools/release.py` runs QA, then writes the regular and tester files into `dist/` and prunes older ones (keeps the newest two versions).
+
+## Why it is cheap
+- Time is fast-forwarded inside the page (`__pd.step`, only available with `#qa`), so no waiting on frames and no per-frame screenshots.
+- One browser session runs everything. The old approach launched a browser for each throwaway script.
+- A cache (`.qa-cache`, not committed) skips the whole run when the built page and the suite are byte-identical to the last passing run.
+- A JavaScript syntax error stops the run in under a second, before any browser starts.
+- Layout checks measure element rectangles instead of relying on screenshots.
+
+## What it checks
+- All five stages start and run with the auto-player; no NaN positions, cheer in range, bank a whole non-negative number, particle and shot lists bounded.
+- Combo calls, paper umbrellas (no cheer loss, stock counts), Air Raid (stock, one at a time), gulls (grab and leave), run speed math and its cap.
+- Card flows: stage clear cards, the run-end card (Save and restart, Reset completely, the confirm step, trophies kept), pause keys.
+- Random-action fuzzing of raids, pickups, gulls, combos, pauses, taps and zones across every stage, clicking through win and lose cards.
+- Layout at 360x640, 412x915, 1280x720 and 820x1180: no sideways scroll, HUD pills do not overlap, the raid button clears the cheer bar and the picks, cards fit the screen.
+- Any page error or console error fails the run.
+
+## Old saves
+Opening a save from an older build keeps all fields and fills the new ones with zeros (checked by loading an older build's save into the current one).
+
+## Habit
+Design iteration: do not run QA until the design is settled. Before a release: `release.py --ff` once.
