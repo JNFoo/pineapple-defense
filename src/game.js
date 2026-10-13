@@ -87,8 +87,8 @@ function loadAssets() {
 
 /* ---------- save ---------- */
 var kit = SaveKit.create({ key: 'pd-save', prefix: 'PD1',
-  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9' },
-  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0 } });
+  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1' },
+  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0 } });
 var sv = kit.load() || kit.validate({});
 sv.ach = sv.ach | 0; sv.au = sv.au | 0; sv.ar = sv.ar | 0; sv.ap = sv.ap | 0; sv.ac2 = sv.ac2 | 0; sv.gu = sv.gu | 0; sv.um = sv.um | 0; sv.ra = sv.ra | 0; sv.run = sv.run | 0; sv.cd = sv.cd | 0; sv.lm = sv.lm | 0;
 ['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
@@ -454,7 +454,8 @@ function autoFire(tg) {
   tg.aut = true; elHint.hidden = true;
 }
 /* the helpers join in only after the player's first throw of each round (the demos lend them at once) */
-function helpOn() { return S.pt || !!demo; }
+function rsg() { return !demo && (S.mode === 'bossIntro' || !!(S.boss && S.boss.rs > 0)); }   /* the Champion's Ready, Set, GO: nothing leaves any slingshot until GO */
+function helpOn() { return (S.pt || !!demo) && !rsg(); }
 function updateAuto(dt) {
   var au = S.au, ta = 0;
   if (!sv.au) return;
@@ -509,7 +510,7 @@ function beginWave(n) {
   S.wave = n; S.spawned = 0; S.toSpawn = WAVE_N[n - 1]; S.spawnT = 0.6; S.bumps = 0; S.pt = false;
   if (n >= NWAVES - 1) S.fishT = Math.min(S.fishT, 2.2);   /* the last two waves of a stage start the fish early */
   S.mode = 'intro'; S.modeT = 0;
-  if (n === 1 && S.stage > 1) banner('Stage ' + S.stage + '\n' + STAGES[S.stage].title, 2300);
+  if (n === 1 && !demo) banner('Stage ' + S.stage + '\n' + STAGES[S.stage].title, 2300);
   else banner(n === NWAVES ? 'Final wave!' : 'Wave ' + n, 1500);
   if (n === 1 && (sv.au || sv.lm) && !demo && helpHint < 2) { helpHint++; toast('Your helpers join in after your first throw each round!', 3.4); }
 }
@@ -595,6 +596,7 @@ function targets() {
 }
 function throwAt(ox, oy, dx, dy, spd, tapPoint) {
   if (S.cd > 0 || S.over || S.paused || S.rc > 0) return;
+  if (rsg()) { if (S.t - (S.wgT || -9) > 1.2) { S.wgT = S.t; var wp = pouchPos(); popText(wp.x, wp.y - H * 0.1, 'Wait for GO!', '#e8a21c', 0); } return; }
   var tc = typeCost(curType);
   if (tc > 0) {
     if (sv.bank < tc) { setType('classic'); toast('Lobbers cost ' + tc + ' Golden Pineapples. Back to Classic!'); }
@@ -826,7 +828,7 @@ function update(dt) {
   if (demo) demoTick(dt);
   S.t += dt; S.cd = Math.max(0, S.cd - dt); S.wob = Math.max(0, S.wob - dt * 1.6);
   var i, ta = 0;
-  if (drag) { var cu = drag.pts[drag.pts.length - 1], ddx = cu.x - drag.sx, ddy = cu.y - drag.sy; if (Math.hypot(ddx, ddy) > 0.02 * Math.min(W, H)) ta = Math.max(-0.6, Math.min(0.6, Math.atan2(ddx, -ddy))); }
+  if (drag) { var cu = drag.pts[drag.pts.length - 1], ddx = cu.x - drag.sx, ddy = cu.y - drag.sy; if (Math.hypot(ddx, ddy) > 0.02 * Math.min(W, H)) ta = Math.max(-AUTO_TURN, Math.min(AUTO_TURN, Math.atan2(ddx, -ddy) * 0.3)); }   /* the main sling only tilts a few degrees, like the helpers */
   S.sa += (ta - S.sa) * Math.min(1, dt * 14);
   fxUpdate(dt);
   if (S.over) return;
@@ -2078,6 +2080,43 @@ function start() {
   loadAssets().then(function () { resize(); startStage(); run(); });
 }
 $('bPlay').addEventListener('click', start);
+
+/* ---------- the first-load tour: five short picture cards for kids; shown once, with a big Skip and a replay in How to play ---------- */
+var TOUR = [
+  { t: 'Welcome!', s: '<use href="#lp-art" x="-6" y="14" width="96" height="96"/><use href="#lr-art" x="150" y="14" width="96" height="96"/><path d="M118 40l5 11 11 5-11 5-5 11-5-11-11-5 11-5z" fill="#ffd23f" stroke="#a8700f" stroke-width="2" stroke-linejoin="round" class="tw"/>', x: 'The penguins are jealous of your pineapples! Help keep your fruit stand safe.' },
+  { t: 'Flick to throw', s: '<use href="#lr-art" x="104" y="2" width="64" height="64"/><path d="M136 118V74" stroke="#fff" stroke-width="4" stroke-dasharray="2 9" stroke-linecap="round" opacity=".9"/><use href="#lp-art" x="108" y="104" width="56" height="56"/><use href="#lp-art" x="108" y="104" width="56" height="56" class="tf"/><g class="th"><circle cx="136" cy="140" r="13" fill="#fff" opacity=".9" stroke="#a8700f" stroke-width="3"/><circle cx="136" cy="140" r="5" fill="#ffb347"/></g>', x: 'Swipe your finger up from the bottom, toward a penguin. Whoosh!' },
+  { t: 'Bonk a penguin!', s: '<use href="#lr-art" x="130" y="40" width="80" height="80" class="tb"/><use href="#lp-art" x="44" y="22" width="56" height="56" class="tf2"/><path d="M114 40l4 9 9 4-9 4-4 9-4-9-9-4 9-4z" fill="#ffd23f" stroke="#a8700f" stroke-width="2" stroke-linejoin="round"/><g transform="translate(36 100)"><use href="#iu-ap" width="40" height="40"/><text x="48" y="28" font-size="22" font-weight="800" fill="#7a3a05" font-family="inherit">+3</text></g>', x: 'Hit a penguin and it slides home in a pineapple hat. You win Golden Pineapples to spend in the Shop!' },
+  { t: 'Keep the cheer up', s: '<use href="#ic-heart" x="30" y="34" width="64" height="64"/><rect x="110" y="48" width="112" height="30" rx="15" fill="#f3e6c8" stroke="#a8700f" stroke-width="3"/><rect x="114" y="52" width="76" height="22" rx="11" fill="#3fbf68" class="tc"/><use href="#lr-art" x="186" y="92" width="48" height="48"/>', x: 'If a penguin reaches your fruit stand, the Cheer bar drops. Stop them before they get there!' },
+  { t: 'Waves and Champions', s: '<g transform="translate(10 20)"><rect x="0" y="10" width="34" height="14" rx="7" fill="#3fbf68"/><rect x="38" y="10" width="34" height="14" rx="7" fill="#3fbf68"/><rect x="76" y="10" width="34" height="14" rx="7" fill="#3fbf68"/><rect x="114" y="10" width="34" height="14" rx="7" fill="#e3d3ac"/><rect x="152" y="10" width="34" height="14" rx="7" fill="#e3d3ac"/></g><use href="#ic-medal" x="205" y="26" width="30" height="30"/><use href="#iu-pz" x="50" y="68" width="48" height="48"/><use href="#ia-9" x="106" y="72" width="44" height="44"/><use href="#iu-ra" x="160" y="68" width="48" height="48"/>', x: 'Win 5 waves, then beat the Champion. Tap pickups and surprises for a little help!' }
+];
+var tourI = 0, tourOpen = false;
+function tourShow() {
+  var T = TOUR[tourI], last = tourI === TOUR.length - 1, body = $('cardBody'), d = '', i;
+  for (i = 0; i < TOUR.length; i++) d += '<i' + (i === tourI ? ' class="on"' : '') + '></i>';
+  $('cardTitle').textContent = T.t;
+  body.innerHTML = '<div class="tour"><svg class="tvis" viewBox="0 0 240 150" aria-hidden="true">' + T.s + '</svg><p class="tbig" role="status">' + T.x + '</p><div class="tdots" aria-hidden="true">' + d + '</div>' +
+    '<div class="tbtns"><button class="btn tback" type="button"' + (tourI ? '' : ' hidden') + '>Back</button><button class="btn btn-play tnext" type="button">' + (last ? 'Let’s play!' : 'Next') + '</button></div>' +
+    '<button class="tskip" type="button">' + (last ? 'Close' : 'Skip the tour') + '</button></div>';
+  body.querySelector('.tnext').onclick = function () { if (last) tourEnd(true); else { tourI++; tourShow(); } };
+  body.querySelector('.tback').onclick = function () { if (tourI) { tourI--; tourShow(); } };
+  body.querySelector('.tskip').onclick = function () { tourEnd(false); };
+  body.querySelector('.tnext').focus();
+}
+function tourStart() {
+  if ((tourOpen && !$('cw').hidden) || !titleEl || titleEl.hidden) return;
+  tourOpen = true; tourI = 0; if (!sv.tr) { sv.tr = 1; kit.save(sv); }
+  $('cw').hidden = false; document.documentElement.setAttribute('data-dlg', '1'); tourShow();
+}
+function tourEnd(play) {
+  tourOpen = false; $('cardOk').click();
+  if (play && !$('bPlay').disabled) $('bPlay').focus();
+}
+$('cardOk').addEventListener('click', function () { tourOpen = false; });
+$('bHow').addEventListener('click', function () {
+  var b = $('cardBody'), r = b.querySelector('.tl'); if (!r || b.querySelector('#tourBtn')) return;
+  var p = document.createElement('button'); p.type = 'button'; p.className = 'btn'; p.id = 'tourBtn'; p.textContent = 'Play the tour'; p.addEventListener('click', function () { $('cardOk').click(); tourStart(); }); b.appendChild(p);
+});
+if (location.hash !== '#qa' && !sv.tr && !sv.thr && !sv.cleared && !(sv.stage > 1)) setTimeout(tourStart, 900);
 btnCont.addEventListener('click', function () { if (!btnCont.disabled) continueGame(); });
 
 /* ---------- save code and file (Settings card) ---------- */
@@ -2253,7 +2292,7 @@ $('bShop').addEventListener('click', fillShop);
 /* test hook, only with #qa in the address */
 var qa = null;
 if (location.hash === '#qa') {
-  qa = window.__pd = { rollGear: function () { return rollGear(); }, stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
+  qa = window.__pd = { tour: tourStart, rsg: function () { return rsg(); }, rollGear: function () { return rollGear(); }, stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
     /* fast-forward without waiting for frames: sec game seconds in steps of dt, drawing every `every` steps (0 = never, one final draw) */
     step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
     win: function () { endStage(true); }, flick: function (dx, dy, spd) { var o = pouchPos(); throwAt(o.x, o.y, dx, dy, spd); }, get sh() { return shots; }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, sim: function (dx, dy, spd, dA, dF) { var h = skSim(skLaunch({ dx: dx, dy: dy, spd: spd }, dA, dF)); return h ? h.v : 0; }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };

@@ -2,6 +2,14 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.13.1645
+- **First-load tour for kids:** five short picture cards (Welcome, Flick to throw, Bonk a penguin, Keep the cheer up, Waves and Champions) with a big Next button, Back, dots and a big "Skip the tour". It shows once on a brand-new game (never for anyone who already played), and you can replay it from **How to play** with "Play the tour". Calm mode stops its animations.
+- **The main slingshot only tilts a few degrees** now (at most about 7), like the helper slingshots, instead of swinging far left and right. Throws still go exactly where you flick.
+- **Pineapple buttons are short, wide pills** (Classic and Lobber side by side, about half as tall) so they cover less of the lane.
+- **No throws during the Champion's Ready, Set, GO.** Nothing leaves any slingshot (yours, the Auto Slingshot or the Lime Launcher) and the Pineapple Rain button waits, until GO. A flick shows "Wait for GO!".
+- **Stage 2's flip-flops look like flip-flops:** foot-shaped soles with a toe post, a Y strap and a thick edge.
+- **Every stage opens with its name** (Stage 1 too, which was skipped before).
+
 ## 2026.10.13.1614
 - **Penguin props are rarer.** About 1 in 3 penguins wears something now, about 1 in 12 wears two, and three at once is very rare. It makes a full outfit a treat to spot.
 - **An icon for every trophy, upgrade and pickup:** 21 glossy round trophy badges (they show in color when earned and gray when not), nine shop upgrade icons and four pickup icons, now in the Trophies and Shop screens.

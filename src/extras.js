@@ -222,7 +222,7 @@ function raidBand() {
   return bn <= 0 ? 0.5 : best;
 }
 function callRaid() {
-  if (!S || S.over || S.paused || S.raid || !(S.raL > 0) || !(S.mode === 'run' || S.mode === 'boss')) return;
+  if (!S || S.over || S.paused || S.raid || rsg() || !(S.raL > 0) || !(S.mode === 'run' || S.mode === 'boss')) return;
   var p = raidBand(), n = Math.max(7, Math.min(12, Math.round(1.9 * FW * sc(p) / (psz(p) * 0.85))));
   S.raL--; S.raid = { t: 0, p: p, n: n, hits: 0, bossHit: false, done: 0 };
   S.call = { txt: 'PINEAPPLE RAIN!', sub: 'Here they come!', tier: 4, t: 0, ttl: 1.6, n: 0 };

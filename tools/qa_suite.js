@@ -150,6 +150,38 @@ await T('penguin outfits: props are rare, two at once are rarer, mecha penguins 
   return Math.round(pa * 100) + '% have a prop, ' + Math.round(pb * 100) + '% two or more';
 });
 
+await T('the main sling only tilts a little, like the helpers', async () => {
+  await go(1, 3); P.bot = false; const S = P.S, cv = document.getElementById('cv'), r = cv.getBoundingClientRect(), x0 = r.left + r.width * 0.5, y0 = r.top + r.height * 0.8;
+  cv.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 7, clientX: x0, clientY: y0, bubbles: true, cancelable: true }));
+  let worst = 0; for (const dx of [-160, 160, -120, 120]) { cv.dispatchEvent(new PointerEvent('pointermove', { pointerId: 7, clientX: x0 + dx, clientY: y0 - 40, bubbles: true })); P.step(0.6, 0.03, 1); worst = Math.max(worst, Math.abs(S.sa)); }
+  cv.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 7, clientX: x0, clientY: y0, bubbles: true }));
+  if (worst < 0.02) throw new Error('the sling did not tilt at all (' + worst.toFixed(3) + ')'); if (worst > 0.13) throw new Error('the sling tilted ' + (worst * 57.3).toFixed(0) + ' degrees, wanted at most about 7');
+  return 'max tilt ' + (worst * 57.3).toFixed(1) + ' degrees';
+});
+
+await T('no throws leave any slingshot during the Champion Ready, Set, GO', async () => {
+  const sv = P.sv(); sv.au = 1; sv.lm = 1; await go(1, 8); const S = P.S, sh0 = P.sh.length; let saw = 0;
+  for (let i = 0; i < 400 && !(S.boss && S.boss.rs > 0); i++) P.step(0.05, 0.05);   /* run into the Ready window */
+  if (!P.rsg()) throw new Error('never saw the Ready window');
+  const before = P.sh.length; S.cd = 0; P.flick(0, -1, 4); P.step(0.1, 0.05); S.au.cd = 0; S.lm.cd = 0; S.pt = true; P.step(1.5, 0.05); P.flick(0.1, -1, 4); P.step(0.2, 0.05); saw++;
+  if (P.sh.length !== before) throw new Error('a shot left a slingshot during Ready (' + (P.sh.length - before) + ')'); if (S.lm.sup < 6 && sv.lm) throw new Error('the lime launcher fired during Ready');
+  for (let i = 0; i < 400 && P.rsg(); i++) P.step(0.05, 0.05); if (P.rsg()) throw new Error('Ready, Set, GO never ended');
+  S.cd = 0; P.flick(0, -1, 4); if (P.sh.length <= before) throw new Error('could not throw after GO'); sv.au = 0; sv.lm = 0;
+  return 'blocked until GO, then free';
+});
+
+await T('first-load tour: five cards, skip, replay', async () => {
+  const sv = P.sv(); document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; sv.tr = 0; P.tour();
+  const cw = document.getElementById('cw'); if (cw.hidden) throw new Error('tour did not open'); if (!sv.tr) throw new Error('tour flag not saved');
+  const titles = [], click = sel => document.querySelector(sel).click();
+  for (let i = 0; i < 5; i++) { titles.push(document.getElementById('cardTitle').textContent); if (!document.querySelector('.tour .tvis')) throw new Error('no picture on card ' + (i + 1)); if (!document.querySelector('.tskip')) throw new Error('no skip button on card ' + (i + 1)); if (i < 4) click('.tnext'); }
+  if (new Set(titles).size !== 5) throw new Error('cards repeat: ' + titles.join('|'));
+  click('.tback'); click('.tnext'); click('.tnext'); if (!cw.hidden) throw new Error('last card did not close the tour');
+  P.tour(); click('.tskip'); if (!cw.hidden) throw new Error('skip did not close the tour');
+  document.getElementById('bHow').click(); const rb = document.getElementById('tourBtn'); if (!rb) throw new Error('no replay button in How to play'); rb.click(); if (cw.hidden || !document.querySelector('.tour')) throw new Error('replay did not start'); click('.tskip');
+  document.getElementById('title').hidden = true; document.getElementById('game').hidden = false; return titles.join(' / ');
+});
+
 await T('every trophy and shop upgrade has its own icon', async () => {
   $('bTro').click(); await new Promise(r => setTimeout(r, 50));
   const us = [...document.querySelectorAll('#trList use')].map(u => u.getAttribute('href')); if (us.length !== 21) throw new Error('trophy rows ' + us.length);

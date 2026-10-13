@@ -73,13 +73,30 @@ function cuteFace(g, x, y, s, blink) {
   g.fillStyle = 'rgba(255,111,143,.45)'; g.beginPath(); g.ellipse(x - s * 0.45, y + s * 0.14, s * 0.1, s * 0.06, 0, 0, 6.3); g.ellipse(x + s * 0.45, y + s * 0.14, s * 0.1, s * 0.06, 0, 0, 6.3); g.fill();
 }
 function flipflop(g, x, y, s, c1, c2) {
+  /* a giant flip-flop stuck upright in the sand: foot-shaped sole (wide toes, narrow arch, round heel), a thick midsole rim, a Y strap and a toe post */
+  function foot(k, o) {
+    var w = s * k, t = -s * 1.12 * k + o, h = -s * 0.02 + o;
+    g.beginPath(); g.moveTo(0, t);
+    g.bezierCurveTo(w * 0.27, t, w * 0.36, t + s * 0.16, w * 0.32, t + s * 0.4);
+    g.bezierCurveTo(w * 0.3, t + s * 0.58, w * 0.21, t + s * 0.66, w * 0.22, t + s * 0.8);
+    g.bezierCurveTo(w * 0.23, t + s * 0.95, w * 0.27, h - s * 0.08, w * 0.17, h);
+    g.bezierCurveTo(w * 0.08, h + s * 0.06, -w * 0.08, h + s * 0.06, -w * 0.17, h);
+    g.bezierCurveTo(-w * 0.27, h - s * 0.08, -w * 0.23, t + s * 0.95, -w * 0.22, t + s * 0.8);
+    g.bezierCurveTo(-w * 0.21, t + s * 0.66, -w * 0.3, t + s * 0.58, -w * 0.32, t + s * 0.4);
+    g.bezierCurveTo(-w * 0.36, t + s * 0.16, -w * 0.27, t, 0, t); g.closePath();
+  }
   g.save(); g.translate(x, y); g.rotate(-0.1);
   g.fillStyle = 'rgba(40,30,60,.14)'; g.beginPath(); g.ellipse(0, 0, s * 0.42, s * 0.07, 0, 0, 6.3); g.fill();
-  g.fillStyle = c2; g.beginPath(); g.ellipse(0, -s * 0.55, s * 0.3, s * 0.55, 0, 0, 6.3); g.fill();
-  g.fillStyle = c1; g.beginPath(); g.ellipse(0, -s * 0.57, s * 0.26, s * 0.5, 0, 0, 6.3); g.fill();
-  g.strokeStyle = '#fff7e3'; g.lineWidth = s * 0.07; g.lineCap = 'round'; g.beginPath(); g.moveTo(0, -s * 0.2); g.lineTo(-s * 0.15, -s * 0.5); g.moveTo(0, -s * 0.2); g.lineTo(s * 0.15, -s * 0.5); g.stroke();
-  dot(g, 0, -s * 0.2, s * 0.05, '#fff7e3'); cuteFace(g, 0, -s * 0.78, s * 0.42, false);
-  g.fillStyle = 'rgba(255,255,255,.4)'; g.beginPath(); g.ellipse(-s * 0.12, -s * 0.95, s * 0.04, s * 0.14, 0.2, 0, 6.3); g.fill(); g.restore();
+  g.fillStyle = c2; foot(1.5, 0); g.fill();                         /* the thick sole edge */
+  g.fillStyle = c1; foot(1.5 * 0.88, -s * 0.03); g.fill();           /* the top of the sole */
+  g.fillStyle = 'rgba(255,255,255,.18)'; foot(1.5 * 0.62, -s * 0.05); g.fill();   /* the soft footbed */
+  g.strokeStyle = c2; g.lineWidth = s * 0.03; g.globalAlpha = 0.5; g.beginPath(); g.moveTo(-s * 0.1, -s * 0.15); g.lineTo(s * 0.1, -s * 0.15); g.moveTo(-s * 0.08, -s * 0.09); g.lineTo(s * 0.08, -s * 0.09); g.stroke(); g.globalAlpha = 1;
+  /* the Y strap and the toe post */
+  g.lineCap = 'round'; g.strokeStyle = c2; g.lineWidth = s * 0.14; g.beginPath(); g.moveTo(0, -s * 0.9); g.lineTo(-s * 0.3, -s * 0.5); g.moveTo(0, -s * 0.9); g.lineTo(s * 0.3, -s * 0.5); g.stroke();
+  g.strokeStyle = '#fff7e3'; g.lineWidth = s * 0.09; g.beginPath(); g.moveTo(0, -s * 0.9); g.lineTo(-s * 0.3, -s * 0.5); g.moveTo(0, -s * 0.9); g.lineTo(s * 0.3, -s * 0.5); g.stroke();
+  dot(g, 0, -s * 0.9, s * 0.07, c2); dot(g, 0, -s * 0.91, s * 0.045, '#fff7e3');
+  cuteFace(g, 0, -s * 0.33, s * 0.4, false);
+  g.fillStyle = 'rgba(255,255,255,.4)'; g.beginPath(); g.ellipse(-s * 0.2, -s * 0.78, s * 0.035, s * 0.12, 0.25, 0, 6.3); g.fill(); g.restore();
 }
 function igloo(g, x, y, s) {
   var gr = g.createLinearGradient(x, y - s, x, y); gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#cfe6f2');

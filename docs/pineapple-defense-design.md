@@ -376,6 +376,14 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Roll feel:** `SK_AIM` 0.3 (was 0.7), speed band `(spd - 1) / 7.5` (was `(spd - 1.2) / 5.3`), `SK_DIN` 1.25 (was 0.9). The lane and the board use fixed 1/240 s steps (`SK_H`, accumulator `b.acc`) so the roll is the same at any frame rate, and `skSim` replays a launch silently (used by the tests; `skSimOn` mutes the crowd). Measured by simulation with a human wobble (normal noise, 6 degrees and 12%): 58% of flicks sink, up from 33%, and a random flick sinks 38% of the time (19% before). All hole values (10 to 100) stay reachable. No aim assist on purpose (the player asked for none).
 - **Audit:** see docs/ideas-qol-and-performance.md.
 
+### Round 37: first-load tour, calmer sling, pills, Ready block
+- **Tour:** `TOUR` (five cards: SVG scene, short sentence) in `game.js`; `tourStart/tourShow/tourEnd` reuse the title's `#cw` card. Save field `tr` (int 0 or 1, set when the tour first opens). Auto-start 900 ms after load when `!sv.tr && !sv.thr && !sv.cleared && stage <= 1` and the page is not `#qa`; `#tourBtn` in How to play replays it. `__pd.tour()` opens it for tests.
+- **Sling tilt:** the drag angle target is `clamp(atan2 * 0.3, +-AUTO_TURN)` (0.12 rad), the same as the helpers.
+- **Pills:** `.pick` is a row (icon, name), 2.2 rem tall; the Lobber cost badge sits on the corner.
+- **Ready, Set, GO:** `rsg()` is true in `bossIntro` and while `boss.rs > 0` (not in demos). `throwAt` and `callRaid` return early (a "Wait for GO!" pop at most every 1.2 s) and `helpOn()` is false, so the Auto Slingshot and Lime Launcher hold fire.
+- **Stage names:** the stage banner shows at wave 1 of every stage (not demos).
+- **Flip-flops:** `flipflop()` draws a foot-shaped sole with Bezier curves, a Y strap and a toe post.
+
 ### Round 36: rarer props, icons, logo, README
 - **Props:** `rollGear` picks a count (0 for 66.7%, 1 for 25%, 2 for 7.3%, 3 for 1%) and fills distinct slots by weight (hat .34, scarf .30, mittens .22, item .14). Test hook `__pd.rollGear()`.
 - **Icons:** `tools/make_icons.py` writes `src/sprites/icons.svg` (symbols `ia-0` to `ia-20` for trophies in `achAll()` order, `iu-*` for upgrades and pickups) and standalone SVGs in `docs/icons/`. `build.py` inlines it at `<!--{{icons}}-->`. `fillTrophies` uses `#ia-N`; `fillShop` maps the demo name through `SHOP_IC`. Shop icons ignore the gray "not owned" filter.

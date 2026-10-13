@@ -19,6 +19,8 @@ A silly, glossy toy-box game for kids of all ages. The penguins are jealous of y
 
 ## How to play
 
+A short picture tour shows the first time you open the game (you can skip it, and replay it from **How to play**).
+
 1. **Flick** up from the bottom of the screen toward a penguin (on a mouse or touchpad, swipe up over the game). A harder flick throws farther.
 2. Penguins that reach your fruit stand make it wobble and lower the **Cheer** meter (the tall bar on the right). Clear waves to cheer it back up.
 3. Each stage has five waves, shown by the bar across the top, then a **Champion**. Every Champion fights differently, and a hint tells you how to win.
