@@ -44,7 +44,7 @@ function extrasWin(st, last) {
   }
   if (last) {
     var k = runK(); award(16); if (k >= 1.3) award(17); if (k >= 1.9) award(18);
-    sv.run = Math.min(99, (sv.run | 0) + 1); sv.cd = 0;
+    sv.run = Math.min(99, (sv.run | 0) + 1); sv.cd = 0; sv.rl = 0;
     out += ' Run ' + sv.run + ' complete! Next run the penguins are ' + runPct() + '% faster' + (runK() >= RUN_MAX ? ' (the top speed).' : '.') + ' New challenge: ' + chal().d;
   }
   return out;
@@ -348,7 +348,7 @@ function updateLime(dt) {
   }
   if (!sv.lm) return;
   if (b !== L.fb) { L.fb = b; L.sup = b ? limeSup() : 0; L.cd = Math.min(L.cd, 0.4); }   /* a fresh Champion means a fresh supply */
-  can = bossOpen(b) && S.mode === 'boss' && !S.over;
+  can = bossOpen(b) && S.mode === 'boss' && !S.over && helpOn();
   L.cd = Math.max(0, L.cd - dt);
   if (can && L.sup > 0 && L.cd <= 0) { launchLime(L.n++); L.sup--; L.cd = limeInt(); }
   if (can && L.sup > 0) { c = penCenter(b); po = pouchPos(limeGeom(), L.a); ta = Math.max(-AUTO_TURN, Math.min(AUTO_TURN, Math.atan2(c.x - po.x, po.y - c.y) * 0.3)); }

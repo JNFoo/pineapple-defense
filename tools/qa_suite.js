@@ -32,7 +32,7 @@ async function T(name, fn) {
 }
 async function go(st, w) { P.go(st, w); if (!await wf(() => P.S && P.S.stage === st && P.penguins !== undefined && !$('game').hidden, 4000)) throw new Error('go timeout'); await wait(80); P.bot = false; }
 
-await T('load', async () => { if (!P) throw new Error('no __pd'); const sv = P.sv(); ['stage', 'wave', 'bank', 'ach', 'ac2', 'gu', 'um', 'ra', 'run', 'cd', 'lm', 'lh', 'aim', 'arc', 'hc', 'lt', 'thr'].forEach(k => { if (!isFinite(sv[k])) throw new Error('save field ' + k + ' = ' + sv[k]); }); });
+await T('load', async () => { if (!P) throw new Error('no __pd'); const sv = P.sv(); ['stage', 'wave', 'bank', 'ach', 'ac2', 'gu', 'um', 'ra', 'run', 'cd', 'rl', 'lm', 'lh', 'aim', 'arc', 'hc', 'lt', 'thr'].forEach(k => { if (!isFinite(sv[k])) throw new Error('save field ' + k + ' = ' + sv[k]); }); });
 
 for (let st = 1; st <= 5; st++) await T('stage ' + st + ' runs', async () => { await go(st, 0); P.bot = true; P.step(25, 0.033, 40); inv('stage' + st); P.bot = false; });
 
@@ -78,8 +78,18 @@ await T('thrown pineapples: harder flicks fly farther, misses land and stay put,
   return 'soft ' + soft.toFixed(2) + ' hard ' + hard.toFixed(2);
 });
 
+await T('helpers wait for the first throw each round', async () => {
+  const sv = P.sv(); sv.au = 1; sv.ar = 3; sv.lm = 3; await go(1, 1); P.bot = false; const S = P.S;
+  if (S.pt) throw new Error('pt should start false');
+  let seen = 0; for (let i = 0; i < 120; i++) { P.step(0.05, 0.05); seen = Math.max(seen, P.sh.length); }
+  if (seen) throw new Error('a helper fired before the first throw');
+  P.flick(0, -1, 3); if (!S.pt) throw new Error('first throw did not release the helpers');
+  const ids = new Set(); for (let i = 0; i < 160; i++) { P.step(0.05, 0.05); P.sh.forEach(s => ids.add(s)); } const fired = ids.size; if (fired < 3) throw new Error('helpers never joined in: ' + fired);
+  P.win(); sv.au = 0; sv.ar = 0; sv.lm = 0; return 'shots after first throw ' + fired;
+});
+
 await T('auto slingshot only turns slightly', async () => {
-  const sv = P.sv(); sv.au = 1; await go(1, 3); P.bot = false; let mx = 0;
+  const sv = P.sv(); sv.au = 1; await go(1, 3); P.bot = false; P.S.pt = true; let mx = 0;
   for (let i = 0; i < 300; i++) { P.step(0.1, 0.05); mx = Math.max(mx, Math.abs(P.S.au.a)); }
   sv.au = 0; if (mx > 0.125) throw new Error('auto slingshot leaned ' + mx.toFixed(2)); return 'max turn ' + mx.toFixed(2) + ' rad';
 });
@@ -122,7 +132,7 @@ await T('lime launcher: tiers set the limes per Champion fight', async () => {
   for (const tier of [1, 2, 3]) {
     sv.lm = tier; await go(1, 8); const S = P.S; let t = 0;
     while (S.mode !== 'boss' || !S.boss || S.boss.st !== 'hold') { P.step(0.1, 0.05); if ((t += 0.1) > 30) throw new Error('boss never held'); }
-    const start = S.lm.sup; let low = start;
+    S.pt = true; const start = S.lm.sup; let low = start;
     for (let i = 0; i < 1200 && S.boss && S.mode === 'boss'; i++) { P.step(0.05, 0.05); if (S.boss) low = Math.min(low, S.lm.sup); }
     const fired = start - low;
     const want = [6, 12, 20][tier - 1]; if (start > want || fired > want) throw new Error('tier ' + tier + ' supply ' + start + ' fired ' + fired + ' (limit ' + want + ')');
@@ -135,7 +145,7 @@ await T('lime launcher: shield first, then Champion', async () => {
   const sv = P.sv(); sv.lm = 0; await go(1, 8);
   const S = P.S; let sawM = 0, t = 0; while (S.mode !== 'boss' || !S.boss || S.boss.st !== 'hold') { P.step(0.1, 0.05); if ((t += 0.1) > 30) throw new Error('boss never held'); }
   P.step(9, 0.05); sawM = S.ms.length; if (sawM || S.boss.hp !== S.bossMax) throw new Error('missiles fired without the launcher');
-  sv.lm = 3; S.boss.shield = S.boss.shield || 3; let popped = 0, hurt = 0, maxM = 0, hp = S.boss.hp, sh = S.boss.shield, first = '';
+  sv.lm = 3; S.pt = true; S.boss.shield = S.boss.shield || 3; let popped = 0, hurt = 0, maxM = 0, hp = S.boss.hp, sh = S.boss.shield, first = '';
   for (let i = 0; i < 1600 && S.boss && S.mode === 'boss'; i++) {
     P.step(0.05, 0.05); maxM = Math.max(maxM, S.ms.length); if (!S.boss) break;
     if (S.boss.shield < sh && !first) first = 'pop'; if (S.boss.hp < hp && !first) first = 'hurt'; if (S.boss.hp < hp) hurt++; if (S.boss.shield < sh) popped++;
@@ -191,7 +201,7 @@ await T('run speed math', async () => {
 });
 
 await T('stage 4 offer, roll, on to 5', async () => {
-  await go(4, 0); P.win(); await wait(50); let c = card();
+  P.sv().rl = 0; await go(4, 0); P.win(); await wait(50); let c = card();
   if (c.t !== 'Stage 4 clear!' || !/Roll/.test(c.b1) || !/Skip/.test(c.b2)) throw new Error(JSON.stringify(c));
   $('gBtn1').click(); if (!await wf(() => P.K, 3000)) throw new Error('roll did not start');
   P.endSk(50); P.step(0.2, 0.033); if (!await wf(cardUp, 2000)) throw new Error('no end card'); c = card();
@@ -200,8 +210,29 @@ await T('stage 4 offer, roll, on to 5', async () => {
   await go(4, 0); P.win(); await wait(50); $('gBtn2').click(); if (!await wf(() => P.S.stage === 5 && !P.K, 3000)) throw new Error('skip failed');
 });
 
+await T('bonus game: two rolls per run', async () => {
+  const sv = P.sv(); sv.rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('first roll'); if (sv.rl !== 1) throw new Error('rl ' + sv.rl);
+  P.endSk(50); P.step(0.2, 0.033); if (!await wf(cardUp, 2000)) throw new Error('no card'); let c = card();
+  if (!/Roll again/.test(c.b1) || !/one more/.test(c.body)) throw new Error(JSON.stringify(c));
+  $('gBtn1').click(); if (!await wf(() => P.K && P.sv().rl === 2, 3000)) throw new Error('second roll');
+  P.endSk(50); P.step(0.2, 0.033); if (!await wf(cardUp, 2000)) throw new Error('no card 2'); c = card();
+  if (/Roll again/.test(c.b1) || !/last roll/.test(c.body)) throw new Error('no limit: ' + JSON.stringify(c)); if (!$('gBtn2').hidden) throw new Error('second button should hide');
+  $('gBtn1').click(); await wait(80); P.skee(); await wait(120); if (P.K) throw new Error('a third roll started'); if (sv.rl !== 2) throw new Error('rl moved ' + sv.rl);
+  await go(4, 0); P.win(); await wait(50); c = card(); if (c.t !== 'Stage 4 clear!' || !/Next stage/.test(c.b1)) throw new Error('offer should vanish: ' + JSON.stringify(c)); $('gBtn1').click(); await wait(80); sv.rl = 0;
+});
+
+await T('bonus game: a human-sized flick wobble still sinks often', async () => {
+  const sv = P.sv(); sv.rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('no minigame');
+  const rnd = () => { let u = 0; for (let i = 0; i < 6; i++) u += Math.random(); return (u - 3) / Math.sqrt(0.5); }, good = [], vals = {};
+  for (let a = -22; a <= 22; a++) for (let s = 2.5; s <= 8.5; s += 0.1) { const v = P.sim(Math.sin(a * Math.PI / 180), -Math.cos(a * Math.PI / 180), s, 0, 0); if (v) { good.push([a, s]); vals[v] = 1; } }
+  for (const v of [10, 20, 30, 40, 50, 100]) if (!vals[v]) throw new Error('no flick reaches the ' + v + ' hole');
+  let h = 0; const n = 400; for (let i = 0; i < n; i++) { const q = good[Math.floor(Math.random() * good.length)], a = (q[0] + rnd() * 6) * Math.PI / 180, s = q[1] * (1 + rnd() * 0.12); if (P.sim(Math.sin(a), -Math.cos(a), s, 0, 0)) h++; }
+  if (h / n < 0.4) throw new Error('only ' + Math.round(100 * h / n) + '% sink with a 6 degree, 12% wobble'); P.endSk(0); P.step(0.2, 0.033); await wait(50); $('gBtn1').click(); await wait(50); sv.rl = 0;
+  return Math.round(100 * h / n) + '% sink with a 6 degree, 12% wobble';
+});
+
 await T('grand finale fireworks delay the card', async () => {
-  P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('no minigame'); const had = !!(P.sv().ac2 & (1 << 10));
+  P.sv().rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('no minigame'); const had = !!(P.sv().ac2 & (1 << 10));
   P.endSk(100); P.step(0.3, 0.033); if (cardUp()) throw new Error('card came before the fireworks'); P.step(4, 0.033, 12);
   if (!cardUp()) throw new Error('card never came'); if (!had && !/Grand Finale/.test(card().body)) throw new Error('trophy text missing'); $('gBtn2').click(); await wait(100);
 });
@@ -224,7 +255,7 @@ await T('pause keys', async () => {
 });
 
 await T('fuzz ' + FUZZ + 's per stage, random actions', async () => {
-  const sv = P.sv(); sv.gu = 3; sv.um = 3; sv.ra = 2; sv.au = 1; sv.ar = 3; sv.ap = 2; sv.bank = 5000; let clicks = 0, stages = new Set();
+  const sv = P.sv(); sv.gu = 3; sv.um = 3; sv.ra = 2; sv.au = 1; sv.ar = 3; sv.ap = 2; sv.lm = 3; sv.bank = 5000; let clicks = 0, stages = new Set();
   for (const st of [1, 2, 3, 4, 5]) {
     await go(st, 0); P.st('um', 3); P.bot = true; const W = window.innerWidth, H = window.innerHeight;
     for (let i = 0, n = Math.round(FUZZ / 1.5); i < n; i++) {
@@ -234,6 +265,17 @@ await T('fuzz ' + FUZZ + 's per stage, random actions', async () => {
       else if (r < 0.62) P.cmb(2 + Math.floor(Math.random() * 9), 1 + Math.floor(Math.random() * 3)); else if (r < 0.7) { P.key('p'); P.key('p'); }
       else if (r < 0.82) P.tap(W * Math.random(), H * (0.45 + 0.4 * Math.random())); else if (r < 0.9) P.award(Math.floor(Math.random() * 21)); else P.zone(Math.floor(Math.random() * 2));
       inv('fuzz stage ' + P.S.stage + ' step ' + i);
+    }
+    P.bot = false;
+    /* every Champion fight with every upgrade on, poked with specials, pauses and wild flicks */
+    await go(st, 8); P.st('um', 3); P.st('ra', 2); P.bot = Math.random() < 0.5;
+    for (let i = 0, n = Math.round(FUZZ / 3); i < n && P.S.stage === st; i++) {
+      if (cardUp()) { clicks++; $('gBtn1').click(); await wait(40); break; }
+      P.step(1.2, 0.033, 25); const r = Math.random();
+      if (r < 0.2) P.raid(); else if (r < 0.35) P.give(['pz', 'pm', 'ph', 'pf'][i % 4]); else if (r < 0.45) P.collect(); else if (r < 0.55) { P.key('p'); P.key('p'); }
+      else if (r < 0.8) P.flick((Math.random() - 0.5) * 2, -1, 0.5 + Math.random() * 6); else P.tap(W * Math.random(), H * (0.2 + 0.5 * Math.random()));
+      inv('champion fuzz ' + st + ' step ' + i);
+      if (P.S.mode === 'bossWin') break;
     }
     P.bot = false;
   }

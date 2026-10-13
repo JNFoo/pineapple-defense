@@ -6,7 +6,7 @@ A free, silly browser game for kids of all ages: flick pineapples at penguins wh
 
 **Play it:** <https://jnfoo.github.io/pineapple-defense/> (one small file, works offline, no ads, no tracking)
 
-**Status:** alpha. All five stages are playable, each with its own scenery, lanes, secret spots and Champion. Latest version: 2026.10.13.1256 (see the [changelog](CHANGELOG.md)). The art is still being polished.
+**Status:** alpha. All five stages are playable, each with its own scenery, lanes, secret spots and Champion. Latest version: 2026.10.13.1405 (see the [changelog](CHANGELOG.md)). The art is still being polished.
 
 <p align="center">
 <img src="docs/img/title.png" alt="Title screen" width="190">

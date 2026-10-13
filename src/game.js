@@ -86,11 +86,11 @@ function loadAssets() {
 
 /* ---------- save ---------- */
 var kit = SaveKit.create({ key: 'pd-save', prefix: 'PD1',
-  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999' },
-  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0 } });
+  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9' },
+  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0 } });
 var sv = kit.load() || kit.validate({});
 sv.ach = sv.ach | 0; sv.au = sv.au | 0; sv.ar = sv.ar | 0; sv.ap = sv.ap | 0; sv.ac2 = sv.ac2 | 0; sv.gu = sv.gu | 0; sv.um = sv.um | 0; sv.ra = sv.ra | 0; sv.run = sv.run | 0; sv.cd = sv.cd | 0; sv.lm = sv.lm | 0;
-['lh', 'aim', 'arc', 'hc', 'lt', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
+['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
 /* comfort settings travel with the save (and so with the save code) */
 function applyPrefs() { root.setAttribute('data-lh', sv.lh ? '1' : '0'); root.setAttribute('data-hc', sv.hc ? '1' : '0'); root.setAttribute('data-lt', sv.lt ? '1' : '0'); }
 function mx(f) { return W * (sv.lh ? 1 - f : f); }
@@ -117,7 +117,7 @@ var gov = new QualityGovernor({ levels: 5, onChange: function (l) { dprStep = l;
 function newState() {
   S = { wave: 0, spawned: 0, toSpawn: 0, spawnT: 0, mode: 'intro', modeT: 0, cheer: 100, golden: 0, bumps: 0,
         cd: 0, cdMax: 0.42, t: 0, wob: 0, thrown: false, over: false, paused: false, id: 0, lastLane: -1, boss: null, inBoss: false, bossHp: 3, bossMax: 3, stage: 1, sa: 0,
-        puT: 9, pu: null, lastPu: '', fx: { zip: 0, mega: 0, frost: 0 }, tro: null, tq: [], earned: 0, streak: 0, cmb: { n: 0, t: -9, m: 0, a: 0, fr: 0, dirty: false }, call: null, shk: 0, gulls: [], umb: [], umL: sv.um | 0, raL: RAID_N[sv.ra | 0] || 0, raid: null, maxCmb: 0, maxSp: 0, fancy: 0, allBumps: 0, zones: 0, chT: -99, chN: 0, gl: 0, fish: [], fishT: 6, toast: null, au: { cd: 1.5, tgt: null, a: 0 }, lm: { cd: 1, a: 0, q: 0, qt: 0, n: 0 }, ms: [], rc: 0, clones: [] };
+        puT: 9, pu: null, lastPu: '', fx: { zip: 0, mega: 0, frost: 0 }, tro: null, tq: [], earned: 0, streak: 0, cmb: { n: 0, t: -9, m: 0, a: 0, fr: 0, dirty: false }, call: null, shk: 0, gulls: [], umb: [], umL: sv.um | 0, raL: RAID_N[sv.ra | 0] || 0, raid: null, maxCmb: 0, maxSp: 0, fancy: 0, allBumps: 0, zones: 0, chT: -99, chN: 0, gl: 0, fish: [], fishT: 6, toast: null, au: { cd: 1.5, tgt: null, a: 0 }, lm: { cd: 1, a: 0, q: 0, qt: 0, n: 0 }, ms: [], rc: 0, clones: [], pt: false };
   penguins = []; shots = []; bits = []; pops = []; rings = []; flys = [];
 }
 
@@ -441,10 +441,12 @@ function autoFire(tg) {
   shots.push({ ty: ty, s0: g.ps * 0.92 * ty.size, x0: po.x, y0: po.y, xE: xE, yE: yE, pEnd: pEnd, t: 0, T: ttf, arc: arc, spin: (Math.random() < 0.5 ? -1 : 1) * 7, ph: 0, auto: true, tgt: tg, soft: true });
   tg.aut = true; elHint.hidden = true;
 }
+/* the helpers join in only after the player's first throw of each round (the demos lend them at once) */
+function helpOn() { return S.pt || !!demo; }
 function updateAuto(dt) {
   var au = S.au, ta = 0;
   if (!sv.au) return;
-  if (S.mode === 'run' || S.mode === 'boss') {
+  if (helpOn() && (S.mode === 'run' || S.mode === 'boss')) {
     au.cd -= dt; autoPick();
     if (au.tgt && au.cd <= 0) { autoFire(au.tgt); au.cd = autoInt(); au.tgt = null; autoPick(); }
   } else au.tgt = null;
@@ -473,7 +475,7 @@ function drawResume() {
   ctx.strokeText('Get ready!', 0, fs * 0.62); ctx.fillText('Get ready!', 0, fs * 0.62); ctx.restore();
 }
 function drawAutoMark() {
-  var au = S.au; if (!sv.au || !au.tgt || S.over) return;
+  var au = S.au; if (!sv.au || !au.tgt || S.over || !helpOn()) return;
   var c = penCenter(au.tgt), t = calm ? 0 : S.t, r = Math.max(13, c.s * 0.11), x = c.x, y = c.y - c.s * 0.62 - Math.abs(Math.sin(t * 4)) * c.s * 0.04, ready = 1 - Math.max(0, au.cd) / autoInt();
   ctx.save(); ctx.lineCap = 'round';
   ctx.strokeStyle = 'rgba(22,120,122,.9)'; ctx.lineWidth = Math.max(2.5, r * 0.22); ctx.setLineDash([r * 0.6, r * 0.5]); ctx.lineDashOffset = -t * 14;
@@ -490,11 +492,13 @@ function drawAutoMark() {
 
 /* ---------- waves and penguins ---------- */
 function effW() { return S.wave + (S.stage - 1) * 2; }
+var helpHint = 0;
 function beginWave(n) {
-  S.wave = n; S.spawned = 0; S.toSpawn = WAVE_N[n - 1]; S.spawnT = 0.6; S.bumps = 0;
+  S.wave = n; S.spawned = 0; S.toSpawn = WAVE_N[n - 1]; S.spawnT = 0.6; S.bumps = 0; S.pt = false;
   S.mode = 'intro'; S.modeT = 0;
   if (n === 1 && S.stage > 1) banner('Stage ' + S.stage + '\n' + STAGES[S.stage].title, 2300);
   else banner(n === NWAVES ? 'Final wave!' : 'Wave ' + n, 1500);
+  if (n === 1 && (sv.au || sv.lm) && !demo && helpHint < 2) { helpHint++; toast('Your helpers join in after your first throw each round!', 3.4); }
 }
 function spawn() {
   var w = effW(), lane;
@@ -583,6 +587,7 @@ function throwAt(ox, oy, dx, dy, spd, tapPoint) {
     if (sv.bank < tc) { setType('classic'); toast('Lobbers cost ' + tc + ' Golden Pineapples. Back to Classic!'); }
     else spend(tc, ox, oy);
   }
+  if (!S.pt) { S.pt = true; S.au.cd = Math.max(S.au.cd, 0.45); S.lm.cd = Math.max(S.lm.cd, 0.7); }   /* the helpers wait one beat after the player's first throw */
   var ty = effType(), len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
   if (ty.img !== 'pa') S.fancy = 1;
   var best = null, bs = 1e9, ttf = 0.6, list = targets(), i;
@@ -686,7 +691,7 @@ function confirmReset() {
   showCard('Reset everything?', 'This erases your upgrades, Golden Pineapples, run streak and progress. Your trophies stay. It cannot be undone.', 'Keep my stuff', function () { showCard('You did it!', runEndText, 'Save and restart', startAgain, 'Reset completely', confirmReset); }, 'Yes, reset', doReset);
 }
 function doReset() {
-  sv.bank = 0; sv.au = 0; sv.ar = 0; sv.ap = 0; sv.gu = 0; sv.um = 0; sv.ra = 0; sv.run = 0; sv.cd = 0; sv.lm = 0; sv.bs1 = sv.bs2 = sv.bs3 = sv.bs4 = sv.bs5 = 0; sv.stage = 1; sv.wave = 0; sv.golden = 0; sv.cheer = 100; sv.cleared = 0;
+  sv.bank = 0; sv.au = 0; sv.ar = 0; sv.ap = 0; sv.gu = 0; sv.um = 0; sv.ra = 0; sv.run = 0; sv.cd = 0; sv.rl = 0; sv.lm = 0; sv.bs1 = sv.bs2 = sv.bs3 = sv.bs4 = sv.bs5 = 0; sv.stage = 1; sv.wave = 0; sv.golden = 0; sv.cheer = 100; sv.cleared = 0;
   kit.save(sv); updateContinue(); startAgain();
 }
 function endStage(win) {
@@ -707,7 +712,7 @@ function endStage(win) {
     kit.save(sv); updateContinue();
     if (last) runEndText = CH.n + ' is giggling and every stage is clear! You collected ' + S.golden + ' Golden Pineapples.' + more + ' Keep your upgrades and credits for the next run, or start over from nothing?';
     if (last) showCard('You did it!', runEndText, 'Save and restart', startAgain, 'Reset completely', confirmReset);
-    else if (st === NSTAGES - 1) showCard('Stage ' + st + ' clear!', CH.n + ' is giggling! You collected ' + S.golden + ' Golden Pineapples.' + more + ' A bonus game is open before the last stage: Pineapple Roll!', 'Roll for bonus credits', function () { startSkee(true); }, 'Skip to stage ' + (st + 1), function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
+    else if (st === NSTAGES - 1 && rollsLeft() > 0) showCard('Stage ' + st + ' clear!', CH.n + ' is giggling! You collected ' + S.golden + ' Golden Pineapples.' + more + ' A bonus game is open before the last stage: Pineapple Roll!', 'Roll for bonus credits', function () { startSkee(true); }, 'Skip to stage ' + (st + 1), function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
     else showCard('Stage ' + st + ' clear!', CH.n + ' is giggling! You collected ' + S.golden + ' Golden Pineapples.' + more + ' Next up: ' + STAGES[st + 1].title.replace('\n', ' ') + '.', 'Next stage', function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
   } else {
     showCard('The stand needs a break!', 'Everyone is giggling. Let us try this wave again!', 'Try again', retryWave);
@@ -726,18 +731,23 @@ function waveClear() {
 /* ---------- boss: Coach Waddles ---------- */
 function startBoss() {
   var CH = CHAMP[S.stage];
-  S.inBoss = true; S.mode = 'bossIntro'; S.modeT = 0; S.bossHp = CH.hp; S.bossMax = CH.hp; S.boss = null; S.spawnT = 2.5; S.wave = NWAVES;
+  S.inBoss = true; S.mode = 'bossIntro'; S.modeT = 0; S.bossHp = CH.hp; S.bossMax = CH.hp; S.boss = null; S.spawnT = 2.5; S.wave = NWAVES; S.pt = false;
   banner(CH.rank + ' Champion\n' + CH.n.replace('Grand Champion ', '') + '!', 2300);
 }
 function spawnBoss() {
   var CH = CHAMP[S.stage];
-  S.boss = { id: ++S.id, kind: CH.kind, xn: 0, p: 0.05, v: 0.07, st: 'walk', t: 0, mood: 'happy', ph: 0, hat: false, a: 1, big: CH.big, hp: CH.hp, shield: CH.shield || 0, sp: 0, puff: 0, vx: 0, dph: 0, nd: CH.slide || 0, tele: false, x0: 0, x1: 0 };
+  S.boss = { id: ++S.id, kind: CH.kind, xn: 0, p: 0.05, v: 0.07, st: 'walk', t: 0, mood: 'happy', ph: 0, hat: false, a: 1, big: CH.big, hp: CH.hp, shield: CH.shield || 0, sp: 0, puff: 0, vx: 0, dph: 0, nd: CH.slide || 0, tele: false, x0: 0, x1: 0, rs: 0 };
   champInit(S.boss); if (CH.tip) toast(CH.tip, 3.6);
+  if (!demo) { S.boss.rs = 1; banner('Ready…', 2600); }
 }
 function updateBoss(b, dt) {
   var CH = CHAMP[S.stage];
   b.t += dt; b.ph += dt * 5; b.sp += dt; b.vx = 0;
-  if (b.st === 'walk') { b.p += b.v * dt * slowK; if (b.p >= 0.4) { b.p = 0.4; b.st = 'hold'; b.t = 0; } }
+  if (b.st === 'walk') {
+    b.p += b.v * dt * slowK;
+    if (b.rs === 1 && b.p >= 0.22) { b.rs = 2; banner('Set…', 3200); }   /* ready, set, go while the Champion strolls into place */
+    if (b.p >= 0.4) { b.p = 0.4; b.st = 'hold'; b.t = 0; if (b.rs) { b.rs = 0; banner('GO!', 900); } }
+  }
   else if (b.st === 'hold') {
     champUpdate(b, dt);
     if (CH.dodge) { var om = CH.om; b.dph += dt * om * slowK; b.xn = Math.sin(b.dph) * CH.dodge; b.vx = Math.cos(b.dph) * CH.dodge * om * slowK; }
@@ -1276,8 +1286,8 @@ function draw() {
 /* ---------- bonus game: a long lane, a hop, and a small 35 degree board of raised rings ---------- */
 var K = null, skBg = null, HINT_TXT = elHint.lastChild ? elHint.lastChild.textContent : '';
 /* world units: the board is 2 wide (u in -1..1); v runs up the incline from its front edge (v=0); the lane is below zero and the hop sits at SK_HUMP */
-var SK_BALLS = 9, SK_RIM = 0.7, SK_WALL = 1.65, SK_G = 10, SK_KZ = 0.7, SK_INC = 35, SK_RB = 0.09, SK_DIN = 0.9, SK_ZC = 0.12;
-var SK_V0 = -2.2, SK_HUMP = -0.2, SK_VMAX = 2.0, SK_K = 0.12, SK_RAT = 0.75, SK_LIFT = 0.55, SK_LFR = 0.5, SK_AIM = 0.7, SK_FL0 = 2.0, SK_FL1 = 2.9, SK_GV = -0.1, SK_DRN = 0.9;
+var SK_BALLS = 9, SK_RIM = 0.7, SK_WALL = 1.65, SK_G = 10, SK_KZ = 0.7, SK_INC = 35, SK_RB = 0.09, SK_DIN = 1.25, SK_ZC = 0.12;
+var SK_V0 = -2.2, SK_HUMP = -0.2, SK_VMAX = 2.0, SK_K = 0.12, SK_RAT = 0.75, SK_LIFT = 0.55, SK_LFR = 0.5, SK_AIM = 0.3, SK_FL0 = 2.0, SK_FL1 = 2.9, SK_GV = -0.1, SK_DRN = 0.9;
 var SK_HOLES = [{ v: 50, u: 0, c: 1.6, r: 0.12 }, { v: 40, u: 0, c: 1.25, r: 0.14 }, { v: 30, u: 0, c: 0.86, r: 0.16 }, { v: 10, u: -0.6, c: 0.55, r: 0.16 }, { v: 10, u: 0.6, c: 0.55, r: 0.16 }, { v: 20, u: 0, c: 0.38, r: 0.17 }, { v: 100, u: -0.66, c: 1.62, r: 0.11 }, { v: 100, u: 0.66, c: 1.62, r: 0.11 }];
 var SK_CROWD = (function () { var a = [], r, c; for (r = 0; r < 12; r++) for (c = 0; c < 3; c++) a.push({ y: 0.27 + r * 0.0525 + (c % 2) * 0.008, k: 0.085 + 0.04 * r / 11, r: r, c: c }); return a; }());
 function skCl(x, a, b) { return Math.max(a, Math.min(b, x)); }
@@ -1288,14 +1298,15 @@ function skY(v) { var yB = H * 0.43; return v >= 0 ? yB - SK_RAT * skFb() / SK_K
 /* the world position along the machine for a screen y (used to keep the crowd off the machine) */
 function skV(y) { var yB = H * 0.43; return y <= yB ? (Math.exp((yB - y) * SK_K / (SK_RAT * skFb())) - 1) / SK_K : SK_V0 * (y - yB) / (H * 0.865 - yB); }
 function skCredits(score) { return Math.floor(score / 4); }
-var rollFromRun = false;
+var rollFromRun = false, ROLL_MAX = 2;   /* the bonus game can be played twice in a run, so it cannot become an endless supply of credits */
+function rollsLeft() { return Math.max(0, ROLL_MAX - (sv.rl | 0)); }
 function leaveRoll() { K = null; skLabels(false); gameEl.removeAttribute('data-bonus'); if (elHint.lastChild) elHint.lastChild.textContent = HINT_TXT; rollFromRun = false; startStage({ stage: NSTAGES, wave: 0, golden: 0, cheer: 100 }); run(); }
 function newSkee() {
-  newState();
+  newState(); sv.rl = Math.min(9, (sv.rl | 0) + 1); kit.save(sv);
   hs = null; hov.length = 0;
   K = { balls: SK_BALLS, score: 0, ball: null, over: false, cl: 99, cr: 99, clA: 1, bt: 99, say: [], bl: [], ball: null, cool: 0, fromRun: rollFromRun };
   elBanner.hidden = true; elHint.hidden = false;
-  if (elHint.lastChild) elHint.lastChild.textContent = 'Flick up to roll! Harder goes farther. Roll as many as you like!';
+  if (elHint.lastChild) elHint.lastChild.textContent = 'Flick up to roll! Harder goes farther. You have 9 balls.';
   banner('Pineapple Roll!', 1500);
 }
 function skLabels(on) {
@@ -1303,7 +1314,9 @@ function skLabels(on) {
   if (a) a.textContent = on ? 'Balls' : 'Left'; if (c) c.textContent = on ? 'Score' : 'Combo';
 }
 function startSkee(fr) {
-  if (K) return; rollFromRun = fr === true;
+  if (K) return;
+  if (rollsLeft() <= 0) { if (fr === true) { startStage({ stage: NSTAGES, wave: 0, golden: 0, cheer: 100 }); run(); } else if (lpaEl && lpaEl.animate && !calm) lpaEl.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 240 }); return; }
+  rollFromRun = fr === true;
   titleEl.hidden = true; gameEl.hidden = false; gameEl.setAttribute('data-bonus', '1');
   loadAssets().then(function () { newSkee(); skLabels(true); resize(); run(); });
 }
@@ -1314,7 +1327,11 @@ function endSkee() {
   sv.bank = Math.min(999999, sv.bank + cr); kit.save(sv);
   burst(W / 2, H * 0.4, 40, PINE_COL.concat(['#ff6f86', '#8fc6e4']));
   var gf = K.lastV >= 100 ? quietAward(20) : '', fr = K.fromRun;
-  var fin = function () { showCard('Pineapple Roll!', 'You scored ' + K.score + ' points and won ' + cr + ' Golden Pineapples! Every 4 points is one.' + (gf ? ' New trophy: ' + gf + '!' : ''), 'Roll again', startSkeeAgain, fr ? 'On to stage ' + NSTAGES : null, fr ? leaveRoll : null); };
+  var fin = function () {
+    var left = rollsLeft(), msg = 'You scored ' + K.score + ' points and won ' + cr + ' Golden Pineapples! Every 4 points is one.' + (gf ? ' New trophy: ' + gf + '!' : '') + (left ? ' You can roll ' + (left === 1 ? 'one more time' : left + ' more times') + ' this run.' : ' That was your last roll this run.');
+    if (left) showCard('Pineapple Roll!', msg, 'Roll again', startSkeeAgain, fr ? 'On to stage ' + NSTAGES : null, fr ? leaveRoll : null);
+    else { showCard('Pineapple Roll!', msg, fr ? 'On to stage ' + NSTAGES : 'Back to title', fr ? leaveRoll : toTitle); $('gBtn2').hidden = true; }
+  };
   if (K.lastV >= 100 && !calm) { K.fw = []; K.fwT = 0; K.fwN = 0; K.fin = fin; skCheer(true, 2); } else fin();
 }
 /* ending on a 100: the pineapples in the stands light a few fireworks before the card comes up */
@@ -1362,10 +1379,25 @@ function skFlick(d) {
 function skGs() { return SK_G * Math.sin(SK_INC * Math.PI / 180); }
 function skGc() { return SK_G * Math.cos(SK_INC * Math.PI / 180); }
 /* a flick: the swipe angle steers the roll (a straight, proportional gain) and the swipe speed sets the launch speed (linear); gravity does the rest */
-function skLaunch(f) {
-  var raw = skCl(Math.atan2(f.dx, -f.dy), -0.6, 0.6), ang = raw * SK_AIM, u01 = skCl((f.spd - 1.2) / 5.3, 0, 1), fl = SK_FL0 + SK_FL1 * u01;
+function skLaunch(f, dA, dF) {
+  var raw = skCl(Math.atan2(f.dx, -f.dy), -0.6, 0.6), ang = skCl(raw * SK_AIM + (dA || 0), -0.5, 0.5), u01 = skCl((f.spd - 1.0) / 7.5, 0, 1), fl = SK_FL0 + SK_FL1 * u01 + (dF || 0);
   var gs = skGs(), gc = skGc(), ca = Math.cos(ang), sa = Math.sin(ang), kz = SK_KZ, T = 2 * kz * fl / gc, f0 = Math.sqrt(fl * fl + 2 * SK_LFR * (SK_HUMP - SK_V0) / ca), uLip = Math.tan(ang) * (SK_HUMP - SK_V0);
   return { vu0: f0 * sa, vv0: f0 * ca, fl: fl, T: T, uLip: uLip, vuL: fl * sa, vvL: fl * ca, vz: kz * fl, v: SK_HUMP + fl * ca * T - 0.5 * gs * T * T, u: skCl(uLip + fl * sa * T, -0.9, 0.9) };
+}
+/* the same lane and board physics on a throwaway ball, in the same fixed steps, quietly (used by the tests): which hole does this launch sink into (or none)? */
+var skSimOn = false, SK_H = 1 / 240;
+function skLane(b, h) {
+  var sp = Math.hypot(b.vu, b.vv), ns = Math.max(0.35, sp - SK_LFR * h), k = sp ? ns / sp : 0;
+  b.vu *= k; b.vv *= k; b.u = skCl(b.u + b.vu * h, -0.9, 0.9); b.v += b.vv * h; b.rot += ns * h * 3;
+  if (b.v >= SK_HUMP) { b.v = SK_HUMP; b.st = 'play'; b.t = 0; b.z = 0; b.vz = SK_KZ * Math.hypot(b.vu, b.vv); }
+}
+function skSim(L) {
+  var b = { u: 0, v: SK_V0, z: 0, vu: L.vu0, vv: L.vv0, vz: 0, st: 'lane', t: 0, rot: 0 }, i;
+  for (i = 0; i < 1800 && b.st === 'lane'; i++) skLane(b, SK_H);
+  skSimOn = true;
+  for (i = 0; i < 1440 && b.st === 'play'; i++) skStep(b, SK_H);
+  skSimOn = false;
+  return b.st === 'sink' ? b.hole : null;
 }
 function skeeRoll(dx, dy, spd) {
   if (!K || K.balls <= 0 || K.over || S.paused || K.cool > 0) return;
@@ -1375,6 +1407,7 @@ function skeeRoll(dx, dy, spd) {
 }
 /* the crowd: pineapples on the left cheer for a score, penguins on the right cheer for a miss */
 function skCheer(left, amp) {
+  if (skSimOn) return;
   var w = left ? ['YAY!', 'WOO!', 'NICE!', 'GO GO!'] : ['hee hee!', 'oopsie!', 'ha ha!', 'bonk!'], c = SK_CROWD[Math.floor(Math.random() * SK_CROWD.length)], P = skCrowdPos(c);
   if (left) { K.cl = 0; K.clA = amp; if (amp >= 2) { K.bt = 0; w = ['CHEST BUMP!']; } } else { K.cr = 0; K.crA = 1; }
   K.say.push({ x: left ? P.x : W - P.x, y: P.y - P.s - 4, txt: w[Math.floor(Math.random() * w.length)], left: left, t: 0 });
@@ -1443,12 +1476,11 @@ function skUpdBall(b, dt) {
   var sp, ns, k, n, i, h;
   b.t += dt;
   if (b.st === 'lane') {
-    sp = Math.hypot(b.vu, b.vv); ns = Math.max(0.35, sp - SK_LFR * dt); k = sp ? ns / sp : 0; b.vu *= k; b.vv *= k;
-    b.u = skCl(b.u + b.vu * dt, -0.9, 0.9); b.v += b.vv * dt; b.rot += ns * dt * 3;
-    if (b.v >= SK_HUMP) { b.v = SK_HUMP; b.st = 'play'; b.t = 0; b.z = 0; b.vz = SK_KZ * Math.hypot(b.vu, b.vv); }
+    b.acc = Math.min(0.1, (b.acc || 0) + dt);   /* fixed 1/240 s steps: the roll plays out the same at any frame rate */
+    while (b.acc >= SK_H && b.st === 'lane') { skLane(b, SK_H); b.acc -= SK_H; }
   } else if (b.st === 'play') {
-    n = Math.max(1, Math.ceil(dt * 120)); h = dt / n;
-    for (i = 0; i < n && b.st === 'play'; i++) skStep(b, h);
+    b.acc = Math.min(0.1, (b.acc || 0) + dt);
+    while (b.acc >= SK_H && b.st === 'play') { skStep(b, SK_H); b.acc -= SK_H; }
     if (b.st === 'play') {
       if (Math.hypot(b.vu, b.vv) < 0.25 && b.z < 0.12) { b.still += dt; if (b.still > 0.3) { b.vu = (b.u >= 0 ? 1 : -1) * 0.7; b.vv = -1; b.vz = 1; b.z = Math.max(b.z, 0.02); b.still = 0; K.kick = (K.kick || 0) + 1; } } else b.still = 0;
       if (b.t > 6) { b.vv = -1.5; b.vu = (b.u >= 0 ? 1 : -1) * 0.5; b.vz = 1; b.t = 3; }
@@ -1798,7 +1830,7 @@ document.addEventListener('keydown', function (e) { if (gameEl.hidden) return; i
 var gcw = $('gcw');
 function showCard(title, body, btn1, fn1, btn2, fn2) {
   $('gTitle').textContent = title; $('gBody').textContent = body;
-  var b1 = $('gBtn1'); b1.textContent = btn1; b1.onclick = function () { hideCard(); fn1(); };
+  var b1 = $('gBtn1'); $('gBtn2').hidden = false; b1.textContent = btn1; b1.onclick = function () { hideCard(); fn1(); };
   $('gBtn2').textContent = btn2 || 'Title'; $('gBtn2').onclick = function () { hideCard(); if (fn2) fn2(); else toTitle(); };
   $('gX').hidden = true; halt(); gcw.hidden = false; b1.focus();
 }
@@ -1826,7 +1858,7 @@ $('gBtn2').textContent = 'Title';
 window.addEventListener('resize', function () { if (gameEl.hidden === false) { resize(); if (!running) { draw(); } } });
 
 function start() {
-  if (sv.stage > 1 || sv.wave > 0) { sv.run = 0; sv.cd = 0; kit.save(sv); }
+  if (sv.stage > 1 || sv.wave > 0) { sv.run = 0; sv.cd = 0; sv.rl = 0; kit.save(sv); }
   titleEl.hidden = true; gameEl.hidden = false;
   loadAssets().then(function () { resize(); startStage(); run(); });
 }
@@ -2007,7 +2039,7 @@ if (location.hash === '#qa') {
   qa = window.__pd = { zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
     /* fast-forward without waiting for frames: sec game seconds in steps of dt, drawing every `every` steps (0 = never, one final draw) */
     step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
-    win: function () { endStage(true); }, flick: function (dx, dy, spd) { var o = pouchPos(); throwAt(o.x, o.y, dx, dy, spd); }, get sh() { return shots; }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
+    win: function () { endStage(true); }, flick: function (dx, dy, spd) { var o = pouchPos(); throwAt(o.x, o.y, dx, dy, spd); }, get sh() { return shots; }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, sim: function (dx, dy, spd, dA, dF) { var h = skSim(skLaunch({ dx: dx, dy: dy, spd: spd }, dA, dF)); return h ? h.v : 0; }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
 }
 /*{{LAB_JS}}*/
 }());

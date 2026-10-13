@@ -32,3 +32,5 @@ Opening a save from an older build keeps all fields and fills the new ones with 
 
 ## Habit
 Design iteration: do not run QA until the design is settled. Before a release: `release.py --ff` once.
+
+Round 33 additions: the fuzz test also plays all five Champion fights with every upgrade on (random raids, pickups, pauses, wild flicks); new tests cover the helpers waiting for the first throw, the two-rolls-per-run limit (card, secret spot, stage 4 offer) and the odds of a wobbly Pineapple Roll flick sinking (at least 40% at 6 degrees and 12%, and every hole value reachable).
