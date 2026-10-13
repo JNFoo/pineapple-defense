@@ -286,6 +286,12 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Champions:** each has its own look and gimmick, and a two-line announcement sized to fit the screen: Coach Waddles (red cap, snowball shield), Captain Flipper (navy captain cap, dodges sideways; shots lead him), Sir Slidealot (aviator goggles and orange scarf, belly-slides across after a wiggle warning), Madame Mohawk (pink mohawk, calls helpers often), Grand Champion Bernard (laurel wreath, purple cape, big medal; a little shield, a small dodge, slides and helpers).
 - **Tester:** the test build can start at any stage and wave, or at that stage's Champion.
 
+## Decisions, round 25: live bank, power trade-offs, evolving penguins (Oct 12)
+- **Power costs speed and money:** Classic is free and fast (0.42 s). Lobber is slower (0.9 s) and costs 2 Golden Pineapples per throw, taken from the bank at the moment of the throw (a "-2" pops up and coins fly from the Bank pill to the slingshot). Mega is slowest (1.1 s). The auto slingshot follows the same rule: better pineapples throw slower and cost 2 or 3 each, and it falls back to Classic when the bank is empty. Pickups stay free.
+- **Pay in real time:** every dispatched penguin adds to the bank instantly with a coin burst and coins flying to the Bank pill: Rockhopper 1, Adélie 3, Gentoo 6, Champion 12 (bigger bursts, sparkle rings and a golden shimmer for the fancier ones). Wave clear pays 5 (10 if perfect), a trophy pays 10. Shop prices are 5 times higher: Auto Slingshot 40, Faster Fling 50/80/120, Better Pineapples 60/100.
+- **Champions block the lane:** normal penguins, including summoned helpers, walk around a Champion and never through him, even when he dodges or slides.
+- **Parachute fish:** every 9 to 14 seconds a fish floats down on a handkerchief parachute and lands in front of a walking penguin. When the penguin reaches it, it stops for about a second, eats the fish and levels up with a glow, stars and a ring: Rockhopper to Adélie (faster), Adélie to Gentoo (faster and takes two hits). The penguin can be hit at any moment, including mid-meal. An uneaten fish waits about 11 seconds, and any other walking penguin in that lane can grab it.
+
 ## Change log
 - 2026.10.12.1556: first title screen, logo and original pineapple and Rockhopper sprites.
 - 2026.10.12.1620: story card text approved; stage titles, Champion names and rosters decided.
@@ -309,3 +315,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.2015: more polish.
 - 2026.10.12.2020: more polish.
 - 2026.10.12.2112: five stages of 5 waves, stage scenery and five Champions.
+- 2026.10.12.2205: live bank and costs, Champion lane blocking, parachute fish and evolving penguins.

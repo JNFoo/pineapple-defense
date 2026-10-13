@@ -13,6 +13,8 @@ var TYPES = {
   lobber: { cd: 0.9, arc: 2.2, T: 1.6, rad: 0.55, splash: 1.0, size: 1.3, img: 'pl' }
 };
 var curType = 'classic';
+/* power costs speed and money: the stronger the pineapple, the slower the throw and the more it costs from the bank */
+var COST = { classic: 0, lobber: 2, mega: 3 }, PAY = { rh: 1, ad: 3, gt: 6, champ: 12 };
 
 /* ---------- layout and projection ---------- */
 var W = 1, H = 1, DPR = 1, hy = 0, gy = 0, FW = 0, size0 = 100, bg = null;
@@ -22,7 +24,7 @@ function py(p) { return hy + (gy - hy) * p; }
 function psz(p) { return size0 * sc(p); }
 
 /* ---------- sprites ---------- */
-var SZ = 384, IMG = { pa: {}, rh: {}, ad: {}, pl: {}, cw: {}, c2: {}, c3: {}, c4: {}, c5: {}, pz: {}, pm: {}, ph: {}, pf: {} }, PROP = {}, assets = null;
+var SZ = 384, IMG = { pa: {}, rh: {}, ad: {}, gt: {}, pl: {}, cw: {}, c2: {}, c3: {}, c4: {}, c5: {}, pz: {}, pm: {}, ph: {}, pf: {} }, PROP = {}, assets = null;
 var VARS = ':root{--pa-hi:#ffeaa0;--pa-mid:#f8bd1c;--pa-lo:#a85a07;--pg-hi:#6b6aab;--pg-mid:#383767;--pg-lo:#171538;--ad-hi:#6a6677;--ad-mid:#34303f;--ad-lo:#15121d}.m-o,.m-grin,.m-pout,.brow{display:none}';
 var MOOD = {
   happy: '',
@@ -58,6 +60,7 @@ function loadAssets() {
     ad: $('spr-ad').innerHTML,
     cw: $('spr-cw').innerHTML
   };
+  src.gt = gtSvg(src.ad); TINT.gt = TINT_GT;
   ['c2', 'c3', 'c4', 'c5'].forEach(function (k) { src[k] = champSvg(src.cw, k); TINT[k] = CHAMP_LOOK[k].vars; });
   src.pl = src.pz = src.pm = src.ph = src.pf = src.pa;
   var jobs = [];
@@ -89,7 +92,7 @@ function updateContinue() {
 updateContinue();
 
 /* ---------- state ---------- */
-var S, penguins, shots, bits, pops;
+var S, penguins, shots, bits, pops, rings, flys, saveT = 0;
 var calm = false, running = false, raf = 0, last = 0, timeScale = 1, qLevel = 0;
 var even = new EvenDt();
 var gov = new QualityGovernor({ levels: 3, onChange: function (l) { qLevel = l; resize(); } });
@@ -97,14 +100,14 @@ var gov = new QualityGovernor({ levels: 3, onChange: function (l) { qLevel = l; 
 function newState() {
   S = { wave: 0, spawned: 0, toSpawn: 0, spawnT: 0, mode: 'intro', modeT: 0, cheer: 100, golden: 0, bumps: 0,
         cd: 0, cdMax: 0.42, t: 0, wob: 0, thrown: false, over: false, paused: false, id: 0, lastLane: -1, boss: null, inBoss: false, bossHp: 3, bossMax: 3, stage: 1, sa: 0,
-        puT: 9, pu: null, lastPu: '', fx: { zip: 0, mega: 0, frost: 0 }, tro: null, tq: [], earned: 0, streak: 0, allBumps: 0, toast: null, au: { cd: 1.5, tgt: null, a: 0 } };
-  penguins = []; shots = []; bits = []; pops = [];
+        puT: 9, pu: null, lastPu: '', fx: { zip: 0, mega: 0, frost: 0 }, tro: null, tq: [], earned: 0, streak: 0, allBumps: 0, gl: 0, fish: [], fishT: 6, toast: null, au: { cd: 1.5, tgt: null, a: 0 } };
+  penguins = []; shots = []; bits = []; pops = []; rings = []; flys = [];
 }
 
 /* ---------- HUD ---------- */
 var elWave = $('waveTxt'), elGold = $('goldTxt'), elCheer = $('cheerFill'), elReady = $('ready'), elBanner = $('banner'), elHint = $('hint');
 var shown = { wave: '', gold: -1, cheer: -1, ready: -1, left: -1, combo: -1, bank: -1, cups: '' };
-var elLeft = $('leftTxt'), elCombo = $('comboTxt'), elBank = $('bankTxt'), elCups = $('cupsTxt');
+var elLobPick = document.querySelector('.pick[data-t="lobber"]'), elLeft = $('leftTxt'), elCombo = $('comboTxt'), elBank = $('bankTxt'), elCups = $('cupsTxt');
 function popcount(n) { var c = 0; while (n) { c += n & 1; n >>= 1; } return c; }
 function setTxt(el, key, v) { if (shown[key] !== v) { shown[key] = v; el.textContent = String(v); } }
 function hud() {
@@ -115,6 +118,7 @@ function hud() {
   if (c !== shown.cheer) { shown.cheer = c; elCheer.style.transform = 'scaleY(' + (c / 100) + ')'; elCheer.parentNode.setAttribute('data-low', c < 35 ? '1' : '0'); }
   var nl = Math.max(0, S.toSpawn - S.spawned), j; for (j = 0; j < penguins.length; j++) if (penguins[j].st === 'walk') nl++;
   setTxt(elLeft, 'left', nl); setTxt(elCombo, 'combo', S.streak); setTxt(elBank, 'bank', sv.bank); setTxt(elCups, 'cups', popcount(sv.ach) + '/10');
+  var poor = sv.bank < COST.lobber && S.fx.mega <= 0 ? '1' : '0'; if (poor !== shown.poor) { shown.poor = poor; elLobPick.setAttribute('data-poor', poor); }
   var r = Math.round((1 - Math.max(0, S.cd) / COOLDOWN) * 20);
   if (r !== shown.ready) { shown.ready = r; elReady.style.setProperty('--pct', (r * 5) + '%'); elReady.setAttribute('data-ready', r >= 20 ? '1' : '0'); }
 }
@@ -235,6 +239,7 @@ function drawScenery(t) {
 }
 
 /*{{STAGES_JS}}*/
+/*{{EVOLVE_JS}}*/
 
 /* ---------- particles ---------- */
 var PINE_COL = ['#f8bd1c', '#ffe58a', '#7fd68f'], SNOW_COL = ['#ffffff', '#cfe9f5', '#a8d6ec'];
@@ -250,7 +255,55 @@ function burst(x, y, n, cols) {
       c: k === 2 ? '#4a2c18' : cols[i % cols.length], t: 0, ttl: 0.7 + Math.random() * 0.5 });
   }
 }
-function popText(x, y, txt, col) { x = Math.max(W * 0.22, Math.min(W * 0.78, x)); pops.push({ x: x, y: y, txt: txt, col: col, t: 0, ttl: 0.95, rot: (Math.random() - 0.5) * 0.4 }); }
+/* ---------- real-time bank: spend on fancy throws, earn on every penguin, with sparkle for the fancier ones ---------- */
+function saveSoon() { if (!saveT) saveT = setTimeout(function () { saveT = 0; kit.save(sv); }, 700); }
+function bankPos() { var a = elBank.parentNode.getBoundingClientRect(), g = gameEl.getBoundingClientRect(); return { x: a.left - g.left + a.width / 2, y: a.top - g.top + a.height / 2 }; }
+function pulseBank(col) {
+  var el = elBank.parentNode; if (calm || !el.animate) return;
+  el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.25)', background: col, offset: 0.35 }, { transform: 'scale(1)' }], { duration: 380, easing: 'ease-out' });
+}
+function coinBurst(x, y, n, up) {
+  if (calm) return;
+  var limit = qLevel === 0 ? 150 : qLevel === 1 ? 100 : 60;
+  for (var i = 0; i < n && bits.length < limit; i++) {
+    var a = -1.57 + (Math.random() - 0.5) * (up ? 2.4 : 5), sp = 150 + Math.random() * (up ? 300 : 200), r = 6 + Math.random() * 4;
+    bits.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, rot: Math.random() * 6, vr: 0, w: r * 2, h: r * 2, k: 3, c: '#ffd23f', t: 0, ttl: 0.9 + Math.random() * 0.5 });
+  }
+}
+function sparkBurst(x, y, n, cols) {
+  if (calm) return;
+  var limit = qLevel === 0 ? 160 : qLevel === 1 ? 110 : 70;
+  for (var i = 0; i < n && bits.length < limit; i++) {
+    var a = Math.random() * 6.28, sp = 120 + Math.random() * 240, r = 6 + Math.random() * 9;
+    bits.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 40, rot: Math.random() * 6, vr: Math.random() * 6 - 3, w: r * 2, h: r * 2, k: 4, c: cols[i % cols.length], t: 0, ttl: 0.6 + Math.random() * 0.5 });
+  }
+}
+function flyCoins(x0, y0, x1, y1, n, back) {
+  if (calm) return;
+  for (var i = 0; i < n && flys.length < 24; i++) flys.push({ x0: x0, y0: y0, x1: x1, y1: y1, t: -i * 0.06, ttl: 0.65 + Math.random() * 0.15, bow: (Math.random() - 0.5) * W * 0.3, back: back });
+}
+/* tier 0 Rockhopper, 1 Adelie, 2 Champion */
+function reward(n, x, y, tier) {
+  sv.bank = Math.min(999999, sv.bank + n); S.golden += n; saveSoon();
+  var bp = bankPos();
+  popText(x, y - psz(0.5) * 0.45, '+' + n, tier === 2 ? '#d9007a' : tier === 1 ? '#e06a00' : '#b86e00', tier);
+  if (tier === 0) { coinBurst(x, y, 4, true); flyCoins(x, y, bp.x, bp.y, 1, false); }
+  else if (tier === 1) {
+    coinBurst(x, y, 10, true); sparkBurst(x, y, 10, ['#ffd23f', '#fff7e3', '#ff9f3a']); flyCoins(x, y, bp.x, bp.y, 3, false);
+    rings.push({ x: x, y: y, t: 0, ttl: 0.5, r: psz(0.5) * 0.9, c: '255,200,60' });
+  } else {
+    coinBurst(x, y, 30, true); sparkBurst(x, y, 26, ['#ffd23f', '#fff7e3', '#ff6fa8', '#8fe0ff']); flyCoins(x, y, bp.x, bp.y, 9, false);
+    rings.push({ x: x, y: y, t: 0, ttl: 0.7, r: psz(0.5) * 1.6, c: '255,111,168' }); rings.push({ x: x, y: y, t: -0.12, ttl: 0.7, r: psz(0.5) * 1.1, c: '255,210,63' });
+    if (!calm) S.gl = 1;
+  }
+}
+function earn(n) { sv.bank = Math.min(999999, sv.bank + n); S.golden += n; saveSoon(); }
+function spend(n, x, y) {
+  sv.bank = Math.max(0, sv.bank - n); saveSoon(); pulseBank('#ffb3a0');
+  var bp = bankPos(); popText(x, y - H * 0.06, '-' + n, '#c23a1c', 0); flyCoins(bp.x, bp.y, x, y, Math.min(4, n), true);
+}
+function typeCost(k) { return S.fx.mega > 0 ? 0 : COST[k] || 0; }
+function popText(x, y, txt, col, big) { x = Math.max(W * 0.22, Math.min(W * 0.78, x)); pops.push({ x: x, y: y, txt: txt, col: col, t: 0, ttl: 0.95, rot: (Math.random() - 0.5) * 0.4, big: big || 0 }); }
 var HIT_WORDS = ['hee hee!', 'tee hee!', 'oh my!', 'wheee!', 'ooh!'];
 
 
@@ -285,8 +338,8 @@ function saveGold() { var cl = S.inBoss ? NWAVES : S.wave - 1; if (cl > 0 && sv.
 function collectTro(auto) {
   if (!S.tro) return;
   var id = S.tro.id, o = slot(1); S.tro = null;
-  sv.ach |= 1 << id; S.golden += 2; saveGold();
-  burst(o.x, o.cy, 14, PINE_COL.concat(['#fff7e3'])); popText(o.x, o.cy - o.s * 0.6, auto ? '+2 saved!' : '+2 golden!', '#b86e00');
+  sv.ach |= 1 << id; earn(10); saveGold();
+  burst(o.x, o.cy, 14, PINE_COL.concat(['#fff7e3'])); popText(o.x, o.cy - o.s * 0.6, auto ? '+10 saved!' : '+10 golden!', '#b86e00');
 }
 function spawnPU(k) { S.pu = { k: k, t: 0, ttl: 9 }; S.lastPu = k; toast('Tap the ' + PU[k].name.replace('!', '') + ' pickup: ' + PU[k].tip); }
 function collectPU() {
@@ -316,7 +369,7 @@ function updateTable(dt) {
 }
 function effType() {
   var b = TYPES[curType];
-  if (S.fx.mega > 0) return { cd: b.cd, arc: b.arc, T: b.T, rad: b.rad, splash: Math.max(1.0, b.splash), size: Math.max(1.15, b.size), img: 'pm' };
+  if (S.fx.mega > 0) return { cd: Math.max(b.cd, 1.1), arc: b.arc, T: b.T, rad: b.rad, splash: Math.max(1.0, b.splash), size: Math.max(1.15, b.size), img: 'pm' };
   return b;
 }
 
@@ -328,7 +381,8 @@ var AUTO_TYPES = [
   { cd: 0, arc: 2.2, T: 1.6, rad: 0.55, splash: 1.0, size: 1.3, img: 'pl' },
   { cd: 0, arc: 2.2, T: 1.6, rad: 0.55, splash: 1.3, size: 1.45, img: 'pm' }
 ];
-function autoInt() { return AUTO_INT[sv.ar] * (S.fx.zip > 0 ? 0.5 : 1); }
+var AUTO_SLOW = [1, 1.35, 1.7], AUTO_COST = [0, 2, 3];
+function autoInt() { return AUTO_INT[sv.ar] * AUTO_SLOW[sv.ap] * (S.fx.zip > 0 ? 0.5 : 1); }
 function autoType() { return AUTO_TYPES[sv.ap]; }
 function autoPick() {
   var au = S.au, best = null, i, pg;
@@ -339,8 +393,9 @@ function autoPick() {
 }
 function autoFire(tg) {
   var ty = autoType(), g = autoGeom(), au = S.au, po = pouchPos(g, au.a);
+  if (AUTO_COST[sv.ap] > 0) { if (sv.bank >= AUTO_COST[sv.ap]) spend(AUTO_COST[sv.ap], po.x, po.y); else ty = AUTO_TYPES[0]; }
   var ttf = (0.42 + 0.38 * (1 - tg.p)) * ty.T, pEnd = Math.min(0.94, tg.p + (tg.st === 'walk' ? tg.v * slowK : 0) * ttf);
-  var xE = px(tg.xn, pEnd), yE = py(pEnd) - psz(pEnd) * (tg.big || 1) * 0.42;
+  var xE = px(tg.xn + (tg.vx || 0) * ttf, pEnd), yE = py(pEnd) - psz(pEnd) * (tg.big || 1) * 0.42;
   var arc = Math.max(H * 0.05, Math.min(H * (0.14 + 0.2 * (1 - pEnd)) * ty.arc, (po.y + yE) / 2 - H * 0.06));
   shots.push({ ty: ty, s0: g.ps * 0.92 * ty.size, x0: po.x, y0: po.y, xE: xE, yE: yE, pEnd: pEnd, t: 0, T: ttf, arc: arc, spin: (Math.random() < 0.5 ? -1 : 1) * 7, ph: 0, auto: true, tgt: tg });
   tg.aut = true; elHint.hidden = true;
@@ -385,8 +440,9 @@ function spawn() {
   var pAd = w < 3 ? 0 : Math.min(0.5, 0.12 * (w - 2));
   var kind = Math.random() < pAd ? 'ad' : 'rh';
   var base = 0.07 + 0.006 * w;
-  penguins.push({ id: ++S.id, kind: kind, xn: (lane - 2) * 0.4 + (Math.random() - 0.5) * 0.06, p: 0.05, v: base * (kind === 'ad' ? 1.3 : 1),
-    st: 'walk', t: 0, mood: 'happy', ph: Math.random() * 6, side: Math.random() < 0.5 ? -1 : 1, hat: false, puff: 0, a: 1 });
+  var sx0 = (lane - 2) * 0.4 + (Math.random() - 0.5) * 0.06;
+  penguins.push({ id: ++S.id, kind: kind, xn: sx0, x0: sx0, p: 0.05, v: base * (kind === 'ad' ? 1.3 : 1),
+    st: 'walk', t: 0, mood: 'happy', ph: Math.random() * 6, av: 0, base: base, hp: 1, ev: 0, side: Math.random() < 0.5 ? -1 : 1, hat: false, puff: 0, a: 1 });
   S.spawned++;
 }
 function bump(pg) {
@@ -395,13 +451,36 @@ function bump(pg) {
   if (S.cheer <= 0) endStage(false);
 }
 function hitPenguin(pg, x, y) {
+  if (pg.hp > 1) {
+    pg.hp--; pg.hat = true; pg.mood = 'pout'; if (pg.ev > 0) { pg.ev = 0; pg.v = pg.vs || pg.v; }
+    S.cheer = Math.min(100, S.cheer + 1); burst(x, y, 10, PINE_COL); sparkBurst(x, y, 6, ['#ffd23f', '#fff7e3']);
+    popText(x, y - psz(pg.p) * 0.3, 'Tough one!', '#7a3a9a', 0); return;
+  }
+  pg.ev = 0;
   pg.st = 'hit'; pg.t = 0; pg.mood = 'wow'; pg.hat = true;
+  reward(PAY[pg.kind] || 1, x, y, pg.kind === 'rh' ? 0 : 1);
   S.cheer = Math.min(100, S.cheer + 2);
   burst(x, y, 12, PINE_COL);
   popText(x, y - psz(pg.p) * 0.3, HIT_WORDS[Math.floor(Math.random() * HIT_WORDS.length)], '#b86e00');
 }
+/* normal penguins, helpers included, walk around a Champion instead of through him */
+function avoidBoss(pg, dt) {
+  var b = S.boss; if (!b || b.st === 'gone' || b.st === 'slide') return;
+  var dp = pg.p - b.p, dx, sep = 0.5 + (b.big - 1.35) * 0.5, want, step;
+  if (dp > 0.12) { if (pg.st === 'walk' && pg.x0 !== undefined) pg.xn += Math.max(-0.6 * dt, Math.min(0.6 * dt, pg.x0 - pg.xn)); return; }
+  if (dp < -0.2) return;
+  dx = pg.xn - b.xn;
+  if (Math.abs(dx) >= sep) { pg.av = 0; return; }
+  if (!pg.av) pg.av = dx > 0.02 ? 1 : dx < -0.02 ? -1 : pg.side;
+  if (Math.abs(b.xn + pg.av * sep) > 1.1) pg.av = -pg.av;
+  want = b.xn + pg.av * sep; step = dp > -0.07 ? 99 : 1.5 * dt;
+  pg.xn += Math.max(-step, Math.min(step, want - pg.xn));
+}
 function updatePenguin(pg, dt) {
   pg.t += dt; pg.ph += dt * (6 + pg.v * 40);
+  if (pg.st === 'walk' || pg.st === 'slide') avoidBoss(pg, dt);
+  if (pg.pop > 0) pg.pop = Math.max(0, pg.pop - dt * 1.4);
+  if (pg.st === 'walk' && pg.ev > 0) evolveStep(pg, dt);
   if (pg.st === 'walk') {
     pg.p += pg.v * dt * slowK;
     if (pg.p >= 0.95) bump(pg);
@@ -429,6 +508,11 @@ function targets() {
 }
 function throwAt(ox, oy, dx, dy, spd, tapPoint) {
   if (S.cd > 0 || S.over || S.paused) return;
+  var tc = typeCost(curType);
+  if (tc > 0) {
+    if (sv.bank < tc) { setType('classic'); toast('Lobbers cost ' + tc + ' Golden Pineapples. Back to Classic!'); }
+    else spend(tc, ox, oy);
+  }
   var ty = effType(), len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
   var best = null, bs = 1e9, ttf = 0.6, list = targets(), i;
   for (i = 0; i < list.length; i++) {
@@ -466,6 +550,7 @@ function hitBoss(units, c) {
   b.hp--; if (b.hp <= 0) award(5); S.bossHp = Math.max(0, b.hp); b.st = 'hit'; b.t = 0; b.mood = 'wow'; b.hat = true;
   S.cheer = Math.min(100, S.cheer + 4);
   burst(c.x, c.y, 18, PINE_COL); popText(c.x, c.y - c.s * 0.4, 'tee hee!', '#b86e00');
+  if (b.hp <= 0) reward(PAY.champ, c.x, c.y - c.s * 0.2, 2); else sparkBurst(c.x, c.y, 8, ['#ffd23f', '#fff7e3']);
   return true;
 }
 function landShot(s) {
@@ -518,7 +603,7 @@ function endStage(win) {
     if (S.tro) collectTro(true);
     while (S.tq.length) { S.tro = { id: S.tq.shift(), t: 0 }; collectTro(true); }
     var st = S.stage, last = st >= NSTAGES, CH = CHAMP[st];
-    sv.bank = Math.min(999999, sv.bank + S.golden); sv.golden = 0; sv.wave = 0; sv.cheer = 100; sv.cleared = Math.max(sv.cleared, st); sv.stage = last ? 1 : st + 1;
+    sv.golden = 0; sv.wave = 0; sv.cheer = 100; sv.cleared = Math.max(sv.cleared, st); sv.stage = last ? 1 : st + 1;
     kit.save(sv); updateContinue();
     if (last) showCard('You did it!', CH.n + ' is giggling and every stage is clear! You collected ' + S.golden + ' Golden Pineapples. Spend them in the Shop on the title screen.', 'Play again', startAgain);
     else showCard('Stage ' + st + ' clear!', CH.n + ' is giggling! You collected ' + S.golden + ' Golden Pineapples. Next up: ' + STAGES[st + 1].title.replace('\n', ' ') + '.', 'Next stage', function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
@@ -527,11 +612,11 @@ function endStage(win) {
   }
 }
 function waveClear() {
-  S.mode = 'clear'; S.modeT = 0;
+  S.mode = 'clear'; S.modeT = 0; S.fish = [];
   if (S.bumps === 0) award(3);
   if (S.cheer < 30) award(8);
   S.cheer = Math.min(100, S.cheer + 15);
-  S.golden += 1 + (S.bumps === 0 ? 1 : 0);
+  earn(S.bumps === 0 ? 10 : 5);
   banner(S.bumps === 0 ? 'Perfect wave!' : 'Wave clear!', 1300);
   sv.stage = S.stage; sv.wave = S.wave; sv.golden = S.golden; sv.cheer = Math.round(S.cheer); kit.save(sv); updateContinue();
 }
@@ -573,7 +658,7 @@ function updateBoss(b, dt) {
   }
 }
 function bossDefeated() {
-  S.mode = 'bossWin'; S.modeT = 0; S.golden += 3; S.cheer = Math.min(100, S.cheer + 15);
+  S.mode = 'bossWin'; S.modeT = 0; S.cheer = Math.min(100, S.cheer + 15);
   banner(CHAMP[S.stage].n.replace('Grand Champion ', '') + '\ngiggles!', 1900);
 }
 function drawShield(b) {
@@ -596,6 +681,9 @@ function fxUpdate(dt) {
     if (b.t > b.ttl) bits.splice(i, 1);
   }
   for (i = pops.length - 1; i >= 0; i--) { pops[i].t += dt; if (pops[i].t > pops[i].ttl) pops.splice(i, 1); }
+  for (i = rings.length - 1; i >= 0; i--) { rings[i].t += dt; if (rings[i].t > rings[i].ttl) rings.splice(i, 1); }
+  for (i = flys.length - 1; i >= 0; i--) { b = flys[i]; b.t += dt; if (b.t > b.ttl) { if (!b.back) pulseBank('#fff2a8'); flys.splice(i, 1); } }
+  if (S.gl > 0) S.gl = Math.max(0, S.gl - dt * 1.6);
 }
 function update(dt) {
   S.t += dt; S.cd = Math.max(0, S.cd - dt); S.wob = Math.max(0, S.wob - dt * 1.6);
@@ -604,7 +692,7 @@ function update(dt) {
   S.sa += (ta - S.sa) * Math.min(1, dt * 14);
   fxUpdate(dt);
   if (S.over) return;
-  updateTable(dt); updateAuto(dt);
+  updateTable(dt); updateAuto(dt); updateFish(dt);
   for (i = shots.length - 1; i >= 0; i--) { updateShot(shots[i], dt); if (shots[i].dead) shots.splice(i, 1); }
   S.modeT += dt;
   if (S.mode === 'intro' && S.modeT > 1.2) { S.mode = 'run'; S.modeT = 0; }
@@ -665,6 +753,8 @@ function drawPenguin(pg) {
     ctx.fillStyle = 'rgba(42,18,13,' + (0.28 - 0.14 * lift) + ')';
     ctx.beginPath(); ctx.ellipse(x - s * 0.17, y - s * 0.01, s * 0.1, s * 0.025, 0, 0, 6.3); ctx.ellipse(x + s * 0.17, y - s * 0.01, s * 0.1, s * 0.025, 0, 0, 6.3); ctx.fill();
   }
+  var el = evolveLook(pg); sx *= el.sx; sy *= el.sy; rot += el.rot;
+  drawEvolveGlow(pg, x, y - hop, s);
   ctx.translate(x, y - hop); ctx.rotate(rot); ctx.scale(sx, sy);
   var im = IMG[pg.kind][pg.mood];
   if (im) ctx.drawImage(im, -s / 2, -s * 0.965, s, s);
@@ -852,10 +942,21 @@ function drawFx(fs) {
 }
 function drawParticles() {
   var i, b, p, u, sc2, yy;
+  for (i = 0; i < rings.length; i++) {
+    b = rings[i]; if (b.t < 0) continue; u = b.t / b.ttl;
+    ctx.strokeStyle = 'rgba(' + b.c + ',' + (0.85 * (1 - u)) + ')'; ctx.lineWidth = Math.max(2, b.r * 0.12 * (1 - u)); ctx.beginPath(); ctx.arc(b.x, b.y, b.r * (0.3 + 0.9 * u), 0, 6.3); ctx.stroke();
+  }
   for (i = 0; i < bits.length; i++) {
     b = bits[i]; ctx.save(); ctx.globalAlpha = Math.min(1, (b.ttl - b.t) * 3); ctx.translate(b.x, b.y); ctx.rotate(b.rot);
     ctx.fillStyle = b.c;
-    if (b.k === 0) { ctx.beginPath(); ctx.ellipse(0, 0, b.w / 2, b.h / 2, 0, 0, 6.3); ctx.fill(); }
+    if (b.k === 3) {
+      ctx.rotate(-b.rot); var sq = Math.max(0.15, Math.abs(Math.cos(b.t * 12 + b.rot))), cr = b.w / 2;
+      ctx.beginPath(); ctx.ellipse(0, 0, cr * sq, cr, 0, 0, 6.3); ctx.fill(); ctx.strokeStyle = '#b8780a'; ctx.lineWidth = 1.6; ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,.65)'; ctx.beginPath(); ctx.ellipse(-cr * 0.2 * sq, -cr * 0.3, cr * 0.18 * sq, cr * 0.28, 0, 0, 6.3); ctx.fill();
+    } else if (b.k === 4) {
+      var sr = b.w / 2; ctx.beginPath(); ctx.moveTo(0, -sr); ctx.quadraticCurveTo(0, 0, sr, 0); ctx.quadraticCurveTo(0, 0, 0, sr); ctx.quadraticCurveTo(0, 0, -sr, 0); ctx.quadraticCurveTo(0, 0, 0, -sr); ctx.fill();
+    }
+    else if (b.k === 0) { ctx.beginPath(); ctx.ellipse(0, 0, b.w / 2, b.h / 2, 0, 0, 6.3); ctx.fill(); }
     else ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
     ctx.restore();
   }
@@ -864,9 +965,15 @@ function drawParticles() {
   for (i = 0; i < pops.length; i++) {
     p = pops[i]; u = p.t / p.ttl; sc2 = u < 0.18 ? 0.3 + 1.2 * (u / 0.18) : u < 0.42 ? 1.5 - 0.5 * ((u - 0.18) / 0.24) : 1 - (u - 0.42) * 0.25;
     yy = p.y - (calm ? 20 : 90) * Math.min(1, u * 1.3);
-    ctx.save(); ctx.globalAlpha = u > 0.6 ? 1 - (u - 0.6) / 0.4 : 1; ctx.translate(p.x, yy); ctx.rotate(p.rot * (1 - u)); ctx.scale(sc2, sc2);
+    ctx.save(); ctx.globalAlpha = u > 0.6 ? 1 - (u - 0.6) / 0.4 : 1; ctx.translate(p.x, yy); ctx.rotate(p.rot * (1 - u)); ctx.scale(sc2 * (1 + p.big * 0.35), sc2 * (1 + p.big * 0.35));
     ctx.lineWidth = fs * 0.2; ctx.strokeStyle = '#fff7e3'; ctx.strokeText(p.txt, 0, 0); ctx.fillStyle = p.col; ctx.fillText(p.txt, 0, 0);
     ctx.restore();
+  }
+  for (i = 0; i < flys.length; i++) {
+    b = flys[i]; if (b.t < 0) continue; u = b.t / b.ttl; u = u * u * (3 - 2 * u);
+    var fx = b.x0 + (b.x1 - b.x0) * u + Math.sin(u * 3.14) * b.bow, fy = b.y0 + (b.y1 - b.y0) * u - Math.sin(u * 3.14) * H * 0.06, fr = Math.max(5, W * 0.02) * (b.back ? 0.9 : 1 - 0.3 * u);
+    ctx.fillStyle = '#ffd23f'; ctx.strokeStyle = '#b8780a'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(fx, fy, fr, 0, 6.3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.arc(fx - fr * 0.3, fy - fr * 0.3, fr * 0.28, 0, 6.3); ctx.fill();
   }
   return fs;
 }
@@ -880,14 +987,15 @@ function draw() {
   drawCloud(((W * 0.7 + drift * 0.6) % (W * 1.4)) - W * 0.2, hy * 0.25, cl * 0.8);
   drawCloud(((W * 1.1 + drift * 0.35) % (W * 1.4)) - W * 0.2, hy * 0.62, cl * 0.62);
   drawScenery(calm ? 0 : S.t);
-  var list = penguins.slice(), i;
+  var list = penguins.concat(S.fish), i;
   if (S.boss) list.push(S.boss);
   list.sort(function (a, b) { return a.p - b.p; });
-  for (i = 0; i < list.length; i++) { drawPenguin(list[i]); if (list[i] === S.boss) drawShield(list[i]); }
+  for (i = 0; i < list.length; i++) { if (list[i].isFish) { drawFish(list[i]); continue; } drawPenguin(list[i]); if (list[i] === S.boss) drawShield(list[i]); }
   drawAutoMark();
   drawStand(); drawTable();
   for (i = 0; i < shots.length; i++) drawShot(shots[i]);
   drawFx(drawParticles());
+  if (S.gl > 0) { ctx.fillStyle = 'rgba(255,226,120,' + (S.gl * 0.22) + ')'; ctx.fillRect(0, 0, W, H); }
 }
 
 /* ---------- bonus game: a long lane, a hop, and a small 35 degree board of raised rings ---------- */
@@ -904,7 +1012,7 @@ function skX(u, v) { return W / 2 + u * skFb() * skS(v); }
 function skY(v) { var yB = H * 0.43; return v >= 0 ? yB - SK_RAT * skFb() / SK_K * Math.log(1 + SK_K * v) : yB + (H * 0.865 - yB) * (v / SK_V0); }
 /* the world position along the machine for a screen y (used to keep the crowd off the machine) */
 function skV(y) { var yB = H * 0.43; return y <= yB ? (Math.exp((yB - y) * SK_K / (SK_RAT * skFb())) - 1) / SK_K : SK_V0 * (y - yB) / (H * 0.865 - yB); }
-function skCredits(score) { return Math.floor(score / 20); }
+function skCredits(score) { return Math.floor(score / 4); }
 function newSkee() {
   newState();
   hs = null; hov.length = 0;
@@ -928,7 +1036,7 @@ function endSkee() {
   var cr = skCredits(K.score);
   sv.bank = Math.min(999999, sv.bank + cr); kit.save(sv);
   burst(W / 2, H * 0.4, 40, PINE_COL.concat(['#ff6f86', '#8fc6e4']));
-  showCard('Pineapple Roll!', 'You scored ' + K.score + ' points and won ' + cr + ' Golden Pineapples! Every 20 points is one.', 'Roll again', startSkeeAgain);
+  showCard('Pineapple Roll!', 'You scored ' + K.score + ' points and won ' + cr + ' Golden Pineapples! Every 4 points is one.', 'Roll again', startSkeeAgain);
 }
 /* read a swipe: the speed is the fastest 40-140 ms stretch of the last 300 ms, the direction runs from the start of that stretch to the end of the swipe */
 function skFlick(d) {
@@ -1358,7 +1466,7 @@ cv.addEventListener('pointerup', function (e) {
 cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 
 var picks = document.querySelectorAll('.pick');
-function setType(t) { curType = t; Array.prototype.forEach.call(picks, function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-t') === t ? 'true' : 'false'); }); }
+function setType(t) { if (t !== 'classic' && sv.bank < (COST[t] || 0) && S.fx.mega <= 0) { toast('Lobbers cost ' + COST[t] + ' Golden Pineapples.'); t = 'classic'; } curType = t; Array.prototype.forEach.call(picks, function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-t') === t ? 'true' : 'false'); }); }
 Array.prototype.forEach.call(picks, function (b) { b.addEventListener('click', function () { setType(b.getAttribute('data-t')); }); });
 document.addEventListener('keydown', function (e) { if (gameEl.hidden) return; if (e.key === '1') setType('classic'); else if (e.key === '2') setType('lobber'); else if (e.key === '3') collectPU(); else if (e.key === '4') collectTro(false); });
 
@@ -1449,13 +1557,13 @@ function fillTrophies() {
 $('bTro').addEventListener('click', fillTrophies);
 /* ---------- shop (title screen): the auto slingshot ---------- */
 var SHOP = {
-  cost: { au: 8, ar: [10, 16, 24], ap: [12, 20] },
-  pine: ['Classic pineapples', 'Lobber pineapples: splashy!', 'Mega pineapples: super splash!']
+  cost: { au: 40, ar: [50, 80, 120], ap: [60, 100] },
+  pine: ['Classic pineapples (free)', 'Lobber pineapples: splashy, slower, 2 each', 'Mega pineapples: super splash, slowest, 3 each']
 };
 function fillShop() {
   var box = $('cardBody').querySelector('#shList'); if (!box) return;
   var note = $('cardBody').querySelector('#shNote');
-  if (note) note.textContent = 'You have ' + sv.bank + ' Golden Pineapples. Earn more from waves, bosses and trophies.';
+  if (note) note.textContent = 'You have ' + sv.bank + ' Golden Pineapples. Earn more from every penguin, wave, Champion and trophy.';
   var rows = [];
   rows.push({ k: 'au', title: 'Auto Slingshot', desc: sv.au ? 'A helper on your table. It aims at the penguin with the teal marker, so aim at a different one!' : 'A little helper that tosses pineapples all by itself and shows who it is aiming at.', cost: sv.au ? 0 : SHOP.cost.au, st: sv.au ? 'Owned' : '' });
   rows.push({ k: 'ar', title: 'Faster Fling ' + sv.ar + '/3', desc: 'Now: a toss every ' + AUTO_INT[sv.ar] + ' seconds.' + (sv.ar < 3 ? ' Next: ' + AUTO_INT[sv.ar + 1] + ' seconds.' : ''), cost: sv.ar < 3 ? SHOP.cost.ar[sv.ar] : 0, st: sv.ar >= 3 ? 'Maxed' : '', lock: !sv.au });
@@ -1478,7 +1586,7 @@ $('bShop').addEventListener('click', fillShop);
 /* test hook, only with #qa in the address */
 var qa = null;
 if (location.hash === '#qa') {
-  qa = window.__pd = { go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
+  qa = window.__pd = { fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
     give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
 }
 /*{{LAB_JS}}*/
