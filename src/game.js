@@ -74,6 +74,7 @@ function loadAssets() {
       if (CORE[k] || location.hash === '#qa') jobs.push(job(k, m)()); else late.push(job(k, m));
     });
   });
+  gearJobs(function (f) { if (location.hash === '#qa') jobs.push(f()); else late.push(f); });
   jobs.push(toImage($('spr-palm').innerHTML, { w: 400, h: 520 }).then(function (c) { PROP.palm = c; }));
   jobs.push(toImage($('spr-plant').innerHTML, { w: 240, h: 240 }).then(function (c) { PROP.plant = c; }));
   jobs.push(document.fonts && document.fonts.load ? document.fonts.load('800 32px "Bricolage Grotesque"') : Promise.resolve());
@@ -126,12 +127,12 @@ var elWave = $('waveTxt'), elGold = $('goldTxt'), elCheer = $('cheerFill'), elRe
 var shown = { wave: '', gold: -1, cheer: -1, ready: -1, left: -1, combo: -1, bank: -1, cups: '' };
 var elRaid = $('bRaid'), elRaidN = $('raidN');
 elRaid.addEventListener('click', function () { callRaid(); elRaid.blur(); });
-var elProg = $('prog'), progSeg = Array.prototype.slice.call(elProg.querySelectorAll('.seg')), progKey = '';
+var elProg = $('prog'), elProgStg = $('progStg'), stgShown = 0, progSeg = Array.prototype.slice.call(elProg.querySelectorAll('.seg')), progKey = '';
 var elBoss = $('bossBar'), elBossFill = $('bossFill'), elLobPick = document.querySelector('.pick[data-t="lobber"]'), elLeft = $('leftTxt'), elCombo = $('comboTxt'), elBank = $('bankTxt'), elCups = $('cupsTxt'), elCred = $('credPill');
 function popcount(n) { var c = 0; while (n) { c += n & 1; n >>= 1; } return c; }
 function setTxt(el, key, v) { if (shown[key] !== v) { shown[key] = v; el.textContent = String(v); } }
 function hud() {
-  var w = S.inBoss ? CHAMP[S.stage].s + ': ' + S.bossHp + ' / ' + S.bossMax : (S.stage > 1 ? 'S' + S.stage + ' · ' : '') + 'Wave ' + Math.max(1, S.wave) + ' / ' + NWAVES;
+  var w = S.inBoss ? CHAMP[S.stage].s + ': ' + S.bossHp + ' / ' + S.bossMax : 'Wave ' + Math.max(1, S.wave) + ' / ' + NWAVES;
   if (w !== shown.wave) { shown.wave = w; elWave.textContent = w; }
   var c = Math.round(S.cheer);
   if (c !== shown.cheer) { shown.cheer = c; elCheer.style.transform = 'scaleY(' + (c / 100) + ')'; elCheer.parentNode.setAttribute('data-low', c < 35 ? '1' : '0'); }
@@ -140,6 +141,7 @@ function hud() {
   var rv = sv.ra > 0 ? S.raL * 10 + (S.raid ? 1 : 0) : -1; if (rv !== shown.raid) { shown.raid = rv; elRaid.hidden = rv < 0; if (rv < 0) gameEl.removeAttribute('data-raid'); else gameEl.setAttribute('data-raid', '1'); elRaidN.textContent = String(S.raL); elRaid.disabled = S.raL <= 0 || !!S.raid; }
   var bk = S.inBoss ? S.bossHp + '/' + S.bossMax : '';
   if (bk !== shown.boss) { shown.boss = bk; elBoss.hidden = !S.inBoss; elBossFill.style.transform = 'scaleY(' + (S.inBoss ? S.bossHp / S.bossMax : 0) + ')'; elBoss.style.setProperty('--n', S.bossMax); }
+  if (stgShown !== S.stage) { stgShown = S.stage; elProgStg.textContent = 'S' + S.stage; }
   var pk, pf = S.inBoss ? NWAVES : Math.max(0, S.wave - 1) + (S.mode === 'clear' ? 1 : S.toSpawn ? Math.max(0, Math.min(1, 1 - nl / S.toSpawn)) : 0);
   pk = Math.round(pf * 20) + (S.inBoss ? 'b' : 'w');
   if (pk !== progKey) {   /* the stage bar: one segment per wave fills as the wave is cleared, and the medal lights up for the Champion */
@@ -280,6 +282,7 @@ function drawScenery(t) {
 
 /*{{STAGES_JS}}*/
 /*{{EVOLVE_JS}}*/
+/*{{GEAR_JS}}*/
 /*{{EXTRAS_JS}}*/
 
 /* ---------- particles ---------- */
@@ -519,7 +522,7 @@ function spawn() {
   var base = 0.07 + 0.006 * w;
   var sx0 = (lane - 2) * 0.4 + (Math.random() - 0.5) * 0.06;
   penguins.push({ id: ++S.id, kind: kind, xn: sx0, x0: sx0, p: 0.05, v: base * (kind === 'ad' ? 1.3 : 1),
-    st: 'walk', t: 0, mood: 'happy', ph: Math.random() * 6, av: 0, base: base, hp: 1, ev: 0, side: Math.random() < 0.5 ? -1 : 1, hat: false, puff: 0, a: 1 });
+    st: 'walk', t: 0, mood: 'happy', ph: Math.random() * 6, av: 0, base: base, hp: 1, ev: 0, side: Math.random() < 0.5 ? -1 : 1, hat: false, puff: 0, a: 1, gear: rollGear() });
   S.spawned++;
 }
 function bump(pg) {
@@ -915,6 +918,7 @@ function drawPenguin(pg) {
   var im = IMG[pg.kind][pg.mood];
   if (im) ctx.drawImage(mip(im, s * Math.max(sx, sy)), -s / 2, -s * 0.965, s, s);
   if (pg.ice) { ctx.fillStyle = 'rgba(140,210,245,.5)'; ctx.beginPath(); ctx.ellipse(0, -s * 0.46, s * 0.31, s * 0.44, 0, 0, 6.3); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.ellipse(-s * 0.12, -s * 0.66, s * 0.07, s * 0.16, 0.3, 0, 6.3); ctx.fill(); }
+  if (pg.gear) drawOutfit(pg, s, tt);
   if (pg.hat && IMG.pa.happy) {
     var hs = s * 0.42;
     ctx.save(); ctx.translate(0, -s * 0.745 - hs * 0.45 + s * 0.03); ctx.rotate(0.28);
@@ -1298,7 +1302,7 @@ function draw() {
 var K = null, skBg = null, HINT_TXT = elHint.lastChild ? elHint.lastChild.textContent : '';
 /* world units: the board is 2 wide (u in -1..1); v runs up the incline from its front edge (v=0); the lane is below zero and the hop sits at SK_HUMP */
 var SK_BALLS = 9, SK_RIM = 0.7, SK_WALL = 1.65, SK_G = 10, SK_KZ = 0.7, SK_INC = 35, SK_RB = 0.09, SK_DIN = 1.25, SK_ZC = 0.12;
-var SK_V0 = -2.2, SK_HUMP = -0.2, SK_VMAX = 2.0, SK_K = 0.12, SK_RAT = 0.75, SK_LIFT = 0.55, SK_LFR = 0.5, SK_AIM = 0.3, SK_FL0 = 2.0, SK_FL1 = 2.9, SK_GV = -0.1, SK_DRN = 0.9, SK_TS = 1.7;
+var SK_V0 = -2.2, SK_HUMP = -0.2, SK_VMAX = 2.0, SK_K = 0.12, SK_RAT = 0.75, SK_LIFT = 0.55, SK_LFR = 0.5, SK_AIM = 0.3, SK_FL0 = 2.0, SK_FL1 = 2.9, SK_GV = -0.1, SK_DRN = 0.9, SK_TS = 1.7, SK_LIP = 1.3, SK_RC = 0.085, SK_RIME = 0.62;   /* the inner lip of a ring is 1.3x the drawn hole; SK_RC is the contact radius the ball rolls on the rim with; SK_RIME is the rim bounciness */
 /* SK_TS: the world clock runs 1.7x the wall clock, which makes 10 u/s^2 feel like a real 26 u/s^2 (9.8 m/s^2 at 0.38 m per unit); the fixed physics step stays 1/240 s of world time, so every roll lands where the tests say */
 var SK_AY = 0.62;
 var SK_COL = { 10: '62,199,214', 20: '95,211,107', 30: '255,210,63', 40: '255,154,61', 50: '255,90,90', 100: '255,79,216' };
@@ -1439,7 +1443,7 @@ function skResolve(hole, b) {
   if (K.balls <= 0 && !K.bl.length) endSkee();
 }
 function skStep(b, h) {
-  var gs = skGs(), gc = skGc(), pz = b.z, floor = b.z <= 0 && b.vz <= 0 && b.v >= 0, sp, k, i, c, d, zc = SK_ZC, nx, ny, imp, vn, ro, rr = SK_RB;
+  var gs = skGs(), gc = skGc(), pz = b.z, floor = b.z <= 0 && b.vz <= 0 && b.v >= 0, sp, k, i, c, d, zc = SK_ZC, nx, ny, imp, vn, ro, rr = SK_RB, re, ze, gap, dz, pn, ndr, nz, pen;
   if (floor) { sp = Math.hypot(b.vu, b.vv); k = sp ? Math.max(0, sp - (0.14 + 0.08 * sp) * h) / sp : 0;   /* rolling resistance: a constant drag plus a little that grows with speed */ b.vu *= k; b.vv *= k; b.vv -= gs * 0.71 * h; }
   else { b.vv -= gs * h; b.vz -= gc * h; }
   b.u += b.vu * h; b.v += b.vv * h; b.z += b.vz * h; b.rot += Math.hypot(b.vu, b.vv) * h * 3 * (b.vv < 0 ? -1 : 1);
@@ -1448,16 +1452,32 @@ function skStep(b, h) {
   for (i = 0; i < SK_HOLES.length; i++) {
     c = SK_HOLES[i]; d = Math.hypot(b.u - c.u, b.v - c.c) || 0.001; ro = c.r + 0.05;
     if (d > ro + 0.6 * rr) continue;
-    nx = (b.u - c.u) / d; ny = (b.v - c.c) / d;
+    nx = (b.u - c.u) / d; ny = (b.v - c.c) / d; re = Math.min(c.r * SK_LIP, ro - 0.012); ze = zc - SK_RC;
+    if (d < re && b.z < zc + 0.01) {
+      /* inside the lip: the ring's inner edge is a round rim. A ball over the middle drops through; one that touches the edge is knocked up and across, so it can rattle around, lip out, or fall in */
+      gap = re - d;
+      if (gap >= SK_RC * 0.92) { if (b.z < ze + 0.01) { b.st = 'sink'; b.t = 0; b.hole = c; b.u0 = b.u; b.v0 = b.v; skCheer(true, c.v >= 100 ? 2 : c.v >= 40 ? 1.5 : 1); skSinkFx(b, c); return; } continue; }
+      dz = b.z - ze; pn = Math.hypot(gap, dz) || 0.001;
+      if (pn < SK_RC) {
+        ndr = -gap / pn; nz = dz / pn; pen = SK_RC - pn;
+        b.u += ndr * nx * pen; b.v += ndr * ny * pen; b.z += nz * pen;
+        vn = (b.vu * nx + b.vv * ny) * ndr + b.vz * nz;
+        if (vn < 0) {
+          skHit(b, -vn / 3, 2); imp = -(1 + SK_RIME) * vn; b.vu += imp * ndr * nx; b.vv += imp * ndr * ny; b.vz += imp * nz;
+          b.vu *= 0.97; b.vv *= 0.97; b.lh = c; b.lt = b.t;
+        } else if (b.z < ze + 0.03 && gap > SK_RC * 0.5) { b.lh = c; b.lt = b.t; }
+      }
+      continue;
+    }
     if (pz >= zc && b.z < zc && b.vz < 0 && d < ro + 0.5 * rr) {
-      if (d < c.r * SK_DIN) { b.st = 'sink'; b.t = 0; b.hole = c; b.u0 = b.u; b.v0 = b.v; skCheer(true, c.v >= 100 ? 2 : c.v >= 40 ? 1.5 : 1); skSinkFx(b, c); return; }
-      imp = -b.vz; skHit(b, imp / 3, 2); b.z = zc; b.vz = Math.max(1.3, imp * SK_RIM); b.vu = (b.vu + nx * imp * 0.9) * 0.9; b.vv = (b.vv + ny * imp * 0.9) * 0.9;
+      /* landing on the flat top of the ring: a lively hop that rolls toward the hole or away from it */
+      imp = -b.vz; skHit(b, imp / 3, 2); b.z = zc; b.vz = Math.max(1.0, imp * SK_RIM); ndr = d < (re + ro) / 2 ? -1 : 1; b.vu = (b.vu + nx * imp * 0.55 * ndr) * 0.92; b.vv = (b.vv + ny * imp * 0.55 * ndr) * 0.92; b.lh = c; b.lt = b.t;
     } else if (b.z < zc) {
       b.u = c.u + nx * (ro + 0.6 * rr); b.v = c.c + ny * (ro + 0.6 * rr);
       vn = b.vu * nx + b.vv * ny;
       if (vn < 0) { skHit(b, -vn / 2.5, 2); b.vu -= SK_WALL * vn * nx; b.vv -= SK_WALL * vn * ny; b.vz = Math.max(b.vz, Math.min(2.2, -vn * 0.55)); }
-      /* the rim is round: a ball pressed against it slides around and off instead of resting on it */
-      ro = (b.u >= c.u ? 1 : -1) * (0.25 + Math.max(0, -vn) * 0.5); b.vu += -ny * ro * h * 6; b.vv += nx * ro * h * 6;
+      /* the ring is round: a ball pressed against it rolls off to one side at once, so it never rests on the wall */
+      imp = (nx >= 0 ? -1 : 1) * (0.5 + Math.max(0, -vn) * 0.4); b.vu += -ny * imp * h * 8; b.vv += nx * imp * h * 8;   /* the push runs down the slope along the wall (it used to run up it, which is what held a ball on a ring's flank) */
     }
   }
   if (b.v >= 0 && b.z <= 0 && b.vz < 0) { b.z = 0; if (b.vz < -0.6) { skHit(b, -b.vz / 3.5, 0); b.vz = -b.vz * skCl(0.52 - 0.05 * -b.vz, 0.25, 0.5); b.vu *= 0.88; b.vv *= 0.88; } else b.vz = 0; }   /* a hard landing bounces higher than a soft one */
@@ -1543,7 +1563,7 @@ function skUpdBall(b, dt) {
     b.acc = Math.min(0.1, (b.acc || 0) + dt);
     while (b.acc >= SK_H && b.st === 'play') { skStep(b, SK_H); b.acc -= SK_H; }
     if (b.st === 'play') {
-      if (Math.hypot(b.vu, b.vv) < 0.25 && b.z < 0.12) { b.still += dt; if (b.still > 0.3) { b.vu = (b.u >= 0 ? 1 : -1) * 0.7; b.vv = -1; b.vz = 1; b.z = Math.max(b.z, 0.02); b.still = 0; K.kick = (K.kick || 0) + 1; } } else b.still = 0;
+      if (Math.hypot(b.vu, b.vv) < 0.25 && b.z < 0.12) { b.still += dt; if (b.still > 0.12) { b.vu = (b.u >= 0 ? 1 : -1) * 0.7; b.vv = -1; b.vz = 1; b.z = Math.max(b.z, 0.02); b.still = 0; K.kick = (K.kick || 0) + 1; } } else b.still = 0;
       if (b.t > 6) { b.vv = -1.5; b.vu = (b.u >= 0 ? 1 : -1) * 0.5; b.vz = 1; b.t = 3; }
     }
   } else if (b.st === 'out') {
@@ -1628,6 +1648,10 @@ function skPul(h) { return calm ? 0.5 : 0.5 + 0.5 * Math.sin(S.t * (h.v >= 100 ?
 function drawHoleGlow(h) {
   var fb = skFb(), s = skS(h.c), x = skX(h.u, h.c), y = skY(h.c), ro = (h.r + 0.05) * fb * s, rro = ro * SK_RAT, pul = skPul(h);
   ctx.globalAlpha = Math.min(1, (0.55 + 0.35 * pul) * (h.v >= 100 ? 1.2 : 1)); ctx.drawImage(glowFor(SK_COL[h.v] || '255,210,63'), x - ro * 2.5, y - rro * 3, ro * 5, rro * 5.6); ctx.globalAlpha = 1;
+}
+function drawHoleFront(h) {
+  var fb = skFb(), s = skS(h.c), x = skX(h.u, h.c), y = skY(h.c), ro = (h.r + 0.05) * fb * s, hg = SK_ZC * fb * s * SK_LIFT * 1.3, yt = y - hg * 0.5;
+  ctx.save(); ctx.beginPath(); ctx.rect(x - ro * 1.4, yt, ro * 2.8, hg * 0.5 + ro * 1.1); ctx.clip(); drawHoleB(h); ctx.restore();
 }
 function drawHoleB(h) {
   var fb = skFb(), s = skS(h.c), x = skX(h.u, h.c), y = skY(h.c), rx = h.r * fb * s, ry = rx * SK_RAT, ro = (h.r + 0.05) * fb * s, rro = ro * SK_RAT, hg = SK_ZC * fb * s * SK_LIFT * 1.3, yt = y - hg * 0.5;
@@ -1873,7 +1897,12 @@ function drawSkee() {
   for (i = 0; i < SK_HOLES.length; i++) drawHoleGlow(SK_HOLES[i]);
   for (i = 0; i < SK_HOLES.length; i++) drawHoleB(SK_HOLES[i]);
   var bs = K.bl.slice().sort(function (p, q) { return q.v - p.v; }), gutB = false;
-  for (i = 0; i < bs.length; i++) { drawSkeeBall(bs[i]); if (bs[i].st === 'gut' || bs[i].st === 'drain') gutB = true; }
+  for (i = 0; i < bs.length; i++) {
+    drawSkeeBall(bs[i]); if (bs[i].st === 'gut' || bs[i].st === 'drain') gutB = true;
+    /* a ball dipping into a ring is half hidden by the ring's front lip */
+    var lb = bs[i], lh = lb.st === 'sink' ? lb.hole : (lb.st === 'play' && lb.lh && lb.t - lb.lt < 0.35 && lb.z < SK_ZC + 0.02 && Math.hypot(lb.u - lb.lh.u, lb.v - lb.lh.c) < lb.lh.r * SK_LIP + 0.02 ? lb.lh : null);
+    if (lh) drawHoleFront(lh);
+  }
   if (gutB) { var yF = skY(SK_HUMP) - (skY(SK_HUMP) - skY(0)) * 0.36, yE = skY(SK_HUMP) + 2; ctx.drawImage(skBg, 0, yF * DPR, skBg.width, (yE - yF) * DPR, 0, yF, W, yE - yF); }
   drawStand();
   /* a column of light shoots up from a ring that just scored */
@@ -1938,7 +1967,7 @@ cv.addEventListener('pointerdown', function (e) {
   if (S.paused || S.over || drag || S.rc > 0) return;
   try { cv.setPointerCapture(e.pointerId); } catch (x) {}
   var p = rel(e);
-  if (tableHit(p) || zoneHit(p)) { e.preventDefault(); return; }
+  if (tableHit(p) || zoneHit(p) || sceneTap(p)) { e.preventDefault(); return; }
   drag = { id: e.pointerId, sx: p.x, sy: p.y, t0: p.t, pts: [p] };
   e.preventDefault();
 });
@@ -2222,7 +2251,7 @@ $('bShop').addEventListener('click', fillShop);
 /* test hook, only with #qa in the address */
 var qa = null;
 if (location.hash === '#qa') {
-  qa = window.__pd = { zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
+  qa = window.__pd = { stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
     /* fast-forward without waiting for frames: sec game seconds in steps of dt, drawing every `every` steps (0 = never, one final draw) */
     step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
     win: function () { endStage(true); }, flick: function (dx, dy, spd) { var o = pouchPos(); throwAt(o.x, o.y, dx, dy, spd); }, get sh() { return shots; }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, sim: function (dx, dy, spd, dA, dF) { var h = skSim(skLaunch({ dx: dx, dy: dy, spd: spd }, dA, dF)); return h ? h.v : 0; }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };

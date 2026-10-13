@@ -2,6 +2,14 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.13.1537
+- **Pineapple Roll rims have drama.** Each ring now has a rounded lip: a ball that clips the edge rattles around it and can drop in, lip out, or pop in and straight back out like a basketball. The invisible "catch" is gone: the push that slid a ball off a ring's flank pointed uphill and balanced gravity, so it now runs downhill and balls roll off instead of hanging (longest hang in the test 0.00 s; about half of rolls now touch a rim). The cup front is redrawn over a ball that is dropping in so it really goes inside. The share of balls that sink stays at 40% or more.
+- **Penguins dress up.** Almost every penguin now wears a random mix of warm hats (beanie, ear flaps, Santa cap, earmuffs, party cone), scarves, mittens and a held item (hot chocolate with steam, a candy cane, a cookie or a snowball). Scarves and hats sway as they waddle. Mecha penguins and the Champions keep their own look.
+- **Stage 4 (the storm):** a lighthouse that sweeps a beam, a cloud with a face that smiles and shows a rainbow when tapped (it also does so on its own every so often), a sailboat and toys on the waves, a duck that says Quack, a whale that says Boop, and a lighthouse that says Flash.
+- **Stage 5 (the fortress party):** floating balloons you can pop (they float back), a turning disco ball that sprays colored light, a snowman DJ, fireworks and searchlights, a softly lit dance floor, string lights, party-hat penguins.
+- **Progress bar now starts with the stage label** (S1 to S5). The separate wave counter is hidden during play because the bar already shows it.
+- Speed: stage 4 and 5 draw about 38% more canvas calls per frame (834 against 604 mean on the audit scenes, mostly cached stamps); frame time in the test browser is a median of 0.5 to 0.6 ms and about 1.4 to 1.9 ms at the 95th percentile. Lights and floor tiles turn off or shrink on lower quality tiers and in Calm mode.
+
 ## 2026.10.13.1452
 - **Auto Slingshot is a helper, not a replacement.** It tosses slower (every 5.2, 4.2, 3.4 and 2.8 seconds by Faster Fling tier) and sometimes misses, landing just beside the penguin (28% of tosses, 20% with Better Pineapples 1, 12% with tier 2). The shop says so.
 - **Stage progress bar** across the top of the game: one segment per wave that fills as the wave is cleared, and a Champion medal that lights up for the Champion fight (like Apple Press).

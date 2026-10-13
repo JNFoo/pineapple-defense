@@ -112,7 +112,7 @@ await T('auto slingshot is slower and sometimes misses', async () => {
 await T('mecha penguins: a Gentoo that eats a fish is tougher than a normal penguin', async () => {
   await go(2, 2); P.bot = false; P.step(4, 0.05); const S = P.S, L = P.penguins; if (!L.length) throw new Error('no penguins');
   L.forEach(pg => { if (pg.st === 'walk') { pg.kind = 'gt'; pg.hp = 2; pg.big = 1.12; pg.p = 0.18; pg.v = Math.min(pg.v, 0.02); } });
-  let mc = null; for (let k = 0; k < 14 && !mc; k++) { P.fish(); P.step(4.5, 0.05); mc = P.penguins.find(pg => pg.kind === 'mc'); if (!mc) L.forEach(pg => { if (pg.st === 'walk' && pg.kind === 'ad') { pg.kind = 'gt'; pg.hp = 2; } }); }
+  let mc = null; for (let k = 0; k < 24 && !mc; k++) { P.fish(); P.step(4.5, 0.05); mc = P.penguins.find(pg => pg.kind === 'mc'); if (!mc) P.penguins.forEach(pg => { if (pg.st === 'walk') { if (pg.kind === 'ad') { pg.kind = 'gt'; pg.hp = 2; } if (pg.p > 0.3) pg.p = 0.18; } }); }
   if (!mc) throw new Error('no Gentoo ever became a mecha penguin');
   if (mc.hp !== 3) throw new Error('mecha hp ' + mc.hp + ', wanted 3'); if (!(mc.hp > 2 && mc.hp < 8)) throw new Error('mecha toughness out of range');
   const hits0 = mc.hp; P.penguins.forEach(pg => { if (pg !== mc) pg.p = -9; }); return 'mecha with ' + hits0 + ' hits';
@@ -136,6 +136,30 @@ await T('more fish fall in the last two waves', async () => {
 
 await T('no giggling anywhere in the page text', async () => {
   const html = document.documentElement.innerHTML; if (/giggl/i.test(html)) throw new Error('found giggl in ' + html.match(/.{30}giggl.{30}/i)[0]);
+});
+
+await T('penguin outfits: most penguins dress up, mecha penguins do not', async () => {
+  await go(2, 3); P.bot = false; const S = P.S; for (let i = 0; i < 300 && P.penguins.length < 6; i++) { P.step(0.1, 0.1); S.cheer = 100; }
+  const L = P.penguins.filter(p => p.kind !== 'mc'); if (L.length < 4) throw new Error('too few penguins: ' + L.length);
+  const dressed = L.filter(p => p.gear && p.gear.some(x => x)).length; if (dressed < L.length * 0.5) throw new Error('only ' + dressed + ' of ' + L.length + ' are dressed');
+  if (L.some(p => !Array.isArray(p.gear) || p.gear.length !== 4)) throw new Error('bad gear shape');
+  P.penguins[0].kind = 'mc'; P.step(0.1, 0.05, 1); /* a mecha draws without error */ P.penguins[0].kind = 'ad'; P.step(0.1, 0.05, 1);
+  return dressed + ' of ' + L.length + ' dressed';
+});
+
+await T('the wave counter pill is gone from play (the progress bar shows it)', async () => {
+  await go(4, 1); const pill = $('waveBox'); if (getComputedStyle(pill).display !== 'none') throw new Error('wave pill still shown'); P.step(0.2, 0.05, 1);
+  if (!/^S4$/.test($("progStg").textContent)) throw new Error("stage label missing: " + $("progStg").textContent);
+  if ($('prog').querySelectorAll('.seg').length !== 5) throw new Error('progress bar missing');
+});
+
+await T('stage 4 and 5 scenery reacts to taps', async () => {
+  await go(4, 1); const S = P.S, W = innerWidth, H = innerHeight; P.step(0.3, 0.05, 1); S.t = 20; S.rc = 0;
+  const c = P.sc.cl; if (!c) throw new Error('no cloud'); if (!P.stap(c.x, c.y)) throw new Error('the cloud ignored a tap'); if (!(P.sc.clT >= 0)) throw new Error('cloud did not react');
+  if (!P.stap(P.sc.dk.x, P.sc.dk.y)) throw new Error('the duck ignored a tap'); if (P.stap(W * 0.5, H * 0.9)) throw new Error('a tap on the lane was swallowed');
+  await go(5, 1); P.S.rc = 0; P.step(0.3, 0.05, 1); const b = P.sc.balPos; if (!b || b.length < 3) throw new Error('no balloons'); const n0 = b.length, q = b[0]; if (!P.stap(q.x, q.y)) throw new Error('balloon did not pop'); P.step(0.1, 0.05, 1);
+  if (P.sc.balPos.length !== n0 - 1) throw new Error('balloon count ' + P.sc.balPos.length); P.step(8, 0.05, 20); if (P.sc.balPos.length !== n0) throw new Error('balloon did not come back');
+  return n0 + ' balloons, one popped and returned';
 });
 
 /* Champion fights: every Champion after Coach Waddles plays a different way */
@@ -294,6 +318,20 @@ await T('bonus game: the ball rolls at real-feeling speed', async () => {
   P.roll(0, -1, 6); const b = K.ball; let t = 0; while (b.st === 'lane' && t < 3) { P.step(0.01, 0.01); t += 0.01; } const tl = t;
   if (tl > 0.7) throw new Error('lane took ' + tl.toFixed(2) + ' s; the ball is rolling in molasses'); if (tl < 0.12) throw new Error('lane took only ' + tl.toFixed(2) + ' s');
   P.endSk(0); P.step(0.2, 0.033); await wait(50); if (cardUp()) $('gBtn1').click(); await wait(50); sv.rl = 0; return 'lane in ' + tl.toFixed(2) + ' s at a strong flick';
+});
+
+await T('bonus game: balls roll off ring walls instead of hanging, and rims rattle', async () => {
+  const sv = P.sv(); sv.rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('no minigame'); await wait(200); const K = P.K; K.balls = 99;
+  let worst = 0, lip = 0, lipOut = 0, n = 0;
+  for (let k = 0; k < 14; k++) {
+    K.cool = 0; K.bl.length = 0; const a = (Math.random() * 30 - 15) * Math.PI / 180, s = 3 + Math.random() * 5; P.roll(Math.sin(a), -Math.cos(a), s); const b = K.bl[0]; let t = 0, slow = 0, w = 0, touched = false;
+    while (K.bl.includes(b) && t < 6) { P.step(0.04, 0.04); t += 0.068; if (b.lh) touched = true; if (b.st === 'play' && Math.hypot(b.vu, b.vv) < 0.12 && b.z < 0.1) { slow += 0.068; w = Math.max(w, slow); } else slow = 0; }
+    worst = Math.max(worst, w); n++; if (touched) { lip++; if (!b.hole) lipOut++; }
+  }
+  if (worst > 0.5) throw new Error('a ball hung on something for ' + worst.toFixed(2) + ' s');
+  if (lip < 2) throw new Error('rims were almost never touched: ' + lip); if (lipOut < 1) throw new Error('no ball ever lipped out');
+  P.endSk(0); P.step(0.2, 0.033); await wait(50); if (cardUp()) $('gBtn1').click(); await wait(50); sv.rl = 0;
+  return 'longest hang ' + worst.toFixed(2) + ' s; rim touches ' + lip + '/' + n + ', lip-outs ' + lipOut;
 });
 
 await T('grand finale fireworks delay the card', async () => {

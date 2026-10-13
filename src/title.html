@@ -130,6 +130,7 @@ body{height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-righ
 .hud{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;gap:.4rem;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left));pointer-events:none;z-index:3}
 .hrow{display:flex;align-items:center;gap:.4rem}
 .prog{display:flex;align-items:center;gap:.28rem;height:1.5rem;padding:0 .45rem 0 .4rem;border-radius:999px;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .14em 0 #b79a63,0 .3em .45em rgba(0,0,0,.18),inset 0 .1em 0 rgba(255,255,255,.7);margin-bottom:.1rem}
+.prog .stg{flex:none;font:inherit;font-weight:900;font-size:.74rem;letter-spacing:.02em;color:#7a4a12;background:linear-gradient(180deg,#ffe38a,#f7b92e);border-radius:999px;padding:.05rem .4rem;box-shadow:0 .08em 0 #b57a14,inset 0 .08em 0 rgba(255,255,255,.7);line-height:1.1}
 .prog .seg{flex:1;height:.62rem;border-radius:999px;background:rgba(122,90,50,.24);overflow:hidden;position:relative;box-shadow:inset 0 .08em .14em rgba(90,60,20,.4)}
 .prog .seg i{position:absolute;inset:0;border-radius:inherit;transform-origin:left center;transform:scaleX(0);background:linear-gradient(180deg,#b6ec8c,#2fa84a 60%,#23863a);transition:transform .35s ease-out}
 .prog .seg[data-now="1"]{box-shadow:inset 0 .08em .14em rgba(90,60,20,.4),0 0 0 .13rem #ffd23f}
@@ -138,7 +139,7 @@ body{height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-righ
 @keyframes medalPulse{50%{transform:scale(1.22) rotate(-6deg)}}
 html[data-calm="1"] .prog svg,html[data-calm="1"] .prog .seg i{animation:none;transition:none}
 html[data-hc="1"] .prog{box-shadow:0 0 0 2.5px #1c0f06}html[data-hc="1"] .prog .seg{box-shadow:inset 0 0 0 2px #1c0f06}
-.game[data-bonus] .prog{display:none}
+.game[data-bonus] .prog{display:none}.game:not([data-bonus]) #waveBox{display:none}
 .pill{display:inline-flex;align-items:center;gap:.35em;min-height:2.3rem;padding:.25em .75em;border-radius:999px;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .14em 0 #b79a63,0 .3em .45em rgba(0,0,0,.18),inset 0 .1em 0 rgba(255,255,255,.7);font:800 .95rem/1 var(--display);color:#4a2b0f;white-space:nowrap}
 .pill[hidden]{display:none}.pill small{font:800 .68rem/1 var(--body);color:#8a6a3c;text-transform:uppercase;letter-spacing:.04em}.pill b{font:800 1rem/1 var(--display)}
 .pill svg{width:1.7em;height:1.7em;flex:none;overflow:visible}
@@ -294,7 +295,7 @@ html[data-lt="1"] .hrow{flex-wrap:wrap}html[data-lt="1"] .pill{font-size:1.1rem;
 <section class="game" id="game" hidden aria-label="Stage 1, Sandy Snack Shore">
 <canvas id="cv" aria-hidden="true"></canvas>
 <div class="hud">
-<div class="prog" id="prog" role="img" aria-label="Stage progress"><span class="seg"><i></i></span><span class="seg"><i></i></span><span class="seg"><i></i></span><span class="seg"><i></i></span><span class="seg"><i></i></span><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#ic-medal"/></svg></div>
+<div class="prog" id="prog" role="img" aria-label="Stage progress"><b class="stg" id="progStg">S1</b><span class="seg"><i></i></span><span class="seg"><i></i></span><span class="seg"><i></i></span><span class="seg"><i></i></span><span class="seg"><i></i></span><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#ic-medal"/></svg></div>
 <div class="hrow"><span class="pill" id="waveBox"><span id="waveTxt">Wave 1 / 8</span></span><span class="pill sm" id="leftPill" title="Penguins left"><small>Left</small><b id="leftTxt">0</b></span><span class="pill sm" id="comboPill" title="Hits in a row"><small>Combo</small><b id="comboTxt">0</b></span><button class="pause" id="bPause" type="button" aria-label="Pause"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-pause"/></svg></button></div>
 <div class="hrow"><span class="pill sm" id="credPill" title="Credits you have won this roll" hidden><small>Won</small><b id="goldTxt">0</b></span><span class="pill sm" title="Your Golden Pineapples"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg><b id="bankTxt">0</b></span><span class="pill sm" title="Trophies collected"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#ic-trophy"/></svg><b id="cupsTxt">0/10</b></span></div>
 </div>
