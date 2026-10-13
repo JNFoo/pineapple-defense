@@ -265,7 +265,6 @@ The game reserves slots for hidden areas and hidden enemies, plus unlock rules. 
 - Exact item list and point prices for each shop slot.
 - Art for the shop screen and the other pineapple types (Cluster, Bowling Pine, Juice Bomb, Rail Gun).
 - Flick feel and cursor-swipe sensitivity tuning from real phone and touchpad testing.
-- Stages 2 to 5 and their Champions.
 
 ## Title screen and logo (alpha 2026.10.12.1556)
 Built and playable in `index.html`. It is made from `src/` by `build.py` (never edit `index.html` by hand).

@@ -6,7 +6,7 @@ A free, silly browser game for kids of all ages: flick pineapples at penguins wh
 
 **Play it:** <https://jnfoo.github.io/pineapple-defense/> (one small file, works offline, no ads, no tracking)
 
-**Status:** early alpha. Stage 1 (Sandy Snack Shore, 8 waves and a boss) is playable. The pictures below are placeholders from the current build; the final art will replace them.
+**Status:** alpha. All five stages are playable, each with its own scenery, lanes, secret spots and Champion. Latest version: 2026.10.12.2307 (see the [changelog](CHANGELOG.md)). The art is still being polished.
 
 <p align="center">
 <img src="docs/img/title.png" alt="Title screen" width="190">
@@ -22,18 +22,25 @@ A free, silly browser game for kids of all ages: flick pineapples at penguins wh
 
 - Flick up from the bottom of the screen toward a penguin. On a touchpad or mouse, swipe up over the game.
 - Penguins that reach your fruit stand make it wobble and lower the **Cheer** meter (the tall bar on the right). Clear waves to cheer it back up.
-- Pick **Classic** (quick, one penguin) or **Lobber** (slower, splashes nearby penguins) at the bottom left.
-- Tap the **pickups** that appear on the table: Zippy, Mega, Cheer up and Brrr give short boosts, and trophies give Golden Pineapples.
-- Spend Golden Pineapples in the **Shop** on the title screen.
-- Calm mode (on the title screen) turns off bobbing, confetti and other motion.
+- Pick **Classic** (quick, free) or **Lobber** (slower, splashes nearby penguins, costs 2 Golden Pineapples a throw) at the bottom left. Mega pineapples (a pickup) splash the most and cost 3.
+- Golden Pineapples are your bank, shown at the top. Every penguin pays out as you dispatch it: Rockhopper 1, Adélie 3, Gentoo 6, Champion 12.
+- At the end of each stage a **Champion** waits with shields, dodges and helpers. Penguins walk around Champions rather than through them.
+- Keep an eye out for **fish on parachutes**. A penguin that eats one levels up (Rockhopper, Adélie, Gentoo) and gets faster and tougher, but you can still hit it at any moment.
+- Tap the **pickups** on your table: Zippy (fast throws), Mega (splash), Cheer up and Toasty (sleepy, slow penguins). Trophies pay Golden Pineapples. Each stage also hides one secret tap spot on each side.
+- **Combos:** every hit within a second and a half chains, whether it comes from your slingshot, the Auto Slingshot or one big splash. The call gets louder as the chain grows.
+- **Shop** (title screen): Auto Slingshot, Faster Fling, Better Pineapples, **Gull Pals** (gulls snatch the falling fish), **Paper Umbrellas** (a last resort that flings a penguin about to knock the cheer down) and **Air Raid** (a row of pineapples falls across the lanes where the most penguins are; press the Raid button or R).
+- **Runs:** clearing all five stages is a run. Each finished run makes penguins and Champions 10% faster (up to double speed) and brings a new challenge and more trophies. Losing a wave and trying again keeps your streak; quitting the run and starting over from stage 1 resets it. After a run you can **Save and restart** or **Reset completely** (trophies always stay).
+- Keys: P or Esc pauses, R calls the Air Raid, 1 and 2 pick the pineapple. Calm mode (title screen) turns off bobbing, confetti and other motion.
 
 ## Project
 
 - Design brief: [docs/pineapple-defense-design.md](docs/pineapple-defense-design.md)
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
+- QA and build process: [docs/qa-process.md](docs/qa-process.md)
 - Build: `python3 build.py` makes the single-file `index.html` from `src/` (needs `fonttools`). Don't edit `index.html` by hand.
 - Packed single file: `python3 tools/pack.py` makes one smaller, self-unpacking `.html` in `dist/`.
-- Checks: `python3 -I tools/qa.py` (add `--ff` for Firefox). Release: `python3 -I tools/release.py`. See `docs/qa-process.md`.
-- Tested in Chromium. Targets: Android Chrome, Firefox and Chromium-based desktop browsers.
+- Checks: `python3 -I tools/qa.py` (add `--ff` for Firefox). Release: `python3 -I tools/release.py`.
+- Tested in Chromium and Firefox 158. Targets: Android Chrome, Firefox and Chromium-based desktop browsers.
 
 Copyright © 2026 JNFoo. All rights reserved.
 Fonts: Bricolage Grotesque and Figtree (SIL OFL 1.1, see `src/fonts/`). `sticker-text` from JS-modules (MIT, see header in `src/vendor/`). LZMA decoder: lzma-js (MIT, see `src/vendor/lzma/`).
