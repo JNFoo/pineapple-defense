@@ -216,7 +216,7 @@ function raidBand() {
   var best = 0.5, bn = -1, p, i, n, pg;
   for (p = 0.14; p <= 0.9; p += 0.03) {
     n = 0; for (i = 0; i < penguins.length; i++) { pg = penguins[i]; if (pg.st === 'walk' && Math.abs(pg.p - p) < 0.05) n++; }
-    if (S.boss && S.boss.st === 'hold' && Math.abs(S.boss.p - p) < 0.06) n += 2;
+    if (bossOpen(S.boss) && Math.abs(S.boss.p - p) < 0.06) n += 2;
     if (n > bn || (n === bn && p > best)) { bn = n; best = p; }
   }
   return bn <= 0 ? 0.5 : best;
@@ -244,7 +244,7 @@ function updateRaid(dt) {
       if (Math.abs(pg.p - r.p) < 0.07 && Math.abs(px(pg.xn, pg.p) - x) < s * 0.62) { c = penCenter(pg); hitPenguin(pg, c.x, c.y - c.s * 0.2); if (pg.st === 'hit') r.hits++; }
     }
     b = S.boss;
-    if (b && !r.bossHit && b.st === 'hold' && Math.abs(b.p - r.p) < 0.1 && Math.abs(px(b.xn, b.p) - x) < s * 0.7 * (b.big || 1)) { r.bossHit = true; hitBoss(1, penCenter(b)); }
+    if (b && !r.bossHit && bossOpen(b) && Math.abs(b.p - r.p) < 0.1 && Math.abs(px(b.xn, b.p) - x) < s * 0.7 * (b.big || 1)) { r.bossHit = true; hitBoss(1, penCenter(b)); }
   }
   if (r.t > RAID_WARN + r.n * RAID_GAP + RAID_FALL + 0.2) { if (r.hits >= 4) award(13); S.raid = null; }
 }
@@ -331,7 +331,7 @@ function launchLime(i) {
 function limeHit(m) {
   var b = S.boss, tp = limeTgt(m);
   curSrc = 1;
-  if (b && b.st === 'hold') hitBoss(1, penCenter(b));
+  if (bossOpen(b)) hitBoss(1, penCenter(b));
   burst(tp.x, tp.y, 9, LIME_COL); sparkBurst(tp.x, tp.y, 4, LIME_COL);
   if (!calm) rings.push({ x: tp.x, y: tp.y, t: 0, ttl: 0.35, r: psz(0.4) * 0.35, c: '166,227,74' });
 }
@@ -340,17 +340,18 @@ function updateLime(dt) {
   for (i = S.ms.length - 1; i >= 0; i--) {
     m = S.ms[i]; m.t += dt; tp = limeTgt(m); u = Math.min(1, m.t / LIME_T); uu = 0.3 * u + 0.7 * u * u;
     var cx = m.x0 + (tp.x - m.x0) * 0.3 + m.side * W * 0.07, cy = Math.min(m.y0, tp.y) - H * 0.1, k = 1 - uu;
-    if (m.h.length > 7) m.h.shift(); m.h.push(m.x, m.y);
+    if (m.h.length > 30) { m.h.shift(); m.h.shift(); } m.h.push(m.x, m.y);
     m.x = k * k * m.x0 + 2 * k * uu * cx + uu * uu * tp.x; m.y = k * k * m.y0 + 2 * k * uu * cy + uu * uu * tp.y;
     m.ang = Math.atan2(2 * k * (cy - m.y0) + 2 * uu * (tp.y - cy), 2 * k * (cx - m.x0) + 2 * uu * (tp.x - cx));
+    if (!calm) { var sp = Math.sin(m.t * 30 + m.i * 2) * Math.min(W, H) * 0.028 * Math.min(1, u * 6) * (1 - 0.7 * u); m.x += -Math.sin(m.ang) * sp; m.y += Math.cos(m.ang) * sp; }   /* a tight corkscrew around the path, like a spiralling football */
     if (m.t >= LIME_T) { limeHit(m); S.ms.splice(i, 1); }
   }
   if (!sv.lm) return;
   if (b !== L.fb) { L.fb = b; L.sup = b ? limeSup() : 0; L.cd = Math.min(L.cd, 0.4); }   /* a fresh Champion means a fresh supply */
-  can = !!b && b.st === 'hold' && S.mode === 'boss' && !S.over;
+  can = bossOpen(b) && S.mode === 'boss' && !S.over;
   L.cd = Math.max(0, L.cd - dt);
   if (can && L.sup > 0 && L.cd <= 0) { launchLime(L.n++); L.sup--; L.cd = limeInt(); }
-  if (can && L.sup > 0) { c = penCenter(b); po = pouchPos(limeGeom(), L.a); ta = Math.max(-0.3, Math.min(0.3, Math.atan2(c.x - po.x, po.y - c.y))); }
+  if (can && L.sup > 0) { c = penCenter(b); po = pouchPos(limeGeom(), L.a); ta = Math.max(-AUTO_TURN, Math.min(AUTO_TURN, Math.atan2(c.x - po.x, po.y - c.y) * 0.3)); }
   L.a += (ta - L.a) * Math.min(1, dt * 9);
 }
 function drawMissiles() {
@@ -359,11 +360,145 @@ function drawMissiles() {
   var im = limeSprite();
   for (i = 0; i < S.ms.length; i++) {
     m = S.ms[i]; h = m.h; n = h.length / 2;
-    if (!calm) for (j = 0; j < n; j++) {
-      ctx.globalAlpha = 0.5 * (j + 1) / (n + 1); ctx.fillStyle = j & 1 ? '#d8ff7a' : '#a6e34a';
-      ctx.beginPath(); ctx.arc(h[j * 2], h[j * 2 + 1], sz * 0.2 * (j + 1) / (n + 1), 0, 6.3); ctx.fill();
+    if (!calm) for (j = 0; j < n; j++) {   /* vapor trail: puffs that grow and fade as they age, following the corkscrew */
+      var age = 1 - (j + 1) / (n + 1);
+      ctx.globalAlpha = 0.9 * (1 - age * 0.85); ctx.fillStyle = j & 1 ? '#ffffff' : '#d6ff8a';
+      ctx.beginPath(); ctx.arc(h[j * 2], h[j * 2 + 1], sz * (0.13 + 0.22 * age), 0, 6.3); ctx.fill();
     }
-    ctx.globalAlpha = 1; ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(calm ? 0 : m.t * 9 * (m.side || 1));   /* the lime tumbles on its way */
+    /* the lime flies long axis first and rolls about it, so it looks like a spiralling football */
+    ctx.globalAlpha = 1; ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.ang - Math.PI / 2);
+    var roll = calm ? 1 : Math.cos(m.t * 30 + m.i * 2 + 1.2);
+    ctx.scale(0.78 + 0.16 * roll, 1.22);
     ctx.drawImage(im, -sz / 2, -sz / 2, sz, sz); ctx.restore();
+  }
+}
+
+/* ---------- Champion fight styles: each Champion after Coach Waddles plays a different kind of fight ----------
+   Waddles  ring    pop his snowballs, then hit him (the original fight)
+   Flipper  peek    he hides behind three ice blocks and pops up behind one; hit him only while he is up
+   Slidealot charge he runs at your table; every hit knocks him back, reaching the table costs Cheer
+   Mohawk   guard   a squad shields her; clear the squad and she is open for a few seconds, then a bigger squad comes
+   Bernard  clones  icy clones stand beside the real Bernard; clones pop, only the solid one takes damage */
+var SLOT_X = [-0.6, 0, 0.6], GUARD_OPEN = 3.4;
+function bossOpen(b) { return !!b && b.st === 'hold' && !b.safe; }
+function champMode() { return S && S.stage ? CHAMP[S.stage].mode || '' : ''; }
+function champInit(b) { b.slot = 1; b.pk = 'hid'; b.pt = 0.9; b.gs = 0; b.n = 3; b.stun = 0; b.safe = false; b.shuf = 5; b.cl0 = 0; b.cr = 0; S.clones = []; }
+function champHidden(b) { return champMode() === 'peek' && b.st === 'hold' && b.pk !== 'up'; }
+function freeSlot(b) { var i, j, ok; for (i = 0; i < 3; i++) { ok = i !== b.slot; for (j = 0; j < S.clones.length && ok; j++) if (S.clones[j].slot === i) ok = false; if (ok) return i; } return -1; }
+function makeDecoy(b, slot) {
+  var d = { id: ++S.id, kind: b.kind, xn: SLOT_X[slot], p: b.p, v: 0, st: 'hold', t: 0, mood: 'happy', ph: Math.random() * 6, hp: 1, ev: 0, evT: 0, pop: 0, hat: false, a: 0.7, big: b.big, side: 1, slot: slot, ice: 1, decoy: true, x0: 0, x1: 0 };
+  burst(px(d.xn, d.p), py(d.p), 6, SNOW_COL); return d;
+}
+function champShuffle(b) {
+  var o = [0, 1, 2], i, j, t;
+  for (i = 2; i > 0; i--) { j = (Math.random() * (i + 1)) | 0; t = o[i]; o[i] = o[j]; o[j] = t; }
+  b.slot = o[0]; b.xn = SLOT_X[o[0]]; S.clones = [];
+  S.clones.push(makeDecoy(b, o[1])); S.clones.push(makeDecoy(b, o[2]));
+  burst(px(b.xn, b.p), py(b.p), 8, SNOW_COL); b.shuf = 6.5; b.cr = 0;
+}
+function callSquad(b) {
+  var n = Math.min(5, b.n), i; b.n++;
+  for (i = 0; i < n; i++) spawn();
+  popText(px(b.xn, b.p), py(b.p) - psz(b.p) * 1.5, 'Squad up!', '#9b3fd0', 1);
+}
+function champUpdate(b, dt) {
+  var m = champMode(), i, alive, np;
+  if (m === 'peek') {
+    b.pt -= dt * slowK;
+    if (b.pk === 'hid' && b.pt <= 0) { do { np = (Math.random() * 3) | 0; } while (np === b.slot); b.slot = np; b.xn = SLOT_X[np]; b.pk = 'tell'; b.pt = 0.85; }
+    else if (b.pk === 'tell' && b.pt <= 0) { b.pk = 'up'; b.pt = 2.4; b.mood = 'giggle'; burst(px(b.xn, b.p), py(b.p) - psz(b.p) * 0.6, 8, SNOW_COL); }
+    else if (b.pk === 'up' && b.pt <= 0) { b.pk = 'hid'; b.pt = 1.0; b.mood = 'happy'; burst(px(b.xn, b.p), py(b.p) - psz(b.p) * 0.4, 6, SNOW_COL); }
+    b.safe = b.pk !== 'up'; b.lift = b.pk === 'up' ? Math.min(0.3, (2.4 - b.pt) * 2) : 0;
+  } else if (m === 'charge') {
+    if (b.stun > 0) { b.stun -= dt; b.mood = 'pout'; }
+    else {
+      b.mood = 'wow'; b.p += (0.08 + 0.018 * (CHAMP[S.stage].hp - b.hp)) * dt * slowK;
+      b.puff -= dt; if (b.puff <= 0) { b.puff = 0.11; burst(px(b.xn, b.p), py(b.p), 2, SNOW_COL); }
+      if (b.p >= 0.9) {
+        S.cheer = Math.max(0, S.cheer - 20); S.wob = 1; S.bumps++; S.allBumps++; S.shk = Math.max(S.shk, 0.8);
+        popText(px(b.xn, b.p), py(b.p) - psz(b.p) * 1.4, 'BONK!', '#b8321f', 1); burst(px(b.xn, b.p), py(b.p), 14, SNOW_COL);
+        b.p = 0.48; b.stun = 1.4; if (S.cheer <= 0) endStage(false);
+      }
+    }
+  } else if (m === 'guard') {
+    alive = 0; for (i = 0; i < penguins.length; i++) if (penguins[i].st === 'walk') alive++;
+    if (b.gs === 0) { callSquad(b); b.gs = 1; }
+    else if (b.gs === 1 && alive === 0) { b.gs = 2; b.pt = GUARD_OPEN; popText(px(b.xn, b.p), py(b.p) - psz(b.p) * 1.5, 'Get her!', '#d4380d', 1); sparkBurst(px(b.xn, b.p), py(b.p) - psz(b.p) * 0.5, 10, ['#ff6fa8', '#fff7e3', '#ffd23f']); }
+    else if (b.gs === 2) { b.pt -= dt * slowK; if (b.pt <= 0) b.gs = 0; }
+    b.safe = b.gs !== 2;
+  } else if (m === 'clones') {
+    if (!b.cl0) { b.cl0 = 1; champShuffle(b); }
+    b.shuf -= dt * slowK; if (b.shuf <= 0) champShuffle(b);
+    for (i = 0; i < S.clones.length; i++) S.clones[i].ph += dt * 5;
+    if (S.clones.length < 2) { b.cr += dt; if (b.cr >= 3) { b.cr = 0; np = freeSlot(b); if (np >= 0) S.clones.push(makeDecoy(b, np)); } }
+  }
+}
+/* a Champion was hit: kind 0 popped a snowball, kind 1 took a heart */
+function champHit(b, kind) {
+  var m = champMode();
+  if (m === 'charge') b.p = Math.max(0.3, b.p - (kind ? 0.16 : 0.05));
+}
+/* a Champion is back from being hit */
+function champReset(b) {
+  var m = champMode();
+  if (m === 'peek') { b.pk = 'hid'; b.pt = 1.0; b.safe = true; }
+  else if (m === 'guard') { b.gs = 0; b.safe = true; }
+  else if (m === 'clones') champShuffle(b);
+  else if (m === 'charge') { b.stun = 0.6; }
+}
+function poofDecoy(d, x, y) {
+  var i = S.clones.indexOf(d); if (i >= 0) S.clones.splice(i, 1);
+  burst(x, y, 12, SNOW_COL); sparkBurst(x, y, 8, ['#ffffff', '#bfe8ff', '#8fd8ff']); popText(x, y - psz(d.p) * 0.4, 'Ice clone!', '#2f6f9f');
+}
+/* a pineapple lands at (xE, yE): clones pop, shielded Champions and ice blocks turn it away. True when it was used up. */
+function champLand(s) {
+  var m = champMode(), i, c, d, b = S.boss, any = false, ty = s.ty, r = ty.splash ? ty.splash : 0.8, best = null, bd = 9, bk;
+  if (!b) return false;
+  if (m === 'clones') {
+    for (i = S.clones.length - 1; i >= 0; i--) {
+      d = S.clones[i]; c = penCenter(d); bk = Math.hypot(c.x - s.xE, c.y - s.yE) / c.s;
+      if (bk < r) { if (!ty.splash && bk >= bd) continue; if (!ty.splash) { best = d; bd = bk; } else { poofDecoy(d, c.x, c.y - c.s * 0.2); any = true; } }
+    }
+    if (best) {
+      c = penCenter(best); var cb = penCenter(b);   /* the real one wins if the pineapple is nearer to him */
+      if (!(bossOpen(b) && Math.hypot(cb.x - s.xE, cb.y - s.yE) / cb.s < bd)) { poofDecoy(best, c.x, c.y - c.s * 0.2); if (!s.auto) S.streak = 0; return true; }
+    }
+    return false;
+  }
+  if (b.st === 'hold' && b.safe && !ty.splash) {
+    if (m === 'peek') {
+      for (i = 0; i < 3; i++) { c = penCenter({ xn: SLOT_X[i], p: b.p, big: 0.62 }); if (Math.hypot(c.x - s.xE, c.y - s.yE) / (c.s * 1.2) < 0.7) { burst(c.x, c.y, 8, SNOW_COL); popText(c.x, c.y - c.s * 0.5, 'Clink!', '#2f6f9f'); if (!s.auto) S.streak = 0; return true; } }
+    } else if (m === 'guard') {
+      c = penCenter(b); if (Math.hypot(c.x - s.xE, c.y - s.yE) / c.s < 0.8) { sparkBurst(c.x, c.y, 8, ['#ff6fa8', '#fff7e3']); popText(c.x, c.y - c.s * 0.4, 'Shielded!', '#9b3fd0'); if (!s.auto) S.streak = 0; return true; }
+    }
+  }
+  return false;
+}
+/* ice block and squad bubble art */
+function drawIceBlock(x, y, sz) {
+  stamp('ice' + Math.round(sz), x, y, Math.ceil(sz * 1.3), Math.ceil(sz * 1.2), Math.ceil(sz * 1.3) / 2, Math.ceil(sz * 1.2) - 2, function (ox, oy) {
+    var w = sz * 0.98, h = sz * 0.9, g = ctx.createLinearGradient(0, oy - h, 0, oy);
+    g.addColorStop(0, '#f2fcff'); g.addColorStop(0.55, '#bfe6f7'); g.addColorStop(1, '#86c4e4');
+    ctx.fillStyle = g; ctx.strokeStyle = '#4f93bb'; ctx.lineWidth = Math.max(2, sz * 0.04); ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(ox - w / 2 + sz * 0.1, oy - h); ctx.lineTo(ox + w / 2 - sz * 0.1, oy - h); ctx.quadraticCurveTo(ox + w / 2, oy - h, ox + w / 2, oy - h + sz * 0.1); ctx.lineTo(ox + w / 2, oy - sz * 0.06); ctx.quadraticCurveTo(ox + w / 2, oy, ox + w / 2 - sz * 0.08, oy); ctx.lineTo(ox - w / 2 + sz * 0.08, oy); ctx.quadraticCurveTo(ox - w / 2, oy, ox - w / 2, oy - sz * 0.06); ctx.lineTo(ox - w / 2, oy - h + sz * 0.1); ctx.quadraticCurveTo(ox - w / 2, oy - h, ox - w / 2 + sz * 0.1, oy - h); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = Math.max(2, sz * 0.07); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(ox - w * 0.34, oy - h * 0.82); ctx.lineTo(ox - w * 0.34, oy - h * 0.42); ctx.moveTo(ox - w * 0.34, oy - h * 0.3); ctx.lineTo(ox - w * 0.34, oy - h * 0.26); ctx.stroke();
+    ctx.strokeStyle = 'rgba(79,147,187,.55)'; ctx.lineWidth = Math.max(1, sz * 0.025); ctx.beginPath(); ctx.moveTo(ox + w * 0.1, oy - h * 0.9); ctx.lineTo(ox + w * 0.02, oy - h * 0.6); ctx.lineTo(ox + w * 0.2, oy - h * 0.45); ctx.moveTo(ox - w * 0.1, oy - h * 0.2); ctx.lineTo(ox + w * 0.05, oy - h * 0.05); ctx.stroke();
+  });
+}
+function drawIceAura(x, y, s) {
+  var g = gk('iceaura', function () { var q = ctx.createRadialGradient(0, 0, 0, 0, 0, 50); q.addColorStop(0, 'rgba(190,235,255,.6)'); q.addColorStop(1, 'rgba(190,235,255,0)'); return q; });
+  ctx.save(); ctx.translate(x, y - s * 0.45); ctx.scale(s * 0.95 / 50, s * 0.95 / 50); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 50, 0, 6.3); ctx.fill(); ctx.restore();
+}
+function drawChampArt(b) {
+  var m = champMode(), i, s, x, c, sh, bs;
+  if (b.st === 'walk' || b.st === 'slide' || b.st === 'gone') return;
+  if (m === 'peek') {
+    s = psz(b.p) * b.big * 0.56;
+    for (i = 0; i < 3; i++) { sh = (b.pk === 'tell' && i === b.slot && !calm) ? Math.sin(S.t * 55) * s * 0.05 : 0; drawIceBlock(px(SLOT_X[i], b.p) + sh, py(b.p) + s * 0.04, s); }
+  } else if (m === 'guard' && b.safe && b.st === 'hold') {
+    c = penCenter(b); bs = c.s * 0.64;
+    ctx.save(); ctx.globalAlpha = 0.26; ctx.fillStyle = '#ff9fcd'; ctx.beginPath(); ctx.ellipse(c.x, c.y, bs, bs * 1.12, 0, 0, 6.3); ctx.fill();
+    ctx.globalAlpha = 0.85; ctx.strokeStyle = '#d63a8a'; ctx.lineWidth = Math.max(2, c.s * 0.025); ctx.setLineDash([c.s * 0.08, c.s * 0.05]); ctx.lineDashOffset = calm ? 0 : -S.t * 20; ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha = 0.6; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(c.x - bs * 0.4, c.y - bs * 0.55, bs * 0.16, bs * 0.08, -0.6, 0, 6.3); ctx.fill(); ctx.restore();
   }
 }

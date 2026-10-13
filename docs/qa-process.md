@@ -17,6 +17,7 @@ Copyright (c) 2026 JNFoo. All rights reserved.
 ## What it checks
 - All five stages start and run with the auto-player; no NaN positions, cheer in range, bank a whole non-negative number, particle and shot lists bounded.
 - Lime Launcher tiers (never more limes than 6 / 12 / 20 per fight), Lime Launcher (no missiles without it; with it, shield snowballs pop before the Champion loses health; missiles in flight stay bounded), combo calls, paper umbrellas (no cheer loss, stock counts), Air Raid (stock, one at a time), gulls (grab and leave), run speed math and its cap.
+- Champion fights (Flipper only hurt while up, Slidealot charges and is knocked back and the table bonk costs Cheer, Mohawk shielded by her squad then open, Bernard's clones pop and never exceed two), thrown pineapples (harder flick lands farther, a miss stays put, a vanished target is flown past), the auto slingshot's small turn.
 - Comfort settings (left-handed mirror, aim help widths, the 3-2-1 resume countdown, large text, high contrast), stage replay (credits paid, saved run untouched, best scores), shop Try it (save restored afterwards) and Undo (refund), the next-goal chip.
 - Card flows: stage clear cards, the run-end card (Save and restart, Reset completely, the confirm step, trophies kept), pause keys.
 - Random-action fuzzing of raids, pickups, gulls, combos, pauses, taps and zones across every stage, clicking through win and lose cards.

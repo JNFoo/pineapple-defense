@@ -198,10 +198,10 @@ The game reserves slots for hidden areas and hidden enemies, plus unlock rules. 
 | Stage | Rank | Name | Gimmick |
 |---|---|---|---|
 | 1 | Bronze | Coach Waddles | Hides behind a shield of snowballs; hit the snowballs first |
-| 2 | Silver | Captain Flipper | Dodges sideways; lead your shot |
-| 3 | Gold | Sir Slidealot | Belly-slides fast across the screen |
-| 4 | Platinum | Madame Mohawk | Calls in helper penguins |
-| 5 | Grand | Grand Champion Bernard | Uses every trick above |
+| 2 | Silver | Captain Flipper | Hides behind three ice blocks and pops up behind one; hit him only while he is up |
+| 3 | Gold | Sir Slidealot | Charges at your table; hits knock him back, reaching the table costs Cheer |
+| 4 | Platinum | Madame Mohawk | Shielded by her squad; clear the squad and she is open for a few seconds |
+| 5 | Grand | Grand Champion Bernard | Icy clones stand beside him; clones pop, only the solid one is hurt |
 
 **Story card** (Play screen, short and giggly): "The penguins can't eat tropical fruit, and they can't visit the tropics. So they're a little jealous! Flick pineapples to send them home giggling. Nobody gets hurt!"
 
@@ -361,3 +361,10 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Lime Launcher supply (replaces Rapid Limes and Lime Volley):** `LM.sup = [6, 12, 20]` limes per Champion fight, one every `LM.gap` = 0.8 s (halved by Zippy) while a Champion holds. `S.lm.fb` remembers the Champion, so a new Champion refills the supply. The sprite is a whole lime with a leaf; the flying lime tumbles instead of pointing like a rocket. Save field `lm` (0 to 3) is unchanged, so old saves keep their tier.
 - **Warm-up queue (`warmAll`, `warmUmb`):** small sprite copies and the three umbrella canopies are built one at a time right after loading and at the start of each stage, so no frame pays for them the first time.
 - Gulls: start at 22% to 32% of the height, dip a little lower on the swoop, slightly bigger.
+
+### Round 32: champion fight styles, thrown pineapples
+- **Fight styles (`CHAMP[n].mode`, code in the "Champion fight styles" section of extras.js):** `peek` (Flipper: three ice blocks at `SLOT_X = [-0.6, 0, 0.6]`; cycle hide 1.0 s, a shaking block 0.85 s, up 2.4 s; shots at blocks clink), `charge` (Slidealot: advances at 0.08 + 0.018 per heart lost; a hit knocks him back 0.16, a snowball 0.05; reaching the table costs 20 Cheer and sends him back with a 1.4 s daze), `guard` (Mohawk: a squad of 3, then 4, then 5 penguins; she is shielded until the last one is gone, then open for 3.4 s; a hit calls the next squad), `clones` (Bernard: two icy decoys, translucent and blue, that pop when hit and come back after 3 s; the real one is solid; everyone reshuffles after each hit or every 6.5 s). Waddles keeps the snowball ring and the original rules.
+- `b.safe` marks a Champion who is present but cannot be hurt right now; `bossOpen(b)` is `hold` and not `safe` and is what the auto slingshot, the lime launcher, the Air Raid and the throw aim use. Each Champion shows a short tip when the fight starts.
+- **Thrown pineapples:** with nothing to aim at, a harder flick now lands farther up the lane (it used to land nearer); a miss lands with a puff and fades where it landed instead of sliding. A pineapple aimed at a penguin that is gone by the time it arrives flies on along its line and falls farther up the lane, and can still hit whoever is there.
+- **Lime flight:** each lime follows its curved path plus a corkscrew offset (about 2.8% of the screen, fading near the target), points along its direction and rolls about its long axis; the vapor trail is up to 15 fading puffs that grow with age. Calm mode has neither.
+- **Auto slingshot and Lime Launcher** only turn up to 0.12 rad toward their target (about 7 degrees), no leaning.

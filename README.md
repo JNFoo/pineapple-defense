@@ -6,7 +6,7 @@ A free, silly browser game for kids of all ages: flick pineapples at penguins wh
 
 **Play it:** <https://jnfoo.github.io/pineapple-defense/> (one small file, works offline, no ads, no tracking)
 
-**Status:** alpha. All five stages are playable, each with its own scenery, lanes, secret spots and Champion. Latest version: 2026.10.13.0956 (see the [changelog](CHANGELOG.md)). The art is still being polished.
+**Status:** alpha. All five stages are playable, each with its own scenery, lanes, secret spots and Champion. Latest version: 2026.10.13.1256 (see the [changelog](CHANGELOG.md)). The art is still being polished.
 
 <p align="center">
 <img src="docs/img/title.png" alt="Title screen" width="190">
@@ -24,7 +24,7 @@ A free, silly browser game for kids of all ages: flick pineapples at penguins wh
 - Penguins that reach your fruit stand make it wobble and lower the **Cheer** meter (the tall bar on the right). Clear waves to cheer it back up.
 - Pick **Classic** (quick, free) or **Lobber** (slower, splashes nearby penguins, costs 2 Golden Pineapples a throw) at the bottom left. Mega pineapples (a pickup) splash the most and cost 3.
 - Golden Pineapples are your bank, shown at the top. Every penguin pays out as you dispatch it: Rockhopper 1, Adélie 3, Gentoo 6, Champion 12.
-- At the end of each stage a **Champion** waits with shields, dodges and helpers. Penguins walk around Champions rather than through them.
+- At the end of each stage a **Champion** waits, and each one fights in a different way: **Coach Waddles** hides behind a ring of snowballs; **Captain Flipper** ducks behind three ice blocks and pops up behind one (a shaking block gives it away); **Sir Slidealot** charges at your table and every hit knocks him back; **Madame Mohawk** is shielded by her squad until you clear it; **Grand Champion Bernard** brings icy clones, and only the solid Bernard counts. Penguins walk around Champions rather than through them.
 - Keep an eye out for **fish on parachutes**. A penguin that eats one levels up (Rockhopper, Adélie, Gentoo) and gets faster and tougher, but you can still hit it at any moment.
 - Tap the **pickups** on your table: Zippy (fast throws), Mega (splash), Cheer up and Toasty (sleepy, slow penguins). Trophies pay Golden Pineapples. Each stage also hides one secret tap spot on each side.
 - **Combos:** every hit within a second and a half chains, whether it comes from your slingshot, the Auto Slingshot or one big splash. The call gets louder as the chain grows.

@@ -112,11 +112,12 @@ function flag(x, y, s, t, c1, c2) {
 
 /* ---------- Champions: a recolored Coach Waddles with their own gear ---------- */
 var CHAMP = [null,
-  { n: 'Coach Waddles', s: 'Waddles', rank: 'Bronze', kind: 'cw', hp: 3, shield: 4, help: 3.6, big: 1.35 },
-  { n: 'Captain Flipper', s: 'Flipper', rank: 'Silver', kind: 'c2', hp: 4, shield: 3, dodge: 0.6, om: 1.6, help: 3.8, big: 1.35 },
-  { n: 'Sir Slidealot', s: 'Slidealot', rank: 'Gold', kind: 'c3', hp: 5, shield: 3, slide: 3.2, help: 3.6, big: 1.35 },
-  { n: 'Madame Mohawk', s: 'Mohawk', rank: 'Platinum', kind: 'c4', hp: 5, shield: 3, call: 2, help: 2.2, big: 1.4 },
-  { n: 'Grand Champion Bernard', s: 'Bernard', rank: 'Grand', kind: 'c5', hp: 6, shield: 3, dodge: 0.32, om: 1.7, slide: 3.4, call: 1, help: 2.6, big: 1.5 }
+  { n: 'Coach Waddles', s: 'Waddles', rank: 'Bronze', kind: 'cw', hp: 3, shield: 4, help: 3.6, big: 1.35, tip: 'Pop the snowballs, then hit him!' },
+  /* each Champion after the first plays a different kind of fight (see "Champion fight styles" in extras.js) */
+  { n: 'Captain Flipper', s: 'Flipper', rank: 'Silver', kind: 'c2', hp: 4, shield: 0, mode: 'peek', noRegen: 1, help: 4.2, big: 1.35, tip: 'A shaking block means he pops up there!' },
+  { n: 'Sir Slidealot', s: 'Slidealot', rank: 'Gold', kind: 'c3', hp: 5, shield: 2, mode: 'charge', noRegen: 1, nohelp: 1, big: 1.35, tip: 'He charges! Every hit knocks him back.' },
+  { n: 'Madame Mohawk', s: 'Mohawk', rank: 'Platinum', kind: 'c4', hp: 4, shield: 0, mode: 'guard', noRegen: 1, nohelp: 1, big: 1.4, tip: 'Clear her squad, then hit her!' },
+  { n: 'Grand Champion Bernard', s: 'Bernard', rank: 'Grand', kind: 'c5', hp: 6, shield: 3, mode: 'clones', help: 3.4, big: 1.5, tip: 'Only the solid Bernard is real!' }
 ];
 var CHAMP_LOOK = {
   c2: { cap: '#24457a', band: '#a82a1f', medal: '#c4ccd8', medal2: '#f0f4fa', ribbon: '#1f9aa8', vars: '--ad-hi:#6f7f9a;--ad-mid:#34425e;--ad-lo:#141b2e',

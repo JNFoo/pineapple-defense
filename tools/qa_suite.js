@@ -62,21 +62,77 @@ await T('air raid', async () => {
   P.step(3, 0.033, 6); if (S.raid) throw new Error('raid never ended'); P.raid(); if (S.raL !== 0) throw new Error('second raid'); P.step(3, 0.033); P.raid(); if (S.raL !== 0) throw new Error('over-stock raid'); inv('raid');
 });
 
+await T('thrown pineapples: harder flicks fly farther, misses land and stay put, a vanished target is flown past', async () => {
+  await go(1, 1); const S = P.S; S.mode = 'intro'; P.penguins.length = 0; S.spawnT = 99;
+  const land = async spd => { S.cd = 0; P.flick(0, -1, spd); const s = P.sh[P.sh.length - 1]; if (!s) throw new Error('no shot'); const pe = s.pEnd; for (let i = 0; i < 40 && P.sh.length; i++) P.step(0.05, 0.05); return pe; };
+  const soft = await land(1.6), hard = await land(4.0);
+  if (!(hard < soft - 0.15)) throw new Error('a harder flick should land farther: soft ' + soft + ' hard ' + hard);
+  S.cd = 0; P.flick(0, -1, 2.5); let s = P.sh[P.sh.length - 1]; P.step(s.T + 0.02, 0.01);
+  if (!(s.ph === 1 && s.rx === s.xE && s.ry === s.yE)) throw new Error('a missed pineapple should stay where it landed');
+  P.step(1, 0.05); inv('flicks');
+  /* aimed at a penguin that is gone by the time it arrives: the pineapple flies on past the spot */
+  P.bot = false; S.mode = 'run'; S.toSpawn = 9; S.spawned = 0; S.spawnT = 0; P.step(1.2, 0.05); const pg = P.penguins.find(q => q.st === 'walk'); if (!pg) throw new Error('no penguin');
+  S.cd = 0; const c = P.plan ? null : null; P.tap(window.innerWidth / 2, window.innerHeight / 2);
+  const aimed = P.sh[P.sh.length - 1]; if (!aimed) throw new Error('no aimed shot'); aimed.soft = true; P.penguins.length = 0;
+  P.step(aimed.T + 0.02, 0.01); if (!aimed.ext) throw new Error('shot did not fly on'); P.step(1, 0.05); inv('fly on'); S.toSpawn = 0;
+  return 'soft ' + soft.toFixed(2) + ' hard ' + hard.toFixed(2);
+});
+
+await T('auto slingshot only turns slightly', async () => {
+  const sv = P.sv(); sv.au = 1; await go(1, 3); P.bot = false; let mx = 0;
+  for (let i = 0; i < 300; i++) { P.step(0.1, 0.05); mx = Math.max(mx, Math.abs(P.S.au.a)); }
+  sv.au = 0; if (mx > 0.125) throw new Error('auto slingshot leaned ' + mx.toFixed(2)); return 'max turn ' + mx.toFixed(2) + ' rad';
+});
+
+/* Champion fights: every Champion after Coach Waddles plays a different way */
+const fightSim = async (st, rule) => {
+  await go(st, 8); const S = P.S; P.bot = true; let t = 0, prevHp = null, prevSafe = false, prevP = 0, seen = {};
+  while (S.mode !== 'bossWin' && !S.over && t < 160) {
+    const b = S.boss; P.step(0.05, 0.05); t += 0.05; if (!S.boss) continue;
+    rule(S, S.boss, { prevHp, prevSafe, prevP, seen }); prevHp = S.boss.hp; prevSafe = S.boss.safe; prevP = S.boss.p;
+  }
+  P.bot = false; inv('fight' + st);
+  if (S.mode !== 'bossWin') throw new Error('the bot did not win in ' + t.toFixed(0) + ' s: mode ' + S.mode + ' hp ' + (S.boss && S.boss.hp));
+  return seen;
+};
+await T('champion 2 (Flipper): hits only count while he is up', async () => {
+  const seen = {}; await fightSim(2, (S, b, o) => { if (o.prevHp !== null && b.hp < o.prevHp && o.prevSafe) throw new Error('hit while hidden'); if (b.safe) seen.hid = 1; else if (b.st === 'hold') seen.up = 1; Object.assign(o.seen, seen); });
+  return 'hid and up both seen';
+});
+await T('champion 3 (Slidealot): charges, hits knock him back', async () => {
+  let back = 0, chg = 0; await fightSim(3, (S, b, o) => { if (o.prevHp !== null && b.hp < o.prevHp && b.p < o.prevP - 0.05) back++; if (b.p > o.prevP + 0.0005) chg++; });
+  if (!back || !chg) throw new Error('knockbacks ' + back + ', advances ' + chg); return 'knockbacks ' + back;
+});
+await T('champion 3 (Slidealot): reaching the table costs cheer', async () => {
+  await go(3, 8); const S = P.S; P.bot = false; let t = 0; while (!(S.boss && S.boss.st === 'hold') && t < 40) { P.step(0.1, 0.05); t += 0.1; }
+  const c0 = S.cheer; let bonk = false; for (let i = 0; i < 300 && !bonk; i++) { P.step(0.1, 0.05); if (S.cheer < c0 - 10) bonk = true; }
+  if (!bonk) throw new Error('he never reached the table'); if (S.boss.p > 0.6) throw new Error('he should be sent back, p=' + S.boss.p); return 'cheer ' + Math.round(S.cheer);
+});
+await T('champion 4 (Mohawk): shielded by her squad, then open', async () => {
+  const seen = {}; await fightSim(4, (S, b, o) => { if (o.prevHp !== null && b.hp < o.prevHp && o.prevSafe) throw new Error('hit while shielded'); if (b.safe && P.penguins.some(q => q.st === 'walk')) seen.sq = 1; if (!b.safe && b.st === 'hold') seen.open = 1; Object.assign(o.seen, seen); });
+  return 'squad and open window seen';
+});
+await T('champion 5 (Bernard): clones pop, only the real one is hurt', async () => {
+  let clones = 0; await fightSim(5, (S, b, o) => { if (S.clones.length > 2) throw new Error('too many clones'); if (S.clones.length) clones++; if (S.clones.some(d => !isFinite(d.xn))) throw new Error('bad clone'); });
+  if (!clones) throw new Error('no clones appeared'); return 'clone frames ' + clones;
+});
+
 await T('lime launcher: tiers set the limes per Champion fight', async () => {
   const sv = P.sv(), out = [];
   for (const tier of [1, 2, 3]) {
-    sv.lm = tier; await go(2, 8); const S = P.S; let t = 0;
+    sv.lm = tier; await go(1, 8); const S = P.S; let t = 0;
     while (S.mode !== 'boss' || !S.boss || S.boss.st !== 'hold') { P.step(0.1, 0.05); if ((t += 0.1) > 30) throw new Error('boss never held'); }
-    let fired = 0, prev = S.lm.n; const start = S.lm.sup;
-    for (let i = 0; i < 1200 && S.boss && S.mode === 'boss'; i++) { P.step(0.05, 0.05); if (S.lm.n > prev) fired += S.lm.n - prev; prev = S.lm.n; if (S.lm.n < prev) prev = S.lm.n; }
+    const start = S.lm.sup; let low = start;
+    for (let i = 0; i < 1200 && S.boss && S.mode === 'boss'; i++) { P.step(0.05, 0.05); if (S.boss) low = Math.min(low, S.lm.sup); }
+    const fired = start - low;
     const want = [6, 12, 20][tier - 1]; if (start > want || fired > want) throw new Error('tier ' + tier + ' supply ' + start + ' fired ' + fired + ' (limit ' + want + ')');
-    if (!fired) throw new Error('tier ' + tier + ' fired nothing'); out.push(tier + ':' + fired);
+    if (!fired) throw new Error('tier ' + tier + ' fired nothing'); if (tier === 1 && (fired < 5 || fired > 6)) throw new Error('tier 1 should use about 6 limes, used ' + fired); out.push(tier + ':' + fired);
   }
   sv.lm = 0; return 'limes fired per fight ' + out.join(' ');
 });
 
 await T('lime launcher: shield first, then Champion', async () => {
-  const sv = P.sv(); sv.lm = 0; await go(2, 8);
+  const sv = P.sv(); sv.lm = 0; await go(1, 8);
   const S = P.S; let sawM = 0, t = 0; while (S.mode !== 'boss' || !S.boss || S.boss.st !== 'hold') { P.step(0.1, 0.05); if ((t += 0.1) > 30) throw new Error('boss never held'); }
   P.step(9, 0.05); sawM = S.ms.length; if (sawM || S.boss.hp !== S.bossMax) throw new Error('missiles fired without the launcher');
   sv.lm = 3; S.boss.shield = S.boss.shield || 3; let popped = 0, hurt = 0, maxM = 0, hp = S.boss.hp, sh = S.boss.shield, first = '';

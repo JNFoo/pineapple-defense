@@ -2,6 +2,12 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.13.1256
+- **Champion fights are different now:** Captain Flipper hides behind three ice blocks and pops up behind one (the block shakes first); Sir Slidealot charges at your table and every hit knocks him back; Madame Mohawk is shielded by her squad until you clear it, then she is open for a few seconds before a bigger squad comes; Grand Champion Bernard brings icy clones and only the solid Bernard counts. Coach Waddles keeps the snowball fight. Each Champion shows a short tip when the fight starts.
+- **Thrown pineapples:** a harder flick with nothing to aim at now flies farther (it used to land near the table), a miss lands with a puff and stays put instead of rolling, and a pineapple aimed at a penguin that is already gone flies on and falls farther up the lane.
+- **Limes** now leave a vapor trail and fly like a spiralling football (long axis first, rolling, on a tight corkscrew path).
+- **Auto slingshot** no longer leans: it turns only a few degrees toward its target (the Lime Launcher too).
+
 ## 2026.10.13.0956
 - **Lime Launcher tiers are now supply, not speed:** 6, 12 and 20 limes in every Champion fight (shop rows: Lime Launcher, More Limes, Lots of Limes, same prices), fired at one steady pace. The missiles are now round limes with a leaf that tumble in flight, a little bigger.
 - **Umbrella stutter fixed:** the umbrella canopies and every sprite's small copies are now built in the background, so the first Brolly (or the first new mood) no longer costs a frame. Opening the first umbrella dropped from about 21 ms of extra work to under 7 ms in the test browser.

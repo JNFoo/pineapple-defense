@@ -117,7 +117,7 @@ var gov = new QualityGovernor({ levels: 5, onChange: function (l) { dprStep = l;
 function newState() {
   S = { wave: 0, spawned: 0, toSpawn: 0, spawnT: 0, mode: 'intro', modeT: 0, cheer: 100, golden: 0, bumps: 0,
         cd: 0, cdMax: 0.42, t: 0, wob: 0, thrown: false, over: false, paused: false, id: 0, lastLane: -1, boss: null, inBoss: false, bossHp: 3, bossMax: 3, stage: 1, sa: 0,
-        puT: 9, pu: null, lastPu: '', fx: { zip: 0, mega: 0, frost: 0 }, tro: null, tq: [], earned: 0, streak: 0, cmb: { n: 0, t: -9, m: 0, a: 0, fr: 0, dirty: false }, call: null, shk: 0, gulls: [], umb: [], umL: sv.um | 0, raL: RAID_N[sv.ra | 0] || 0, raid: null, maxCmb: 0, maxSp: 0, fancy: 0, allBumps: 0, zones: 0, chT: -99, chN: 0, gl: 0, fish: [], fishT: 6, toast: null, au: { cd: 1.5, tgt: null, a: 0 }, lm: { cd: 1, a: 0, q: 0, qt: 0, n: 0 }, ms: [], rc: 0 };
+        puT: 9, pu: null, lastPu: '', fx: { zip: 0, mega: 0, frost: 0 }, tro: null, tq: [], earned: 0, streak: 0, cmb: { n: 0, t: -9, m: 0, a: 0, fr: 0, dirty: false }, call: null, shk: 0, gulls: [], umb: [], umL: sv.um | 0, raL: RAID_N[sv.ra | 0] || 0, raid: null, maxCmb: 0, maxSp: 0, fancy: 0, allBumps: 0, zones: 0, chT: -99, chN: 0, gl: 0, fish: [], fishT: 6, toast: null, au: { cd: 1.5, tgt: null, a: 0 }, lm: { cd: 1, a: 0, q: 0, qt: 0, n: 0 }, ms: [], rc: 0, clones: [] };
   penguins = []; shots = []; bits = []; pops = []; rings = []; flys = [];
 }
 
@@ -367,7 +367,7 @@ var PU = {
   pf: { name: 'Toasty!', col: '#ff7a3a', glow: '255,122,58', secs: 6, tip: 'Sleepy, slow penguins' }
 };
 var PU_KEYS = ['pz', 'pm', 'ph', 'pf'], slowK = 1;
-function toast(txt) { S.toast = { txt: txt, t: 0, ttl: 2.4 }; }
+function toast(txt, ttl) { S.toast = { txt: txt, t: 0, ttl: ttl || 2.4 }; }
 function award(i) {
   var b = 1 << i; if (demo) return;
   if (hasAch(i) || (S.earned & b)) return;
@@ -422,13 +422,14 @@ var AUTO_TYPES = [
   { cd: 0, arc: 2.2, T: 1.6, rad: 0.55, splash: 1.3, size: 1.45, img: 'pm' }
 ];
 var AUTO_SLOW = [1, 1.35, 1.7], AUTO_COST = [0, 2, 3];
+var AUTO_TURN = 0.12;   /* the auto slingshot only turns a few degrees toward its target; it never leans over */
 function autoInt() { return AUTO_INT[sv.ar] * AUTO_SLOW[sv.ap] * (S.fx.zip > 0 ? 0.5 : 1); }
 function autoType() { return AUTO_TYPES[sv.ap]; }
 function autoPick() {
   var au = S.au, best = null, i, pg;
-  if (au.tgt && !au.tgt.aut && (au.tgt.st === 'walk' || (au.tgt === S.boss && au.tgt.st === 'hold'))) return;
+  if (au.tgt && !au.tgt.aut && (au.tgt.st === 'walk' || (au.tgt === S.boss && bossOpen(au.tgt)))) return;
   for (i = 0; i < penguins.length; i++) { pg = penguins[i]; if (pg.st === 'walk' && !pg.aut && pg.p > 0.1 && (!best || pg.p > best.p)) best = pg; }
-  if (!best && S.boss && S.boss.st === 'hold' && !S.boss.aut) best = S.boss;
+  if (!best && bossOpen(S.boss) && !S.boss.aut) best = S.boss;
   au.tgt = best;
 }
 function autoFire(tg) {
@@ -437,7 +438,7 @@ function autoFire(tg) {
   var ttf = (0.42 + 0.38 * (1 - tg.p)) * ty.T, pEnd = Math.min(0.94, tg.p + (tg.st === 'walk' ? tg.v * slowK : 0) * ttf);
   var xE = px(tg.xn + (tg.vx || 0) * ttf, pEnd), yE = py(pEnd) - psz(pEnd) * (tg.big || 1) * 0.42;
   var arc = Math.max(H * 0.05, Math.min(H * (0.14 + 0.2 * (1 - pEnd)) * ty.arc, (po.y + yE) / 2 - H * 0.06));
-  shots.push({ ty: ty, s0: g.ps * 0.92 * ty.size, x0: po.x, y0: po.y, xE: xE, yE: yE, pEnd: pEnd, t: 0, T: ttf, arc: arc, spin: (Math.random() < 0.5 ? -1 : 1) * 7, ph: 0, auto: true, tgt: tg });
+  shots.push({ ty: ty, s0: g.ps * 0.92 * ty.size, x0: po.x, y0: po.y, xE: xE, yE: yE, pEnd: pEnd, t: 0, T: ttf, arc: arc, spin: (Math.random() < 0.5 ? -1 : 1) * 7, ph: 0, auto: true, tgt: tg, soft: true });
   tg.aut = true; elHint.hidden = true;
 }
 function updateAuto(dt) {
@@ -447,7 +448,7 @@ function updateAuto(dt) {
     au.cd -= dt; autoPick();
     if (au.tgt && au.cd <= 0) { autoFire(au.tgt); au.cd = autoInt(); au.tgt = null; autoPick(); }
   } else au.tgt = null;
-  if (au.tgt) { var c = penCenter(au.tgt), po = pouchPos(autoGeom(), au.a); ta = Math.max(-0.6, Math.min(0.6, Math.atan2(c.x - po.x, po.y - c.y))); }
+  if (au.tgt) { var c = penCenter(au.tgt), po = pouchPos(autoGeom(), au.a); ta = Math.max(-AUTO_TURN, Math.min(AUTO_TURN, Math.atan2(c.x - po.x, po.y - c.y) * 0.3)); }
   au.a += (ta - au.a) * Math.min(1, dt * 9);
 }
 /* a faint dotted line along the flick while dragging: always, never, or just for the first five throws */
@@ -571,7 +572,8 @@ function penCenter(pg) { var s = psz(pg.p) * (pg.big || 1); return { x: px(pg.xn
 function targets() {
   var out = [], i;
   for (i = 0; i < penguins.length; i++) if (penguins[i].st === 'walk') out.push(penguins[i]);
-  if (S.boss && (S.boss.st === 'hold' || S.boss.st === 'walk')) out.push(S.boss);
+  if (S.boss && (bossOpen(S.boss) || S.boss.st === 'walk')) out.push(S.boss);
+  if (S.clones) for (i = 0; i < S.clones.length; i++) out.push(S.clones[i]);
   return out;
 }
 function throwAt(ox, oy, dx, dy, spd, tapPoint) {
@@ -601,7 +603,7 @@ function throwAt(ox, oy, dx, dy, spd, tapPoint) {
   } else if (cheerShot) {
     xE = cheerShot.x; yE = cheerShot.y; pEnd = 0.06; ttf = (0.42 + 0.38 * 0.94) * ty.T;
   } else {
-    pEnd = tapPoint ? Math.max(0.12, Math.min(0.92, (tapPoint.y - hy) / (gy - hy))) : Math.max(0.25, Math.min(0.92, 0.25 + (spd - 0.8) * 0.2));
+    pEnd = tapPoint ? Math.max(0.12, Math.min(0.92, (tapPoint.y - hy) / (gy - hy))) : Math.max(0.1, Math.min(0.88, 0.88 - (spd - 0.8) * 0.2));   /* a harder flick flies farther up the lane */
     yE = py(pEnd) - psz(pEnd) * 0.3;
     var tt = (yE - oy) / dy; xE = ox + dx * tt;
     ttf = (0.42 + 0.38 * (1 - pEnd)) * ty.T;
@@ -611,28 +613,29 @@ function throwAt(ox, oy, dx, dy, spd, tapPoint) {
   if (sv.thr < 99) { sv.thr++; if (sv.thr <= 6) saveSoon(); }
   elHint.hidden = true;
   var arc = Math.max(H * 0.05, Math.min(H * (0.14 + 0.2 * (1 - pEnd)) * ty.arc, (oy + yE) / 2 - H * 0.06));
-  shots.push({ ty: ty, s0: slingGeom().ps * 0.92 * ty.size, x0: ox, y0: oy, xE: xE, yE: yE, pEnd: pEnd, t: 0, T: ttf, arc: arc, spin: (Math.random() < 0.5 ? -1 : 1) * 7, ph: 0, cheer: !!cheerShot && !best });
+  shots.push({ ty: ty, s0: slingGeom().ps * 0.92 * ty.size, x0: ox, y0: oy, xE: xE, yE: yE, pEnd: pEnd, t: 0, T: ttf, arc: arc, spin: (Math.random() < 0.5 ? -1 : 1) * 7, ph: 0, cheer: !!cheerShot && !best, soft: !!best });
 }
 function hitBoss(units, c) {
   var b = S.boss; cmbHit(c.x, c.y);
   if (b.shield > 0) {
     var had = b.shield; b.shield = Math.max(0, b.shield - units); if (had > 0 && b.shield === 0) award(4);
-    burst(c.x, c.y, 8, SNOW_COL); popText(c.x, c.y - c.s * 0.35, 'poof!', '#2f6f9f');
+    burst(c.x, c.y, 8, SNOW_COL); popText(c.x, c.y - c.s * 0.35, 'poof!', '#2f6f9f'); champHit(b, 0);
     return true;
   }
   b.hp--; if (b.hp <= 0) award(5); S.bossHp = Math.max(0, b.hp); b.st = 'hit'; b.t = 0; b.mood = 'wow'; b.hat = true;
-  S.cheer = Math.min(100, S.cheer + 4);
+  S.cheer = Math.min(100, S.cheer + 4); champHit(b, 1);
   burst(c.x, c.y, 18, PINE_COL); popText(c.x, c.y - c.s * 0.4, 'tee hee!', '#b86e00');
   if (b.hp <= 0) reward(PAY.champ, c.x, c.y - c.s * 0.2, 2); else sparkBurst(c.x, c.y, 8, ['#ffd23f', '#fff7e3']);
   return true;
 }
 var curSrc = 0;
-function landShot(s) {
+function landShot(s, soft) {
   curSrc = s.auto ? 1 : 2;
   var ty = s.ty, hit = false, i, c, d, best = null, bd = ty.rad, nh = 0;
   if (s.tgt) s.tgt.aut = false;
   if (s.cheer) { cheerHit(s.xE, s.yE); return true; }
-  if (S.boss && S.boss.st === 'hold') {
+  if (champLand(s)) return true;
+  if (bossOpen(S.boss)) {
     c = penCenter(S.boss);
     if (Math.hypot(c.x - s.xE, c.y - s.yE) / c.s < 0.8) { hit = hitBoss(ty.splash ? 2 : 1, c); if (!ty.splash) { if (!s.auto) { S.streak++; if (S.streak >= 3) award(1); if (S.streak >= 5) award(7); } return true; } }
   }
@@ -643,6 +646,7 @@ function landShot(s) {
     else if (d < bd) { bd = d; best = pg; }
   }
   if (best) { c = penCenter(best); hitPenguin(best, c.x, c.y - c.s * 0.2); hit = true; }
+  if (!hit && soft) return false;
   if (!hit) burst(s.xE, s.yE + psz(s.pEnd) * 0.3, 5, PINE_COL);
   if (nh >= 3) award(2);
   if (nh > S.maxSp) S.maxSp = nh;
@@ -652,10 +656,14 @@ function landShot(s) {
 function updateShot(s, dt) {
   s.t += dt;
   if (s.ph === 0 && s.t >= s.T) {
-    if (landShot(s)) { s.dead = true; return; }
-    s.ph = 1; s.t = 0; s.T = 0.5;
-    var gx = (s.xE - s.x0), gy2 = (s.yE - s.y0), l = Math.hypot(gx, gy2) || 1;
-    s.rx = s.xE + gx / l * W * 0.05; s.ry = s.yE + gy2 / l * W * 0.05;
+    var soft = s.soft && !s.ext;
+    if (landShot(s, soft)) { s.dead = true; return; }
+    if (soft) {   /* the penguin it was aimed at is gone: the pineapple flies on along its line and falls where it falls */
+      var dx = s.xE - s.x0, dy = s.yE - s.y0, p2 = Math.max(0.06, s.pEnd - 0.2), y2 = py(p2) - psz(p2) * 0.3, x2 = Math.abs(dy) > 1 ? s.xE + dx / dy * (y2 - s.yE) : s.xE;
+      s.s0 = psz(s.pEnd) * 0.5 * s.ty.size; s.x0 = s.xE; s.y0 = s.yE; s.xE = Math.max(W * 0.04, Math.min(W * 0.96, x2)); s.yE = y2; s.pEnd = p2; s.arc = H * 0.05; s.t = 0; s.T = 0.4; s.ext = true;
+      return;
+    }
+    s.ph = 1; s.t = 0; s.T = 0.3; s.rx = s.xE; s.ry = s.yE;   /* lands with a puff and fades: no planting and no rolling */
   } else if (s.ph === 1 && s.t >= s.T) s.dead = true;
 }
 
@@ -724,12 +732,14 @@ function startBoss() {
 function spawnBoss() {
   var CH = CHAMP[S.stage];
   S.boss = { id: ++S.id, kind: CH.kind, xn: 0, p: 0.05, v: 0.07, st: 'walk', t: 0, mood: 'happy', ph: 0, hat: false, a: 1, big: CH.big, hp: CH.hp, shield: CH.shield || 0, sp: 0, puff: 0, vx: 0, dph: 0, nd: CH.slide || 0, tele: false, x0: 0, x1: 0 };
+  champInit(S.boss); if (CH.tip) toast(CH.tip, 3.6);
 }
 function updateBoss(b, dt) {
   var CH = CHAMP[S.stage];
   b.t += dt; b.ph += dt * 5; b.sp += dt; b.vx = 0;
   if (b.st === 'walk') { b.p += b.v * dt * slowK; if (b.p >= 0.4) { b.p = 0.4; b.st = 'hold'; b.t = 0; } }
   else if (b.st === 'hold') {
+    champUpdate(b, dt);
     if (CH.dodge) { var om = CH.om; b.dph += dt * om * slowK; b.xn = Math.sin(b.dph) * CH.dodge; b.vx = Math.cos(b.dph) * CH.dodge * om * slowK; }
     if (CH.slide) {
       b.nd -= dt * slowK; b.tele = b.nd < 0.55 && b.nd > 0;
@@ -743,7 +753,7 @@ function updateBoss(b, dt) {
   else if (b.st === 'hit') {
     if (b.t > 1.0) {
       if (b.hp <= 0) { b.st = 'slide'; b.t = 0; b.mood = 'giggle'; b.shield = 0; }
-      else { b.st = 'hold'; b.mood = 'happy'; b.hat = false; b.shield = CH.kind === 'cw' ? b.hp + 1 : (CH.shield || 0); b.t = 0; b.nd = Math.max(b.nd, 2.2); }
+      else { b.st = 'hold'; b.mood = 'happy'; b.hat = false; b.shield = CH.kind === 'cw' ? b.hp + 1 : (CH.noRegen ? 0 : CH.shield || 0); b.t = 0; b.nd = Math.max(b.nd, 2.2); champReset(b); }
     }
   } else if (b.st === 'slide') {
     b.p -= (0.35 + b.t * 1.1) * dt; b.puff -= dt;
@@ -752,6 +762,7 @@ function updateBoss(b, dt) {
   }
 }
 function bossDefeated() {
+  S.clones = [];
   S.mode = 'bossWin'; S.modeT = 0; S.cheer = Math.min(100, S.cheer + 15);
   banner(CHAMP[S.stage].n.replace('Grand Champion ', '') + '\ngiggles!', 1900);
 }
@@ -812,12 +823,12 @@ function update(dt) {
   if (S.mode === 'bossIntro' && S.modeT > 1.9) { spawnBoss(); S.mode = 'boss'; S.modeT = 0; }
   if (S.mode === 'boss') {
     S.spawnT -= dt;
-    if (S.boss && S.boss.st === 'hold' && S.spawnT <= 0 && penguins.length < (CHAMP[S.stage].call ? 4 : 3)) { spawn(); S.spawnT = CHAMP[S.stage].help; if (CHAMP[S.stage].call === 2) popText(px(S.boss.xn, S.boss.p), py(S.boss.p) - psz(S.boss.p) * 1.5, 'Squad up!', '#9b3fd0'); }
+    if (S.boss && S.boss.st === 'hold' && !CHAMP[S.stage].nohelp && S.spawnT <= 0 && penguins.length < 3) { spawn(); S.spawnT = CHAMP[S.stage].help; }
     if (S.boss) { updateBoss(S.boss, dt); if (S.boss.st === 'gone') { S.boss = null; bossDefeated(); } }
   }
   if (S.mode === 'bossWin' && S.modeT > 2.2) endStage(true);
   if (qa && qa.bot && S.cd <= 0) {
-    var tgt = (S.boss && S.boss.st === 'hold') ? S.boss : null;
+    var tgt = bossOpen(S.boss) ? S.boss : null;
     for (i = 0; !tgt && i < penguins.length; i++) if (penguins[i].st === 'walk' && (!tgt || penguins[i].p > tgt.p)) tgt = penguins[i];
     if (tgt) { var c = penCenter(tgt), o = pouchPos(); throwAt(o.x, o.y, c.x - o.x, c.y - o.y, 1.5, { x: c.x, y: c.y }); }
   }
@@ -862,12 +873,14 @@ function drawPenguin(pg) {
   var s = psz(pg.p) * (pg.big || 1), x = px(pg.xn, pg.p), y = py(pg.p);
   ctx.save(); ctx.globalAlpha = pg.a;
   var rot = 0, hop = 0, sx = 1, sy = 1, tt = calm ? 0 : S.t;
+  if (pg.ice) drawIceAura(x, y, s);
   if (pg.st === 'walk' || pg.st === 'hold' || (pg.st === 'bump' && pg.t > 0.9)) { if (!calm) { rot = Math.sin(pg.ph) * 0.1; hop = Math.abs(Math.sin(pg.ph)) * s * 0.03; } }
   else if (pg.st === 'hit') { rot = calm ? 0 : Math.sin(pg.t * 30) * 0.05; }
   else if (pg.st === 'slide') { sx = 1.15; sy = 0.62; rot = 0.1; }
   else if (pg.st === 'dash') { sx = 1.2; sy = 0.64; rot = 0.1 * (pg.x1 > pg.x0 ? 1 : -1); }
   var fh = 0;
   if (pg.st === 'fling') { fh = Math.sin(Math.min(1, pg.t / 1.2) * 3.14) * H * 0.26; rot = calm ? 0 : pg.t * 15 * pg.side; }
+  if (pg.lift) fh += pg.lift * s;
   if (pg.tele && !calm) rot = Math.sin(S.t * 44) * 0.14;
   var lift = hop / (s * 0.03 || 1);
   drawShadow(x + s * 0.05, y - s * 0.015, s * 0.34 * sx * (1 - 0.16 * lift), 1 - 0.25 * lift);
@@ -880,6 +893,7 @@ function drawPenguin(pg) {
   ctx.translate(x, y - hop - fh); ctx.rotate(rot); ctx.scale(sx, sy);
   var im = IMG[pg.kind][pg.mood];
   if (im) ctx.drawImage(mip(im, s * Math.max(sx, sy)), -s / 2, -s * 0.965, s, s);
+  if (pg.ice) { ctx.fillStyle = 'rgba(140,210,245,.5)'; ctx.beginPath(); ctx.ellipse(0, -s * 0.46, s * 0.31, s * 0.44, 0, 0, 6.3); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.ellipse(-s * 0.12, -s * 0.66, s * 0.07, s * 0.16, 0.3, 0, 6.3); ctx.fill(); }
   if (pg.hat && IMG.pa.happy) {
     var hs = s * 0.42;
     ctx.save(); ctx.translate(0, -s * 0.745 - hs * 0.45 + s * 0.03); ctx.rotate(0.28);
@@ -905,7 +919,7 @@ function drawShot(sh) {
     drawShadow(x, gyy, size * 0.3, 0.6);
   } else {
     u = Math.min(1, sh.t / sh.T);
-    x = sh.xE + (sh.rx - sh.xE) * u; y = sh.yE + (sh.ry - sh.yE) * u - 4 * H * 0.04 * u * (1 - u);
+    x = sh.xE + (sh.rx - sh.xE) * u; y = sh.yE + (sh.ry - sh.yE) * u - 4 * H * 0.012 * u * (1 - u);
     size = psz(sh.pEnd) * 0.5; a = 1 - u; rot = sh.spin * (sh.T * 0.3 + sh.t * 1.5);
   }
   ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.rotate(rot);
@@ -1246,9 +1260,10 @@ function draw() {
   for (i = 0; i < penguins.length; i++) list[n++] = penguins[i];
   for (i = 0; i < S.fish.length; i++) list[n++] = S.fish[i];
   if (S.boss) list[n++] = S.boss;
+  for (i = 0; i < S.clones.length; i++) list[n++] = S.clones[i];
   list.length = n;
   for (i = 1; i < n; i++) { v = list[i]; for (j = i - 1; j >= 0 && list[j].p > v.p; j--) list[j + 1] = list[j]; list[j + 1] = v; }
-  for (i = 0; i < list.length; i++) { if (list[i].isFish) { drawFish(list[i]); continue; } drawPenguin(list[i]); if (list[i] === S.boss) drawShield(list[i]); }
+  for (i = 0; i < list.length; i++) { if (list[i].isFish) { drawFish(list[i]); continue; } if (list[i] === S.boss) { if (!champHidden(list[i])) drawPenguin(list[i]); drawShield(list[i]); drawChampArt(list[i]); } else drawPenguin(list[i]); }
   drawAutoMark();
   drawStand(); drawTable(); drawUmbrellas();
   for (i = 0; i < shots.length; i++) drawShot(shots[i]);
@@ -1934,7 +1949,7 @@ function startDemo(sp) {
   var ok = $('cardOk'); if (ok) ok.click();
   titleEl.hidden = true; gameEl.hidden = false;
   loadAssets().then(function () {
-    resize(); startStage({ stage: sp.kind === 'boss' ? 2 : 1, wave: sp.kind === 'boss' ? 8 : 3, golden: 0, cheer: 100 });
+    resize(); startStage({ stage: 1, wave: sp.kind === 'boss' ? 8 : 3, golden: 0, cheer: 100 });
     if (sp.kind === 'boss') S.modeT = 2;
     $('demoBar').hidden = false; run();
   });
@@ -1992,7 +2007,7 @@ if (location.hash === '#qa') {
   qa = window.__pd = { zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
     /* fast-forward without waiting for frames: sec game seconds in steps of dt, drawing every `every` steps (0 = never, one final draw) */
     step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
-    win: function () { endStage(true); }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
+    win: function () { endStage(true); }, flick: function (dx, dy, spd) { var o = pouchPos(); throwAt(o.x, o.y, dx, dy, spd); }, get sh() { return shots; }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
 }
 /*{{LAB_JS}}*/
 }());
