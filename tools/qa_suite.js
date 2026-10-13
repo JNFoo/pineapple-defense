@@ -32,7 +32,7 @@ async function T(name, fn) {
 }
 async function go(st, w) { P.go(st, w); if (!await wf(() => P.S && P.S.stage === st && P.penguins !== undefined && !$('game').hidden, 4000)) throw new Error('go timeout'); await wait(80); P.bot = false; }
 
-await T('load', async () => { if (!P) throw new Error('no __pd'); const sv = P.sv(); ['stage', 'wave', 'bank', 'ach', 'ac2', 'gu', 'um', 'ra', 'run', 'cd', 'lm'].forEach(k => { if (!isFinite(sv[k])) throw new Error('save field ' + k + ' = ' + sv[k]); }); });
+await T('load', async () => { if (!P) throw new Error('no __pd'); const sv = P.sv(); ['stage', 'wave', 'bank', 'ach', 'ac2', 'gu', 'um', 'ra', 'run', 'cd', 'lm', 'lh', 'aim', 'arc', 'hc', 'lt', 'thr'].forEach(k => { if (!isFinite(sv[k])) throw new Error('save field ' + k + ' = ' + sv[k]); }); });
 
 for (let st = 1; st <= 5; st++) await T('stage ' + st + ' runs', async () => { await go(st, 0); P.bot = true; P.step(25, 0.033, 40); inv('stage' + st); P.bot = false; });
 
@@ -74,6 +74,38 @@ await T('lime launcher: shield first, then Champion', async () => {
   }
   if (first !== 'pop') throw new Error('first effect was ' + first); if (!hurt || !popped) throw new Error('popped ' + popped + ' hurt ' + hurt); if (maxM > 8) throw new Error('too many missiles ' + maxM);
   sv.lm = 0; inv('lime'); return 'popped ' + popped + ', hurt ' + hurt + ', max in flight ' + maxM;
+});
+
+await T('comfort: left-handed, aim help, countdown, text, contrast', async () => {
+  const sv = P.sv(); await go(1, 2); const S = P.S, r = document.documentElement;
+  sv.lh = 1; sv.hc = 1; sv.lt = 1; sv.aim = 0; sv.arc = 1; document.documentElement.setAttribute('data-lh', '1');
+  P.step(1, 0.033); const cheer = document.querySelector('.cheer').getBoundingClientRect(), boss = document.querySelector('.bossbar');
+  if (cheer.left > innerWidth / 2) throw new Error('left-handed cheer bar is still on the right');
+  const hrow = [...document.querySelectorAll('.hud .hrow > *')].filter(e => e.offsetParent); if (hrow.some(e => { const b = e.getBoundingClientRect(); return b.left < -1 || b.right > innerWidth + 1; })) throw new Error('left-handed HUD overflows');
+  sv.lh = 0; sv.hc = 0; sv.lt = 0; sv.aim = 1; sv.arc = 0; document.documentElement.setAttribute('data-lh', '0');
+  P.pause(); P.resume(); if (!(S.rc > 2.9)) throw new Error('no resume countdown'); const t0 = S.t; P.step(1, 0.05); if (S.t !== t0) throw new Error('world moved during countdown'); P.step(3, 0.05); if (S.rc !== 0) throw new Error('countdown did not finish');
+  inv('comfort');
+});
+
+await T('replay keeps the saved run; best scores', async () => {
+  const sv = P.sv(); sv.cleared = 2; sv.stage = 4; sv.wave = 3; sv.golden = 77; sv.bs2 = 0; P.replay(2); if (!await wf(() => P.S && P.S.replay, 3000)) throw new Error('replay did not start');
+  const S = P.S; P.bot = true; P.step(40, 0.05, 0); if (sv.stage !== 4 || sv.wave !== 3 || sv.golden !== 77) throw new Error('replay overwrote progress: ' + sv.stage + '/' + sv.wave + '/' + sv.golden);
+  P.bot = false; P.win(); if (!sv.bs2) throw new Error('no best score recorded'); if (sv.stage !== 4 || sv.wave !== 3) throw new Error('replay win changed progress'); const c = card(); if (!/Play it again/.test(c.b1)) throw new Error('replay card: ' + c.b1);
+  $('gBtn2').click(); await wait(50);
+});
+
+await T('shop: try it restores the save; undo refunds', async () => {
+  const sv = P.sv(); sv.bank = 500; sv.lm = 0; sv.gu = 0; sv.au = 0; const before = JSON.stringify(sv);
+  P.demo({ name: 'Lime Launcher', kind: 'boss', over: { lm: 3 } }); if (!await wf(() => P.S && P.S.stage === 2 && P.dm, 3000)) throw new Error('demo did not start');
+  if (sv.lm !== 3) throw new Error('upgrade was not lent'); for (let i = 0; i < 400 && P.dm; i++) P.step(0.1, 0.05); await wait(80);
+  if (P.dm) throw new Error('demo never ended'); if (JSON.stringify(sv) !== before) throw new Error('save was not restored: ' + JSON.stringify(sv) + ' vs ' + before);
+  $('cardOk') && $('cardOk').click(); document.getElementById('bShop').click(); const buy = [...document.querySelectorAll('#shList .sb')].find(b => /^Buy/.test(b.textContent)); buy.click();
+  if (sv.bank >= 500) throw new Error('buy did nothing'); P.undoShop(); if (sv.bank !== 500 || sv.au) throw new Error('undo did not refund: bank ' + sv.bank + ' au ' + sv.au); $('cardOk').click();
+});
+
+await T('next goal chip', async () => {
+  const sv = P.sv(); sv.bank = 10; sv.au = 0; sv.lm = 0; sv.gu = 0; sv.um = 0; sv.ra = 0; P.goal(); const g = $('goal'); if (g.hidden || !/more Golden Pineapples for the Auto Slingshot/.test(g.textContent)) throw new Error('goal: ' + g.textContent);
+  sv.bank = 500; P.goal(); if (!/can buy/.test(g.textContent)) throw new Error('goal2: ' + g.textContent); sv.bank = 0;
 });
 
 await T('gull grabs fish', async () => {

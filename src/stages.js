@@ -250,7 +250,7 @@ function animHarbor(t) {
   var i, wy = hy + H * 0.05, bs = Math.min(H * 0.075, W * 0.13);
   /* the lighthouse beam sweeps back and forth */
   var lx = W * 0.1, ly = wy - H * 0.24 - H * 0.02, ang = Math.sin(t * 0.8) * 0.35;
-  ctx.save(); ctx.translate(lx, ly); ctx.rotate(ang); var bm = ctx.createLinearGradient(0, 0, W * 0.6, 0); bm.addColorStop(0, 'rgba(255,240,170,.5)'); bm.addColorStop(1, 'rgba(255,240,170,0)');
+  ctx.save(); ctx.translate(lx, ly); ctx.rotate(ang); var bm = gk('beam', function () { var b = ctx.createLinearGradient(0, 0, W * 0.6, 0); b.addColorStop(0, 'rgba(255,240,170,.5)'); b.addColorStop(1, 'rgba(255,240,170,0)'); return b; });
   ctx.fillStyle = bm; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(W * 0.6, -H * 0.05); ctx.lineTo(W * 0.6, H * 0.05); ctx.closePath(); ctx.fill(); ctx.restore();
   /* a little sailboat with a pineapple on its sail drifts and bobs */
   var bx = W * 0.34 + Math.sin(t * 0.25) * W * 0.04, by = hy + H * 0.026 + Math.sin(t * 1.3) * 2.2;
@@ -300,7 +300,7 @@ function sceneStorm(g) {
 }
 function stormCloud(x, y, s, t, giggle) {
   ctx.save(); ctx.translate(x, y + Math.sin(t * 0.9) * s * 0.04);
-  var gr = ctx.createLinearGradient(0, -s * 0.5, 0, s * 0.5); gr.addColorStop(0, '#6a5a8a'); gr.addColorStop(1, '#3f3560');
+  var gr = gk('storm' + Math.round(s), function () { var g = ctx.createLinearGradient(0, -s * 0.5, 0, s * 0.5); g.addColorStop(0, '#6a5a8a'); g.addColorStop(1, '#3f3560'); return g; });
   ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(0, s * 0.18, s * 0.95, s * 0.3, 0, 0, 6.3); ctx.arc(-s * 0.5, 0, s * 0.34, 0, 6.3); ctx.arc(-s * 0.1, -s * 0.22, s * 0.46, 0, 6.3); ctx.arc(s * 0.42, -s * 0.02, s * 0.36, 0, 6.3); ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,.14)'; ctx.beginPath(); ctx.ellipse(-s * 0.25, -s * 0.34, s * 0.22, s * 0.08, -0.3, 0, 6.3); ctx.fill();
   var blink = (t % 3.3) < 0.12;
@@ -373,7 +373,7 @@ function animFort(t) {
   /* aurora ribbons ripple over the cool side */
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   for (i = 0; i < 3; i++) {
-    var ay = hy * (0.2 + i * 0.12), gr = ctx.createLinearGradient(0, ay - H * 0.07, 0, ay + H * 0.1); gr.addColorStop(0, 'rgba(90,255,200,0)'); gr.addColorStop(0.5, i === 1 ? 'rgba(140,120,255,.28)' : 'rgba(90,255,200,.3)'); gr.addColorStop(1, 'rgba(90,255,200,0)');
+    var ay = hy * (0.2 + i * 0.12), gr = gk('aur' + i, function () { var g = ctx.createLinearGradient(0, ay - H * 0.07, 0, ay + H * 0.1); g.addColorStop(0, 'rgba(90,255,200,0)'); g.addColorStop(0.5, i === 1 ? 'rgba(140,120,255,.28)' : 'rgba(90,255,200,.3)'); g.addColorStop(1, 'rgba(90,255,200,0)'); return g; });
     ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(W * 0.35, ay);
     for (var k = 0; k <= 10; k++) ctx.lineTo(W * (0.35 + k * 0.065), ay + Math.sin(t * 0.9 + k * 0.7 + i * 1.7) * H * 0.035);
     for (k = 10; k >= 0; k--) ctx.lineTo(W * (0.35 + k * 0.065), ay + H * 0.07 + Math.sin(t * 0.9 + k * 0.7 + i * 1.7 + 0.6) * H * 0.03);

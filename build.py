@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build index.html from src/. Never hand-edit index.html."""
-import base64, io, re, sys, datetime, zoneinfo
+import os, base64, io, re, sys, datetime, zoneinfo
 from pathlib import Path
 from fontTools import subset
 from fontTools.ttLib import TTFont
@@ -20,6 +20,7 @@ def font_face(fam, fname, weight):
             "src:url(data:font/woff;base64,%s) format('woff')}" % (fam, weight, b64))
 
 LAB = "--lab" in sys.argv
+MIN = "--min" in sys.argv
 
 def game_js():
     g = (S / "game.js").read_text(encoding="utf-8")
@@ -29,6 +30,21 @@ def game_js():
     g = g.replace("/*{{EVOLVE_JS}}*/", (S / "evolve.js").read_text(encoding="utf-8"))
     g = g.replace("/*{{EXTRAS_JS}}*/", (S / "extras.js").read_text(encoding="utf-8"))
     return g.replace("/*{{LAB_JS}}*/", (S / "lab" / "lab.js").read_text(encoding="utf-8") if LAB else "")
+
+def minify(t):
+    """Shrink every inline script and style with esbuild (optional tool). Returns None when esbuild is missing."""
+    import shutil, subprocess
+    exe = os.environ.get("PD_ESBUILD") or shutil.which("esbuild") or str(R / "node_modules" / ".bin" / "esbuild")
+    if not os.path.exists(exe) and not shutil.which(exe): return None
+    def run(code, loader):
+        r = subprocess.run([exe, "--minify", "--loader=" + loader, "--target=es2017"], input=code, capture_output=True, text=True)
+        if r.returncode: raise SystemExit("minify failed: " + r.stderr[:400])
+        return r.stdout.rstrip("\n")
+    def js(m): return m.group(1) + (run(m.group(2), "js") if m.group(2).strip() else "") + m.group(3)
+    def css(m): return m.group(1) + run(m.group(2), "css") + m.group(3)
+    # scripts and styles in document order, each closed by its own tag, so a "</style>" string inside a script is left alone
+    return re.sub(r"(<script(?![^>]*src)[^>]*>)(.*?)(</script>)|(<style[^>]*>)(.*?)(</style>)",
+                  lambda m: js(m) if m.group(1) else m.group(4) + run(m.group(5), "css") + m.group(6), t, flags=re.S)
 
 def main():
     now = datetime.datetime.now(zoneinfo.ZoneInfo("America/New_York"))
@@ -64,5 +80,13 @@ def main():
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(t, encoding="utf-8")
     print("built", out.relative_to(R), ver, len(t) // 1024, "KB")
+    if MIN:
+        m = minify(t)
+        if m is None:
+            print("no esbuild found (npm i --no-save esbuild, or set PD_ESBUILD): skipped the minified build")
+        else:
+            mo = R / "dist" / ("lab-min" if LAB else "min") / "index.html"
+            mo.parent.mkdir(parents=True, exist_ok=True); mo.write_text(m, encoding="utf-8")
+            print("built", mo.relative_to(R), len(m) // 1024, "KB (minified)")
 
 main()

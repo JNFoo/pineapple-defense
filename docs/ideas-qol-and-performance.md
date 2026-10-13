@@ -2,30 +2,44 @@
 
 Pineapple Defense. Written 2026-10-12. Copyright (c) 2026 JNFoo. All rights reserved.
 
-The performance list marks what is already done in version 2026.10.12.2343 and what is still open. Reference for the canvas ideas: MDN, "Optimizing canvas" (cache repeated drawing in offscreen canvases, batch calls, avoid per-frame state changes, avoid fractional coordinates where it matters, scale with CSS or the backing store on purpose).
+Status as of version 2026.10.13.0008: every item below is done except haptics (excluded on request) and the two atlas ideas (judged not worth it, see the audit at the end). Reference for the canvas ideas: MDN, "Optimizing canvas" (cache repeated drawing in offscreen canvases, batch calls, avoid per-frame state changes, avoid fractional coordinates where it matters, scale with CSS or the backing store on purpose).
 
 ## 10 quality-of-life ideas for the player
 
-1. **Left-handed layout.** One toggle mirrors the HUD and the pickup and trophy spots so the thumb that holds the phone is never in the way.
-2. **Resume countdown.** After a pause, a tab switch or a rotation, show 3, 2, 1 before the penguins move again, so nobody loses a Cheer heart to a surprise restart.
-3. **Aim help setting.** Generous, Normal or Off for the sticky aim, plus a faint dotted arc for the first few throws of a new player.
-4. **Color and shape safety.** Every marker (teal auto marker, green lime missiles, raid line) also gets a distinct shape or pattern, plus a high-contrast option, so color alone never carries meaning.
-5. **Haptics.** A short vibration on a hit, a longer one on a combo call and a pattern on Champion defeat, with an on and off switch (navigator.vibrate where supported).
-6. **Readability options.** Bigger banners and combo calls, a calmer font weight, and a Reduce motion switch that also follows the system prefers-reduced-motion setting by default.
-7. **Shop try-out and undo.** A "Try it" button runs a ten-second demo of an upgrade before buying, and the last purchase can be undone until the next stage starts.
-8. **Stage replay.** Pick any cleared stage from the title screen to replay for credits and trophies, and show a small best-score line per stage.
-9. **Next-goal chip.** One small chip shows the closest trophy or upgrade goal ("40 more for the Lime Launcher"), with progressive hints on locked trophies.
-10. **Save backup code.** Export the save as a short text code or a .md file and import it on another device, since the game is fully offline and has no account.
+1. **Left-handed layout.** One toggle mirrors the HUD and the pickup and trophy spots so the thumb that holds the phone is never in the way.  **Status: Done (Settings, Comfort).**
+2. **Resume countdown.** After a pause, a tab switch or a rotation, show 3, 2, 1 before the penguins move again, so nobody loses a Cheer heart to a surprise restart.  **Status: Done: 3, 2, 1 after pause, tab switch or rotation; rotating the phone now pauses first.**
+3. **Aim help setting.** Generous, Normal or Off for the sticky aim, plus a faint dotted arc for the first few throws of a new player.  **Status: Done: Generous, Normal (default) or Off, and a dotted arc shown on the first 5 throws (or always, or never).**
+4. **Color and shape safety.** Every marker (teal auto marker, green lime missiles, raid line) also gets a distinct shape or pattern, plus a high-contrast option, so color alone never carries meaning.  **Status: Done: the auto marker has a diamond emblem, raid hazards have dashes, snowballs get outlines, and High contrast adds heavier rings.**
+5. **Haptics.** A short vibration on a hit, a longer one on a combo call and a pattern on Champion defeat, with an on and off switch (navigator.vibrate where supported).  **Status: Not built, on request.**
+6. **Readability options.** Bigger banners and combo calls, a calmer font weight, and a Reduce motion switch that also follows the system prefers-reduced-motion setting by default.  **Status: Done: Large text (banners, combo calls, tags) and Calm / Reduce motion, mirrored in Settings.**
+7. **Shop try-out and undo.** A "Try it" button runs a ten-second demo of an upgrade before buying, and the last purchase can be undone until the next stage starts.  **Status: Done: a Try it button runs a 12 to 14 second demo on a copy of the save (nothing is spent or earned), and Undo refunds the last purchase.**
+8. **Stage replay.** Pick any cleared stage from the title screen to replay for credits and trophies, and show a small best-score line per stage.  **Status: Done: pick any cleared stage from the title; credits are paid in full and runs count, but your saved progress is untouched; best score per stage is kept.**
+9. **Next-goal chip.** One small chip shows the closest trophy or upgrade goal ("40 more for the Lime Launcher"), with progressive hints on locked trophies.  **Status: Done: the cheapest upgrade you do not own yet, on the title screen and in the shop.**
+10. **Save backup code.** Export the save as a short text code or a .md file and import it on another device, since the game is fully offline and has no account.  **Status: Already existed before this list was written: Settings has Save code (copy and paste) and Save file (export and import). The new comfort settings and best scores are part of the save, so they travel with it.**
 
 ## 10 performance and efficiency ideas for the code
 
-1. **Cache static layers.** The striped stand, sling frames, power-up badges, the trophy, closed umbrellas and the open umbrella canopy are painted once per size into offscreen canvases. Done: this removed about 450 canvas calls per frame.
-2. **Batch particles.** Confetti is bucketed by color and fade step and drawn as one path per bucket, with no per-bit save, restore or transform. Done: about 500 fewer calls in a busy Champion fight. Open: one prebuilt confetti atlas drawn with one call per bit.
-3. **Mip copies of sprites.** Small or distant penguins and the pouch pineapple draw from a 192 or 96 pixel copy of the 384 pixel sprite. Done. Open: pack all sprites into one atlas to cut texture switches on GPU canvases.
-4. **Do not draw when nothing changes.** Pause, cards and the title screen can stop the animation loop or drop to 30 frames per second with a single pending frame for the dialog fade.
-5. **Smooth resolution scaling.** The quality governor already steps between three levels; let it move the backing-store scale in small steps (for example 0.1) between 1.0 and the device ratio, and restore it slowly when frames are fast.
-6. **Cache gradients and sprites instead of creating them per frame.** The Champion snowballs, the stand and the halo stars no longer create gradients every frame. Done. Open: scenery gradients (lighthouse beam, aurora ribbons) can be built once per size.
-7. **Raster SVG sprites off the main thread.** Use createImageBitmap or OffscreenCanvas in a worker for the 384 pixel sprite sheet at startup so the first screen appears sooner on slow phones.
-8. **Pool short-lived objects.** Particles, missiles, pop-up texts and rings are created and dropped constantly; a fixed pool (or parallel typed arrays) removes garbage-collection hitches on low-memory phones.
-9. **Cheaper depth sorting.** The per-frame concat and sort of penguins, fish and Champion can be an insertion sort on a nearly sorted list, which also avoids creating a new array each frame.
-10. **Smaller file and faster load.** Minify the inline script and CSS, subset the font to the glyphs used, and compress the packed single file; keep the build strict-CSP friendly (no eval). Also keep the test loop fast: fast-forward time, one browser session, skip unchanged builds (already in tools/qa.py).
+1. **Cache static layers.** The striped stand, sling frames, power-up badges, the trophy, closed umbrellas and the open umbrella canopy are painted once per size into offscreen canvases. Done: this removed about 450 canvas calls per frame.  **Status: Done.**
+2. **Batch particles.** Confetti is bucketed by color and fade step and drawn as one path per bucket, with no per-bit save, restore or transform. Done: about 500 fewer calls in a busy Champion fight. Open: one prebuilt confetti atlas drawn with one call per bit.  **Status: Done. The confetti atlas stays open on purpose: batched paths already cost a few dozen calls for 150 bits, an atlas would cost one call per bit.**
+3. **Mip copies of sprites.** Small or distant penguins and the pouch pineapple draw from a 192 or 96 pixel copy of the 384 pixel sprite. Done. Open: pack all sprites into one atlas to cut texture switches on GPU canvases.  **Status: Done. The sprite atlas stays open on purpose: the canvas has no texture-switch cost we can measure, and an atlas would complicate every draw call.**
+4. **Do not draw when nothing changes.** Pause, cards and the title screen can stop the animation loop or drop to 30 frames per second with a single pending frame for the dialog fade.  **Status: Already true: the loop stops on pause, cards, the title, game over and a hidden tab, and restarts on resume; the HUD only touches the page when a value changes.**
+5. **Smooth resolution scaling.** The quality governor already steps between three levels; let it move the backing-store scale in small steps (for example 0.1) between 1.0 and the device ratio, and restore it slowly when frames are fast.  **Status: Done: five governor steps, canvas scale 2, 1.75, 1.5, 1.25, 1; heavy effects thin out in three groups.**
+6. **Cache gradients and sprites instead of creating them per frame.** The Champion snowballs, the stand and the halo stars no longer create gradients every frame. Done. Open: scenery gradients (lighthouse beam, aurora ribbons) can be built once per size.  **Status: Done: scenery, fish, gull, storm cloud, sling pouch and caps no longer create anything per frame (6 to 9 gradients per frame before, 0 now).**
+7. **Raster SVG sprites off the main thread.** Use createImageBitmap or OffscreenCanvas in a worker for the 384 pixel sprite sheet at startup so the first screen appears sooner on slow phones.  **Status: Done in the way that is possible here: SVG decode cannot run in a worker under the strict CSP, so instead stage-one art loads first and the champions, golden penguin and power-up icons decode in the background one at a time. Time from tapping Play to the first frame fell from about 300 ms to about 175 ms in the software-rendered test browser.**
+8. **Pool short-lived objects.** Particles, missiles, pop-up texts and rings are created and dropped constantly; a fixed pool (or parallel typed arrays) removes garbage-collection hitches on low-memory phones.  **Status: Done for confetti (recycled through a free list, swap-remove). Pop-up texts, rings and missiles number a handful at a time, so pooling them would add code for no measurable gain.**
+9. **Cheaper depth sorting.** The per-frame concat and sort of penguins, fish and Champion can be an insertion sort on a nearly sorted list, which also avoids creating a new array each frame.  **Status: Done: one reused list and an insertion sort; no array is created per frame.**
+10. **Smaller file and faster load.** Minify the inline script and CSS, subset the font to the glyphs used, and compress the packed single file; keep the build strict-CSP friendly (no eval). Also keep the test loop fast: fast-forward time, one browser session, skip unchanged builds (already in tools/qa.py).  **Status: Done: build.py --min minifies the inline script and CSS with esbuild (optional; the build falls back to the readable page when esbuild is missing), the QA suite runs on the minified page too, and the tester and regular builds are packed from it. Font subsetting was skipped on purpose: the fonts are already the Latin subset and re-cutting them would change a licensed file.**
+
+## Audit of the captured improvements
+
+Measured in the headless Chromium used for QA at 412 x 732 and a device ratio of 2, with software rendering (so absolute times are slower than a phone, and run-to-run noise is about 5 to 10%). Stages 1, 3 and 5 with the Auto Slingshot, umbrellas and Lime Launcher on.
+
+| What | Before this work | Now |
+|---|---|---|
+| Canvas calls per frame (mean) | 1,936 | 952 (about 51% fewer) |
+| Gradients created per frame | 6 to 9 | 0 |
+| Software draw time per frame (mean) | 5.4 to 5.9 ms | 4.6 to 5.0 ms (8 to 21% less, noisy) |
+| Tap Play to first frame | about 300 ms | about 175 ms |
+| Page size, readable / minified | 376 KB / 279 KB | the packed file uses the minified page (about 15% smaller after compression) |
+
+What the audit found and fixed on the way: the idea list said save codes were missing when they exist (corrected above); the first minifier pass treated a "<style>" string inside the script as a stylesheet and broke the page (fixed, and the QA suite now runs on the minified page so this cannot slip through again); recycled confetti kept a stale color index (fixed when the pool was added).

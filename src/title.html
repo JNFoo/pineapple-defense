@@ -186,6 +186,18 @@ html[data-dlg] .title *,html[data-dlg] .title *::before,html[data-dlg] .title *:
 @keyframes swayk{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
 @keyframes swayp{from{transform:rotate(-1.8deg)}to{transform:rotate(2.2deg)}}
 @keyframes bbflip{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0)}}
+
+html[data-lh="1"] .hrow{flex-direction:row-reverse}html[data-lh="1"] .pause{margin-left:0;margin-right:auto}
+html[data-lh="1"] .cheer{right:auto;left:6px}html[data-lh="1"] .bossbar{left:auto!important;right:6px!important}
+html[data-lh="1"] .raid{right:auto;left:3px}html[data-lh="1"] .picks{left:auto;right:max(12px,env(safe-area-inset-right))}
+html[data-hc="1"] .pill,html[data-hc="1"] .pause,html[data-hc="1"] .pick{box-shadow:0 0 0 2.5px #1c0f06,0 .3em .45em rgba(0,0,0,.3)}html[data-hc="1"] .pill{color:#000}html[data-hc="1"] .pill small{color:#2a1a08}
+html[data-hc="1"] .cheer,html[data-hc="1"] .bossbar,html[data-hc="1"] .raid{box-shadow:0 0 0 2.5px #1c0f06}html[data-hc="1"] .bar{outline:2px solid #1c0f06}html[data-hc="1"] .card p,html[data-hc="1"] .ti i{color:#000}
+html[data-lt="1"] .hrow{flex-wrap:wrap}html[data-lt="1"] .pill{font-size:1.1rem;min-height:2.6rem;padding:.2em .6em}html[data-lt="1"] .pill small{font-size:.8rem}html[data-lt="1"] .pill b{font-size:1.15rem}html[data-lt="1"] .banner{font-size:clamp(3rem,11cqmin,6rem)}html[data-lt="1"] .hint{font-size:1.15rem}html[data-lt="1"] .pick{font-size:.85rem}html[data-lt="1"] .card p,html[data-lt="1"] .ti i{font-size:1.2rem}
+.card .opts{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin:.3rem 0}.card .opts .btn{margin:0;padding:.55rem .4rem;font-size:.95rem}.card h3.cm{margin:.5rem 0 .1rem;font:800 1.05rem var(--display);color:#7a3a05}
+
+.btn[hidden]{display:none}.goal{margin:.5rem auto 0;max-width:92%;padding:.3em .9em;border-radius:999px;background:rgba(255,247,227,.92);font:800 .85rem/1.2 var(--body);color:#7a3a05;box-shadow:0 .12em 0 #b79a63}.goal[hidden]{display:none}
+.sbs{display:flex;flex-direction:column;gap:.3rem;flex:none}.card .sb.try{background:linear-gradient(180deg,#dff5e6,#a9dcb8);color:#14532d;font-size:.78rem;min-height:2rem}
+.demo{position:absolute;left:50%;transform:translateX(-50%);top:15cqh;z-index:5;display:flex;align-items:center;gap:.6rem;padding:.3rem .4rem .3rem .9rem;border-radius:999px;background:rgba(255,247,227,.96);box-shadow:0 .14em 0 #b79a63,0 .3em .45em rgba(0,0,0,.2);font:800 .9rem var(--display);color:#4a2b0f;white-space:nowrap}.demo[hidden]{display:none}.demo .btn{margin:0;font-size:.8rem;min-height:2.1rem;padding:.3em .8em}
 </style>
 </head>
 <body>
@@ -244,10 +256,14 @@ html[data-dlg] .title *,html[data-dlg] .title *::before,html[data-dlg] .title *:
 <button class="btn" id="bTro" type="button">Trophies</button>
 </div>
 <div class="row">
+<button class="btn" id="bRep" type="button" disabled title="Clear a stage first">Replay a stage</button>
+</div>
+<div class="row">
 <button class="btn" id="bSet" type="button">Settings</button>
 <button class="btn" id="bShop" type="button">Shop</button>
 <button class="btn" id="bCalm" type="button" aria-pressed="false">Calm mode <span class="dot"></span></button>
 </div>
+<p class="goal" id="goal" hidden></p>
 <!--{{LAB_BTN}}-->
 </nav>
 <p class="legal">Alpha {{VERSION}} &middot; &copy; 2026 JNFoo. All rights reserved.</p>
@@ -269,6 +285,7 @@ html[data-dlg] .title *,html[data-dlg] .title *::before,html[data-dlg] .title *:
 <button class="raid" id="bRaid" type="button" hidden aria-label="Air raid: pineapples fall across the lanes (R)"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#ic-raid"/></svg><b id="raidN">0</b></button>
 <div class="bossbar" id="bossBar" hidden role="img" aria-label="Champion health"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#ic-medal"/></svg><div class="bar"><i id="bossFill"></i></div></div>
 <div class="banner" id="banner" hidden></div>
+<div class="demo" id="demoBar" hidden><span id="demoTxt"></span><button class="btn" id="demoX" type="button">Back to shop</button></div>
 <div class="hint" id="hint"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 56C16 40 24 24 44 12" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round"/><path d="M34 10l14 0-2 14" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Flick up from the bottom toward a penguin!</span></div>
 <div class="picks" role="group" aria-label="Pineapple type">
 <button class="pick" type="button" data-t="classic" aria-pressed="true" aria-label="Classic pineapple" title="Classic (key 1): quick throw at one penguin"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg><span>Classic</span></button>
@@ -309,11 +326,19 @@ html[data-dlg] .title *,html[data-dlg] .title *::before,html[data-dlg] .title *:
 <p class="note" id="trNote" role="status"></p>
 <div class="tl two" id="trList"></div>
 </template>
+<template id="t-rep">
+<p class="note" id="rpNote" role="status"></p>
+<div class="tl" id="rpList"></div>
+</template>
 <template id="t-shop">
 <p class="note" id="shNote" role="status"></p>
+<div class="row"><button class="btn" id="shUndo" type="button" hidden></button></div>
 <div class="tl" id="shList"></div>
 </template>
 <template id="t-set">
+<h3 class="cm">Comfort</h3>
+<div class="opts"><button class="btn" id="cmLh" type="button" aria-pressed="false"></button><button class="btn" id="cmAim" type="button"></button><button class="btn" id="cmArc" type="button"></button><button class="btn" id="cmHc" type="button" aria-pressed="false"></button><button class="btn" id="cmLt" type="button" aria-pressed="false"></button><button class="btn" id="cmCalm" type="button" aria-pressed="false"></button></div>
+<h3 class="cm">Save code</h3>
 <p>Move your game to another device with a save code or a file.</p>
 <div class="row"><button class="btn" id="svShow" type="button">Show save code</button><button class="btn" id="svFile" type="button">Save file</button></div>
 <textarea id="svCode" rows="3" readonly hidden aria-label="Your save code"></textarea>
@@ -324,7 +349,7 @@ html[data-dlg] .title *,html[data-dlg] .title *::before,html[data-dlg] .title *:
 <input type="file" id="svPick" accept=".txt,.md,.json" hidden>
 <p id="svMsg" role="status"></p>
 <span class="soon">Sound and music: coming later</span>
-<p>Calm mode is on the main menu. It stops bobbing, confetti and squishing.</p>
+<p>Calm mode (also on the main menu) stops bobbing, confetti and squishing, and starts on by itself if your device asks for reduced motion.</p>
 </template>
 <script>/*{{STICKER_JS}}*/</script>
 <script>/*{{EVEN_DT}}*/</script>
@@ -394,6 +419,7 @@ $('bHow').addEventListener('click',function(){openCard('t-how','How to play',thi
 $('bSet').addEventListener('click',function(){openCard('t-set','Settings',this)});
 $('bTro').addEventListener('click',function(){openCard('t-ach','Trophies',this)});
 $('bShop').addEventListener('click',function(){openCard('t-shop','Shop',this)});
+$('bRep').addEventListener('click',function(){openCard('t-rep','Replay a stage',this)});
 var bb=$('bb'),SL=['BRRR IS BEST!','SNOW DAYS ROCK!','FROSTY FEET!','NO SPIKY FRUIT!','FISH SNACKS!','TOO TOASTY!'],si=0;
 function setBB(t){bb.textContent=t;bb.style.fontSize='9.6px';var L=bb.getComputedTextLength?bb.getComputedTextLength():0;if(L>62)bb.style.fontSize=(9.6*62/L).toFixed(2)+'px'}
 setInterval(function(){if(title.hidden||!cw.hidden||document.hidden||root.getAttribute('data-calm')==='1')return;si=(si+1)%SL.length;bb.classList.add('flip');setTimeout(function(){setBB(SL[si])},230);setTimeout(function(){bb.classList.remove('flip')},470)},4200);

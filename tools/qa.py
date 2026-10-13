@@ -4,6 +4,7 @@
   python3 -I tools/qa.py            build, syntax check, then the in-page suite in Chromium (about 10 s)
   python3 -I tools/qa.py --ff       also run it in Firefox (the stress test)
   python3 -I tools/qa.py --lab      test the tester (lab) build instead
+  python3 -I tools/qa.py --min      test the minified page (the one that gets packed)
   python3 -I tools/qa.py --fuzz 300 longer random-action fuzzing (game seconds per stage, default 60)
   python3 -I tools/qa.py --force    ignore the "nothing changed since the last pass" cache
   python3 -I tools/qa.py --shots DIR  save a few screenshots into DIR
@@ -25,9 +26,11 @@ def run(cmd):
 
 # 1. build (about 0.4 s) and the page under test
 lab = flag('--lab')
-b = run([sys.executable, '-I', 'build.py'] + (['--lab'] if lab else []))
+mini = flag('--min')
+b = run([sys.executable, '-I', 'build.py'] + (['--lab'] if lab else []) + (['--min'] if mini else []))
 if b.returncode: print(b.stdout, b.stderr); sys.exit(2)
-page = os.path.join(ROOT, 'dist/lab/index.html' if lab else 'index.html')
+page = os.path.join(ROOT, ('dist/lab-min' if lab else 'dist/min') + '/index.html' if mini else 'dist/lab/index.html' if lab else 'index.html')
+if not os.path.exists(page): print('minified page missing (npm i --no-save esbuild)'); sys.exit(2)
 src = open(page, encoding='utf-8').read()
 
 # 2. syntax check of every inline script before any browser starts
@@ -44,7 +47,7 @@ print('[%s] built and syntax ok (%d KB)' % (stamp(), len(src) // 1024))
 suite = open(os.path.join(ROOT, 'tools/qa_suite.js'), encoding='utf-8').read()
 layout = open(os.path.join(ROOT, 'tools/qa_layout.js'), encoding='utf-8').read()
 key = hashlib.sha1((src + suite + layout + str(FUZZ) + str(flag('--ff'))).encode()).hexdigest()
-cache = os.path.join(ROOT, '.qa-cache'); mode = 'lab' if lab else 'main'
+cache = os.path.join(ROOT, '.qa-cache'); mode = ('lab' if lab else 'main') + ('-min' if mini else '')
 store = json.load(open(cache)) if os.path.exists(cache) else {}
 if store.get(mode) == key and not flag('--force'):
     print('[%s] unchanged since the last passing run: skipped (use --force to rerun)' % stamp()); sys.exit(0)

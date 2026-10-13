@@ -5,8 +5,11 @@ The decoder is lzma-js (MIT), vendored in src/vendor/lzma/. Copyright (c) 2026 J
 import base64, lzma, re, sys, pathlib
 root = pathlib.Path(__file__).resolve().parent.parent
 lab = '--lab' in sys.argv
+mn = '--min' in sys.argv   # pack the esbuild-minified page (build.py --min first); falls back to the readable page if it is missing
 args = [a for a in sys.argv[1:] if not a.startswith('--')]
-src = ((root / 'dist' / 'lab' / 'index.html') if lab else (root / 'index.html')).read_bytes()
+pg = (root / 'dist' / ('lab-min' if lab else 'min') / 'index.html') if mn else None
+if not (pg and pg.exists()): pg = (root / 'dist' / 'lab' / 'index.html') if lab else (root / 'index.html')
+src = pg.read_bytes()
 src = re.sub(rb'<meta http-equiv="Content-Security-Policy"[^>]*>\n?', b'', src)  # the wrapper carries the same policy
 ver = re.search(rb'Alpha ([0-9.]+)', src)
 ver = ver.group(1).decode() if ver else 'dev'

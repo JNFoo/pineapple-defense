@@ -96,7 +96,7 @@ function drawGull(x, y, s, dir, fl, fish) {
     ctx.fillStyle = '#2b3b4c'; ctx.beginPath(); ctx.moveTo(-s * 0.78, -s * 0.52); ctx.quadraticCurveTo(-s * 0.62, -s * 0.5, -s * 0.52, -s * 0.34); ctx.lineTo(-s * 0.7, -s * 0.28); ctx.closePath(); ctx.fill();
     ctx.restore();
     if (k === 0) {
-      var bg = ctx.createLinearGradient(0, -s * 0.2, 0, s * 0.22); bg.addColorStop(0, '#ffffff'); bg.addColorStop(1, '#cfdbe5');
+      var bg = gk('gull' + Math.round(s), function () { var b = ctx.createLinearGradient(0, -s * 0.2, 0, s * 0.22); b.addColorStop(0, '#ffffff'); b.addColorStop(1, '#cfdbe5'); return b; });
       ctx.fillStyle = bg; ctx.strokeStyle = '#7e93a6'; ctx.lineWidth = c; ctx.beginPath(); ctx.ellipse(0, 0, s * 0.42, s * 0.2, 0, 0, 6.3); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#e2eaf0'; ctx.beginPath(); ctx.moveTo(-s * 0.36, -s * 0.04); ctx.lineTo(-s * 0.66, -s * 0.12); ctx.lineTo(-s * 0.62, s * 0.08); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(s * 0.4, -s * 0.12, s * 0.15, 0, 6.3); ctx.fill(); ctx.stroke();
@@ -195,7 +195,7 @@ function drawUmbrellas() {
   var i, u, o, e, s, al, op, wob;
   for (i = 0; i < S.umL; i++) {
     /* closed umbrellas lie on the table next to the sling: one small cached sprite per colour */
-    var x = W * (0.345 + i * 0.04), y = H * 0.881, cu = closedUmb(i % 3);
+    var x = mx(0.345 + i * 0.04), y = H * 0.881, cu = closedUmb(i % 3);
     ctx.save(); ctx.translate(x, y); ctx.rotate(-0.09 + i * 0.05); ctx.drawImage(cu, -cu.width / DPR / 2, -cu.height / DPR / 2, cu.width / DPR, cu.height / DPR); ctx.restore();
   }
   for (i = 0; i < S.umb.length; i++) {
@@ -250,6 +250,7 @@ function drawRaid() {
     ctx.save(); ctx.globalAlpha = wa * pulse; ctx.lineCap = 'round'; ctx.setLineDash([s * 0.3, s * 0.18]); ctx.lineDashOffset = calm ? 0 : -r.t * 90;
     ctx.shadowColor = 'rgba(255,60,40,.9)'; ctx.shadowBlur = 12; ctx.strokeStyle = '#e0301f'; ctx.lineWidth = Math.max(6, s * 0.16); ctx.beginPath(); ctx.moveTo(xl, yEnd); ctx.lineTo(xr, yEnd); ctx.stroke();
     ctx.strokeStyle = '#fff7e3'; ctx.lineWidth = Math.max(1.5, s * 0.04); ctx.beginPath(); ctx.moveTo(xl, yEnd); ctx.lineTo(xr, yEnd); ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0;
+    if (sv.hc) { ctx.strokeStyle = '#1c0f06'; ctx.lineWidth = Math.max(2, s * 0.05); ctx.setLineDash([s * 0.18, s * 0.5]); ctx.beginPath(); ctx.moveTo(xl, yEnd); ctx.lineTo(xr, yEnd); ctx.stroke(); ctx.setLineDash([]); }
     for (i = 0; i < r.n; i++) { xn = -0.95 + 1.9 * i / (r.n - 1); x = px(xn, r.p); ctx.fillStyle = 'rgba(224,48,31,.35)'; ctx.beginPath(); ctx.ellipse(x, yEnd, s * 0.22, s * 0.06, 0, 0, 6.3); ctx.fill(); }
     ctx.restore();
   }
@@ -289,7 +290,7 @@ var LM = { cost: [80, 100, 150], rate: [4.2, 3.0], vol: [2, 4] };
 var LIME_COL = ['#d8ff7a', '#a6e34a', '#5cb82a', '#fff7e3'], limeImg = null, LIME_TY = null, LIME_GAP = 0.14, LIME_T = 0.55;
 function limeInt() { return LM.rate[sv.lm >= 2 ? 1 : 0] * (S.fx.zip > 0 ? 0.5 : 1); }
 function limeVol() { return LM.vol[sv.lm >= 3 ? 1 : 0]; }
-function limeGeom() { var s = slingGeom(); return { x: W * 0.255, base: s.base, f: s.f * 0.46, ps: s.f * 0.46 * 0.62 }; }
+function limeGeom() { var s = slingGeom(); return { x: mx(0.255), base: s.base, f: s.f * 0.46, ps: s.f * 0.46 * 0.62 }; }
 function limeReady() { var L = S.lm; return L.q > 0 ? 1 : 1 - Math.max(0, L.cd) / limeInt(); }
 function limeTy() { return LIME_TY || (LIME_TY = { img: 'pa', size: 0.95, pic: limeSprite() }); }
 /* the missile, drawn once and reused: nose up, a slice of lime in its window */

@@ -7,7 +7,11 @@ def run(*a):
     r = subprocess.run(py + list(a), cwd=ROOT, capture_output=True, text=True); sys.stdout.write(r.stdout); sys.stderr.write(r.stderr)
     if r.returncode: sys.exit(r.returncode)
 run('tools/qa.py', *[a for a in sys.argv[1:] if a in ('--ff', '--force', '--fuzz') or a.isdigit()])
-run('build.py', '--lab'); run('tools/pack.py'); run('tools/pack.py', '--lab')
+run('build.py', '--lab', '--min'); run('build.py', '--min')
+if os.path.exists(os.path.join(ROOT, 'dist/min/index.html')):
+    run('tools/qa.py', '--min', *[a for a in sys.argv[1:] if a == '--force'])   # the minified page is what ships, so it gets the same suite
+else: print('note: esbuild not found, packing the readable page')
+run('tools/pack.py', '--min'); run('tools/pack.py', '--lab', '--min')
 files = sorted(glob.glob(os.path.join(ROOT, 'dist/pineapple-defense*-20*.html')))
 vers = sorted({re.search(r'(20\d\d\.\d+\.\d+\.\d+)', f).group(1) for f in files})
 for f in files:                      # keep only the newest two versions

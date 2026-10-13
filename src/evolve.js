@@ -73,14 +73,14 @@ function drawFishBody(x, y, s, flap, ang, face) {
   var gr, fy = flap * s * 0.1;
   ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
   /* tail with two lobes and a lighter rim */
-  gr = ctx.createLinearGradient(-s * 0.8, 0, -s * 0.4, 0); gr.addColorStop(0, '#ff9a4a'); gr.addColorStop(1, '#e8601e');
+  gr = gk('ft' + Math.round(s * 4), function () { var g = ctx.createLinearGradient(-s * 0.8, 0, -s * 0.4, 0); g.addColorStop(0, '#ff9a4a'); g.addColorStop(1, '#e8601e'); return g; });
   ctx.fillStyle = gr; ctx.strokeStyle = '#b84a12'; ctx.lineWidth = Math.max(1.2, s * 0.04); ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.moveTo(-s * 0.4, 0); ctx.quadraticCurveTo(-s * 0.62, -s * 0.06 + fy * 0.5, -s * 0.8, -s * 0.26 + fy); ctx.quadraticCurveTo(-s * 0.7, fy * 0.3, -s * 0.76, s * 0.28 + fy); ctx.quadraticCurveTo(-s * 0.6, s * 0.06 + fy * 0.5, -s * 0.4, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
   /* top fin and belly fin */
   ctx.fillStyle = '#ffd7a8'; ctx.beginPath(); ctx.moveTo(-s * 0.12, -s * 0.27); ctx.quadraticCurveTo(-s * 0.02, -s * 0.56 + flap * s * 0.04, s * 0.22, -s * 0.25); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(-s * 0.02, s * 0.27); ctx.quadraticCurveTo(s * 0.04, s * 0.44, s * 0.16, s * 0.28); ctx.closePath(); ctx.fill(); ctx.stroke();
   /* body: orange on top, cream belly, a glossy shine */
-  gr = ctx.createLinearGradient(0, -s * 0.3, 0, s * 0.3); gr.addColorStop(0, '#ffc07a'); gr.addColorStop(0.55, '#ff8a42'); gr.addColorStop(1, '#e8601e');
+  gr = gk('fb' + Math.round(s * 4), function () { var g = ctx.createLinearGradient(0, -s * 0.3, 0, s * 0.3); g.addColorStop(0, '#ffc07a'); g.addColorStop(0.55, '#ff8a42'); g.addColorStop(1, '#e8601e'); return g; });
   ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(0, 0, s * 0.5, s * 0.3, 0, 0, 6.3); ctx.fill(); ctx.stroke();
   ctx.save(); ctx.beginPath(); ctx.ellipse(0, 0, s * 0.5, s * 0.3, 0, 0, 6.3); ctx.clip();
   ctx.fillStyle = 'rgba(255,240,214,.8)'; ctx.beginPath(); ctx.ellipse(s * 0.02, s * 0.3, s * 0.56, s * 0.17, 0, 0, 6.3); ctx.fill();

@@ -2,3 +2,6 @@ private/
 dist/
 .qa-cache
 .qa-syntax.js
+node_modules/
+package.json
+package-lock.json
