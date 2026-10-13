@@ -62,6 +62,19 @@ await T('air raid', async () => {
   P.step(3, 0.033, 6); if (S.raid) throw new Error('raid never ended'); P.raid(); if (S.raL !== 0) throw new Error('second raid'); P.step(3, 0.033); P.raid(); if (S.raL !== 0) throw new Error('over-stock raid'); inv('raid');
 });
 
+await T('lime launcher: tiers set the limes per Champion fight', async () => {
+  const sv = P.sv(), out = [];
+  for (const tier of [1, 2, 3]) {
+    sv.lm = tier; await go(2, 8); const S = P.S; let t = 0;
+    while (S.mode !== 'boss' || !S.boss || S.boss.st !== 'hold') { P.step(0.1, 0.05); if ((t += 0.1) > 30) throw new Error('boss never held'); }
+    let fired = 0, prev = S.lm.n; const start = S.lm.sup;
+    for (let i = 0; i < 1200 && S.boss && S.mode === 'boss'; i++) { P.step(0.05, 0.05); if (S.lm.n > prev) fired += S.lm.n - prev; prev = S.lm.n; if (S.lm.n < prev) prev = S.lm.n; }
+    const want = [6, 12, 20][tier - 1]; if (start > want || fired > want) throw new Error('tier ' + tier + ' supply ' + start + ' fired ' + fired + ' (limit ' + want + ')');
+    if (!fired) throw new Error('tier ' + tier + ' fired nothing'); out.push(tier + ':' + fired);
+  }
+  sv.lm = 0; return 'limes fired per fight ' + out.join(' ');
+});
+
 await T('lime launcher: shield first, then Champion', async () => {
   const sv = P.sv(); sv.lm = 0; await go(2, 8);
   const S = P.S; let sawM = 0, t = 0; while (S.mode !== 'boss' || !S.boss || S.boss.st !== 'hold') { P.step(0.1, 0.05); if ((t += 0.1) > 30) throw new Error('boss never held'); }
@@ -73,6 +86,7 @@ await T('lime launcher: shield first, then Champion', async () => {
     hp = S.boss.hp; sh = S.boss.shield; if (S.boss.st === 'hold' && S.boss.shield > S.boss.hp + 10) break;
   }
   if (first !== 'pop') throw new Error('first effect was ' + first); if (!hurt || !popped) throw new Error('popped ' + popped + ' hurt ' + hurt); if (maxM > 8) throw new Error('too many missiles ' + maxM);
+  const lm = P.S.lm; if (lm.sup < 0 || lm.sup > 20) throw new Error('lime supply out of range ' + lm.sup);
   sv.lm = 0; inv('lime'); return 'popped ' + popped + ', hurt ' + hurt + ', max in flight ' + maxM;
 });
 
@@ -98,7 +112,7 @@ await T('shop: try it restores the save; undo refunds', async () => {
   const sv = P.sv(); sv.bank = 500; sv.lm = 0; sv.gu = 0; sv.au = 0; const before = JSON.stringify(sv);
   P.demo({ name: 'Lime Launcher', kind: 'boss', over: { lm: 3 } }); if (!await wf(() => P.S && P.S.stage === 2 && P.dm, 3000)) throw new Error('demo did not start');
   if (sv.lm !== 3) throw new Error('upgrade was not lent'); for (let i = 0; i < 400 && P.dm; i++) P.step(0.1, 0.05); await wait(80);
-  if (P.dm) throw new Error('demo never ended'); if (JSON.stringify(sv) !== before) throw new Error('save was not restored: ' + JSON.stringify(sv) + ' vs ' + before);
+  if (P.dm) throw new Error('demo never ended'); const strip = (j) => j.replace(/,"seen":\d+/, ''); if (strip(JSON.stringify(sv)) !== strip(before)) throw new Error('save was not restored: ' + JSON.stringify(sv) + ' vs ' + before);   /* "seen" is the save time stamp and may move */
   $('cardOk') && $('cardOk').click(); document.getElementById('bShop').click(); const buy = [...document.querySelectorAll('#shList .sb')].find(b => /^Buy/.test(b.textContent)); buy.click();
   if (sv.bank >= 500) throw new Error('buy did nothing'); P.undoShop(); if (sv.bank !== 500 || sv.au) throw new Error('undo did not refund: bank ' + sv.bank + ' au ' + sv.au); $('cardOk').click();
 });

@@ -63,24 +63,24 @@ function fishXY(f) {
 function gullFor(f) {
   var ch = GULL_P[sv.gu | 0]; if (!ch || Math.random() > ch) return;
   var side = Math.random() < 0.5 ? -1 : 1;
-  S.gulls.push({ f: f, side: side, t: 0, T: 1.5, st: 'in', x: 0, y: 0, x0: side < 0 ? -W * 0.14 : W * 1.14, y0: H * (0.1 + Math.random() * 0.1), fl: Math.random() * 6, hold: false });
+  S.gulls.push({ f: f, side: side, t: 0, T: 1.5, st: 'in', x: 0, y: 0, x0: side < 0 ? -W * 0.14 : W * 1.14, y0: H * (0.22 + Math.random() * 0.1), fl: Math.random() * 6, hold: false });
 }
 function updateGulls(dt) {
   var i, g, u, e, tg, s;
   for (i = S.gulls.length - 1; i >= 0; i--) {
-    g = S.gulls[i]; g.t += dt; g.fl += dt * 13; s = Math.max(30, W * 0.085);
+    g = S.gulls[i]; g.t += dt; g.fl += dt * 13; s = Math.max(32, W * 0.095);
     if (g.st === 'in') {
       var ix = S.fish.indexOf(g.f);
       if (ix < 0 || g.f.st !== 'fall') { g.st = 'out'; g.t = 0; g.sx = g.x || g.x0; g.sy = g.y || g.y0; continue; }
       tg = fishXY(g.f); u = Math.min(1, g.t / g.T); e = u * u * (3 - 2 * u);
-      g.x = g.x0 + (tg.x - g.x0) * e; g.y = g.y0 + (tg.y - g.y0) * e - Math.sin(u * 3.14) * H * 0.05;
+      g.x = g.x0 + (tg.x - g.x0) * e; g.y = g.y0 + (tg.y - g.y0) * e + Math.sin(u * 3.14) * H * 0.035;   /* a low swoop, easy to see over the lanes */
       if (g.t >= g.T) {
         S.fish.splice(ix, 1); g.hold = true; g.st = 'out'; g.t = 0; g.sx = g.x; g.sy = g.y;
         burst(g.x, g.y, 8, ['#ffffff', '#dbe6ee']); sparkBurst(g.x, g.y, 6, ['#fff7e3', '#8fd8ff']); popText(g.x, g.y - s * 0.7, 'Squawk!', '#2f6fa0', 1);
         rings.push({ x: g.x, y: g.y, t: 0, ttl: 0.5, r: s * 0.9, c: '255,255,255' }); award(10);
       }
     } else {
-      u = g.t / 1.5; g.x = g.sx - g.side * W * 1.3 * u * u - g.side * W * 0.1 * u; g.y = g.sy - H * 0.14 * u - Math.sin(g.t * 5) * 3;
+      u = g.t / 1.5; g.x = g.sx - g.side * W * 1.3 * u * u - g.side * W * 0.1 * u; g.y = g.sy - H * 0.1 * u - Math.sin(g.t * 5) * 3;
       if (u >= 1) S.gulls.splice(i, 1);
     }
   }
@@ -112,7 +112,7 @@ function drawGull(x, y, s, dir, fl, fish) {
   if (fish) drawFishBody(x + dir * s * 0.82, y + s * 0.13, s * 0.5, Math.sin(fl * 0.8), dir > 0 ? 0.25 : Math.PI - 0.25, true);
 }
 function drawGulls() {
-  var i, g, s = Math.max(30, W * 0.085), dir;
+  var i, g, s = Math.max(32, W * 0.095), dir;
   for (i = 0; i < S.gulls.length; i++) {
     g = S.gulls[i]; if (!g.x && !g.y) continue;
     dir = g.st === 'in' ? (g.side < 0 ? 1 : -1) : (g.side < 0 ? 1 : -1);
@@ -168,13 +168,19 @@ function drawBrolly(x, y, r, open, col, rot) {
 }
 /* the open canopy is painted once per colour and size; opening is a scale about the foot of the stick */
 var BROLLY = {};
-function drawBrollyCached(x, y, r, open, ci, rot, alpha) {
-  var key = ci + 'x' + Math.round(r) + 'x' + DPR, c = BROLLY[key], g, c0, pw = Math.ceil(r * 2.5), ph = Math.ceil(r * 2.9), pa = ctx.globalAlpha;
+function brollyCanvas(ci, r) {
+  var key = ci + 'x' + Math.round(r) + 'x' + DPR, c = BROLLY[key], g, c0, pw = Math.ceil(r * 2.5), ph = Math.ceil(r * 2.9);
   if (!c) {
     if (Object.keys(BROLLY).length > 9) BROLLY = {};
     c = BROLLY[key] = document.createElement('canvas'); c.width = Math.ceil(pw * DPR); c.height = Math.ceil(ph * DPR); g = c.getContext('2d'); g.setTransform(DPR, 0, 0, DPR, pw / 2 * DPR, (ph - r * 0.2) * DPR);
     c0 = ctx; ctx = g; drawBrolly(0, 0, r, 1, UMB_COL[ci], 0); ctx = c0;
   }
+  return c;
+}
+/* build the three canopies and the closed umbrellas before the first one opens, so opening never costs a frame */
+function warmUmb() { if (!S || !(sv.um > 0)) return; for (var ci = 0; ci < 3; ci++) { brollyCanvas(ci, psz(0.95) * 1.05); closedUmb(ci); } }
+function drawBrollyCached(x, y, r, open, ci, rot, alpha) {
+  var c = brollyCanvas(ci, r), pw = Math.ceil(r * 2.5), ph = Math.ceil(r * 2.9), pa = ctx.globalAlpha;
   ctx.globalAlpha = pa * alpha; ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(open, open);
   ctx.drawImage(c, -pw / 2, -(ph - r * 0.2), pw, ph); ctx.restore(); ctx.globalAlpha = pa;
 }
@@ -286,30 +292,27 @@ function drawHalo(o, rgb, t, age) {
 }
 
 /* ---------- Lime Launcher: a small green helper for Champion fights. Its lime missiles pop the Champion's snowballs first; leftovers hit the Champion ---------- */
-var LM = { cost: [80, 100, 150], rate: [4.2, 3.0], vol: [2, 4] };
+/* the tiers set how many limes the launcher has for each Champion fight; it fires them at one steady pace */
+var LM = { cost: [80, 100, 150], sup: [6, 12, 20], gap: 0.8 };
 var LIME_COL = ['#d8ff7a', '#a6e34a', '#5cb82a', '#fff7e3'], limeImg = null, LIME_TY = null, LIME_GAP = 0.14, LIME_T = 0.55;
-function limeInt() { return LM.rate[sv.lm >= 2 ? 1 : 0] * (S.fx.zip > 0 ? 0.5 : 1); }
-function limeVol() { return LM.vol[sv.lm >= 3 ? 1 : 0]; }
+function limeInt() { return LM.gap * (S.fx.zip > 0 ? 0.5 : 1); }
+function limeSup() { return LM.sup[Math.max(0, Math.min(2, (sv.lm | 0) - 1))]; }
 function limeGeom() { var s = slingGeom(); return { x: mx(0.255), base: s.base, f: s.f * 0.46, ps: s.f * 0.46 * 0.62 }; }
-function limeReady() { var L = S.lm; return L.q > 0 ? 1 : 1 - Math.max(0, L.cd) / limeInt(); }
+function limeReady() { var L = S.lm; return L.fb && L.sup <= 0 ? 0 : 1 - Math.max(0, L.cd) / limeInt(); }
 function limeTy() { return LIME_TY || (LIME_TY = { img: 'pa', size: 0.95, pic: limeSprite() }); }
-/* the missile, drawn once and reused: nose up, a slice of lime in its window */
+/* the missile is a whole lime with a leaf, drawn once and reused */
 function limeSprite() {
   if (limeImg) return limeImg;
-  var c = document.createElement('canvas'), g, bg, i, a, cy = 62; c.width = c.height = 128; g = c.getContext('2d');
-  g.translate(64, 0); g.lineJoin = 'round'; g.strokeStyle = '#143d09'; g.lineWidth = 4;
-  g.fillStyle = '#2f7a12';
-  g.beginPath(); g.moveTo(-16, 80); g.quadraticCurveTo(-36, 88, -34, 116); g.lineTo(-14, 104); g.closePath(); g.fill(); g.stroke();
-  g.beginPath(); g.moveTo(16, 80); g.quadraticCurveTo(36, 88, 34, 116); g.lineTo(14, 104); g.closePath(); g.fill(); g.stroke();
-  bg = g.createLinearGradient(-20, 0, 20, 0); bg.addColorStop(0, '#9be03a'); bg.addColorStop(0.35, '#d8ff7a'); bg.addColorStop(0.72, '#7fcf3a'); bg.addColorStop(1, '#3f8f1d');
-  g.fillStyle = bg; g.beginPath(); g.moveTo(-20, 100); g.lineTo(-20, 46); g.quadraticCurveTo(-20, 12, 0, 4); g.quadraticCurveTo(20, 12, 20, 46); g.lineTo(20, 100); g.quadraticCurveTo(0, 110, -20, 100); g.closePath(); g.fill(); g.stroke();
-  g.fillStyle = '#e9ffb0'; g.beginPath(); g.arc(0, cy, 13, 0, 6.3); g.fill(); g.stroke();
-  g.fillStyle = '#8fd83e'; g.beginPath(); g.arc(0, cy, 9.5, 0, 6.3); g.fill();
-  g.strokeStyle = '#e9ffb0'; g.lineWidth = 2; g.beginPath();
-  for (i = 0; i < 6; i++) { a = i * Math.PI / 3; g.moveTo(0, cy); g.lineTo(Math.cos(a) * 9.5, cy + Math.sin(a) * 9.5); }
-  g.stroke();
-  g.fillStyle = 'rgba(255,255,255,.62)'; g.beginPath(); g.ellipse(-10, 36, 3.5, 18, 0.06, 0, 6.3); g.fill();
-  g.fillStyle = 'rgba(20,61,9,.35)'; g.fillRect(-20, 88, 40, 5);
+  var c = document.createElement('canvas'), g, bg, i, a; c.width = c.height = 128; g = c.getContext('2d');
+  g.lineJoin = 'round'; g.strokeStyle = '#143d09'; g.lineWidth = 4;
+  bg = g.createRadialGradient(50, 58, 4, 64, 72, 50); bg.addColorStop(0, '#f0ffa8'); bg.addColorStop(0.35, '#a6e34a'); bg.addColorStop(1, '#3f8f1d');
+  g.fillStyle = bg; g.beginPath(); g.moveTo(64, 28); g.bezierCurveTo(96, 28, 112, 52, 108, 78); g.bezierCurveTo(104, 104, 84, 118, 64, 118); g.bezierCurveTo(44, 118, 24, 104, 20, 78); g.bezierCurveTo(16, 52, 32, 28, 64, 28); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = '#e9ffb0'; g.beginPath(); g.arc(64, 118, 3.5, 0, 6.3); g.fill();
+  g.fillStyle = 'rgba(31,100,12,.55)'; for (i = 0; i < 9; i++) { a = i * 2.4; g.beginPath(); g.arc(64 + Math.cos(a) * (14 + i * 4), 76 + Math.sin(a) * (10 + i * 3.4), 2, 0, 6.3); g.fill(); }
+  g.fillStyle = '#4fa81e'; g.beginPath(); g.moveTo(64, 30); g.quadraticCurveTo(70, 8, 98, 6); g.quadraticCurveTo(92, 30, 64, 30); g.closePath(); g.fill(); g.stroke();
+  g.strokeStyle = '#a6e34a'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(68, 26); g.quadraticCurveTo(80, 18, 92, 11); g.stroke();
+  g.fillStyle = '#5a3a14'; g.fillRect(60, 24, 8, 9);
+  g.fillStyle = 'rgba(255,255,255,.7)'; g.beginPath(); g.ellipse(42, 62, 8, 17, 0.5, 0, 6.3); g.fill();
   limeImg = c; return c;
 }
 function limeTgt(m) {
@@ -343,18 +346,15 @@ function updateLime(dt) {
     if (m.t >= LIME_T) { limeHit(m); S.ms.splice(i, 1); }
   }
   if (!sv.lm) return;
+  if (b !== L.fb) { L.fb = b; L.sup = b ? limeSup() : 0; L.cd = Math.min(L.cd, 0.4); }   /* a fresh Champion means a fresh supply */
   can = !!b && b.st === 'hold' && S.mode === 'boss' && !S.over;
   L.cd = Math.max(0, L.cd - dt);
-  if (can && L.q === 0 && L.cd <= 0) { L.q = limeVol(); L.qt = 0; L.n = 0; }
-  if (L.q > 0) {
-    L.qt -= dt;
-    if (L.qt <= 0) { if (can) launchLime(L.n++); L.q--; L.qt = LIME_GAP; if (L.q === 0) L.cd = limeInt(); }
-  }
-  if (can || L.q > 0) { c = penCenter(b); po = pouchPos(limeGeom(), L.a); ta = Math.max(-0.3, Math.min(0.3, Math.atan2(c.x - po.x, po.y - c.y))); }
+  if (can && L.sup > 0 && L.cd <= 0) { launchLime(L.n++); L.sup--; L.cd = limeInt(); }
+  if (can && L.sup > 0) { c = penCenter(b); po = pouchPos(limeGeom(), L.a); ta = Math.max(-0.3, Math.min(0.3, Math.atan2(c.x - po.x, po.y - c.y))); }
   L.a += (ta - L.a) * Math.min(1, dt * 9);
 }
 function drawMissiles() {
-  var i, j, m, sz = Math.max(30, Math.min(W, H) * 0.075), h, n, fl;
+  var i, j, m, sz = Math.max(36, Math.min(W, H) * 0.095), h, n;
   if (!S.ms.length) return;
   var im = limeSprite();
   for (i = 0; i < S.ms.length; i++) {
@@ -363,10 +363,7 @@ function drawMissiles() {
       ctx.globalAlpha = 0.5 * (j + 1) / (n + 1); ctx.fillStyle = j & 1 ? '#d8ff7a' : '#a6e34a';
       ctx.beginPath(); ctx.arc(h[j * 2], h[j * 2 + 1], sz * 0.2 * (j + 1) / (n + 1), 0, 6.3); ctx.fill();
     }
-    ctx.globalAlpha = 1; ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.ang + Math.PI / 2);
-    fl = calm ? 1 : 0.8 + 0.3 * Math.sin(m.t * 60 + i);
-    ctx.fillStyle = '#ff9f3a'; ctx.beginPath(); ctx.ellipse(0, sz * 0.62, sz * 0.12, sz * 0.24 * fl, 0, 0, 6.3); ctx.fill();
-    ctx.fillStyle = '#fff2a8'; ctx.beginPath(); ctx.ellipse(0, sz * 0.58, sz * 0.06, sz * 0.14 * fl, 0, 0, 6.3); ctx.fill();
+    ctx.globalAlpha = 1; ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(calm ? 0 : m.t * 9 * (m.side || 1));   /* the lime tumbles on its way */
     ctx.drawImage(im, -sz / 2, -sz / 2, sz, sz); ctx.restore();
   }
 }

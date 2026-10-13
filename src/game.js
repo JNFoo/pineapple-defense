@@ -78,7 +78,8 @@ function loadAssets() {
   jobs.push(toImage($('spr-plant').innerHTML, { w: 240, h: 240 }).then(function (c) { PROP.plant = c; }));
   jobs.push(document.fonts && document.fonts.load ? document.fonts.load('800 32px "Bricolage Grotesque"') : Promise.resolve());
   assets = Promise.all(jobs).then(function () {
-    (function next() { if (late.length) late.shift()().then(function () { setTimeout(next, 0); }); })();
+    (function next() { if (late.length) late.shift()().then(function () { setTimeout(next, 0); }); else warmAll(); })();
+    warmAll();
   });
   return assets;
 }
@@ -666,7 +667,7 @@ function startStage(from) {
   elBanner.hidden = true;
   elHint.hidden = !!(from && (from.wave > 0 || from.stage > 1));
   if (from) { S.golden = from.golden; S.cheer = Math.max(60, from.cheer); }
-  hud(); runToast();
+  hud(); runToast(); setTimeout(warmUmb, 60);
   if (from && from.wave >= NWAVES) startBoss(); else beginWave(from ? from.wave + 1 : 1);
 }
 function continueGame() { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage(sv); run(); }); }
@@ -840,6 +841,16 @@ function mip(im, sz) {
   var need = sz * DPR; if (!im || need > 250) return im;
   var m = im._m192 || (im._m192 = halve(im, 192));
   return need > 125 ? m : (im._m96 || (im._m96 = halve(m, 96)));
+}
+/* build every sprite's small copies (and the umbrella canopies) a little at a time in the background, so no frame has to pay for them the first time a mood or color shows up */
+var warmQ = [], warmOn = false;
+function warmStep() { var f = warmQ.shift(); if (!f) { warmOn = false; return; } f(); setTimeout(warmStep, 6); }
+function warmAll() {
+  Object.keys(IMG).forEach(function (k) { Object.keys(IMG[k]).forEach(function (m) {
+    var im = IMG[k][m]; if (im && !im._m96) warmQ.push(function () { var c = im._m192 || (im._m192 = halve(im, 192)); if (!im._m96) im._m96 = halve(c, 96); });
+  }); });
+  warmQ.push(warmUmb);
+  if (!warmOn) { warmOn = true; setTimeout(warmStep, 30); }
 }
 function halve(im, lv) { var c = document.createElement('canvas'), g = c.getContext('2d'); c.width = c.height = lv; g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, lv, lv); return c; }
 function drawShadow(x, y, w, a) {
@@ -1892,9 +1903,9 @@ function fillShop() {
   rows.push({ k: 'au', demo: dm('Auto Slingshot', 'auto', { au: 1 }), title: 'Auto Slingshot', desc: sv.au ? 'A helper on your table. It aims at the penguin with the teal marker, so aim at a different one!' : 'A little helper that tosses pineapples all by itself and shows who it is aiming at.', cost: sv.au ? 0 : SHOP.cost.au, st: sv.au ? 'Owned' : '' });
   rows.push({ k: 'ar', demo: dm('Faster Fling', 'auto', { au: 1, ar: Math.min(3, sv.ar + 1) }), title: 'Faster Fling ' + sv.ar + '/3', desc: 'Now: a toss every ' + AUTO_INT[sv.ar] + ' seconds.' + (sv.ar < 3 ? ' Next: ' + AUTO_INT[sv.ar + 1] + ' seconds.' : ''), cost: sv.ar < 3 ? SHOP.cost.ar[sv.ar] : 0, st: sv.ar >= 3 ? 'Maxed' : '', lock: !sv.au });
   rows.push({ k: 'ap', demo: dm('Better Pineapples', 'auto', { au: 1, ap: Math.min(2, sv.ap + 1), bank: 60 }), title: 'Better Pineapples ' + sv.ap + '/2', desc: 'Now: ' + SHOP.pine[sv.ap] + (sv.ap < 2 ? ' Next: ' + SHOP.pine[sv.ap + 1] : ''), cost: sv.ap < 2 ? SHOP.cost.ap[sv.ap] : 0, st: sv.ap >= 2 ? 'Maxed' : '', lock: !sv.au });
-  rows.push({ k: 'lm', demo: dm('Lime Launcher', 'boss', { lm: Math.max(1, sv.lm) }), title: 'Lime Launcher', desc: sv.lm ? 'A small green helper. In Champion fights it fires lime missiles that pop the Champion\u2019s snowballs first, and any left over hit the Champion.' : 'A small green helper for Champion fights. Its lime missiles pop the snowballs around a Champion, and any left over hit the Champion. Works on its own, no Auto Slingshot needed.', cost: sv.lm ? 0 : LM.cost[0], st: sv.lm ? 'Owned' : '' });
-  rows.push({ k: 'lm', demo: dm('Rapid Limes', 'boss', { lm: Math.max(2, sv.lm) }), title: 'Rapid Limes ' + (sv.lm >= 2 ? 1 : 0) + '/1', desc: 'Now: a volley every ' + LM.rate[sv.lm >= 2 ? 1 : 0] + ' seconds.' + (sv.lm < 2 ? ' Next: ' + LM.rate[1] + ' seconds.' : ''), cost: sv.lm < 2 ? LM.cost[1] : 0, st: sv.lm >= 2 ? 'Maxed' : '', lock: sv.lm < 1 });
-  rows.push({ k: 'lm', demo: dm('Lime Volley', 'boss', { lm: 3 }), title: 'Lime Volley ' + (sv.lm >= 3 ? 1 : 0) + '/1', desc: 'Now: ' + LM.vol[sv.lm >= 3 ? 1 : 0] + ' missiles per volley.' + (sv.lm < 3 ? ' Next: ' + LM.vol[1] + ' missiles.' : ''), cost: sv.lm < 3 ? LM.cost[2] : 0, st: sv.lm >= 3 ? 'Maxed' : '', lock: sv.lm < 2 });
+  rows.push({ k: 'lm', demo: dm('Lime Launcher', 'boss', { lm: Math.max(1, sv.lm) }), title: 'Lime Launcher', desc: 'A small green helper for Champion fights. It tosses ' + LM.sup[0] + ' limes in every fight: they pop the snowballs around the Champion first, and any left over hit the Champion. Works on its own, no Auto Slingshot needed.', cost: sv.lm ? 0 : LM.cost[0], st: sv.lm ? 'Owned' : '' });
+  rows.push({ k: 'lm', demo: dm('More Limes', 'boss', { lm: Math.max(2, sv.lm) }), title: 'More Limes ' + (sv.lm >= 2 ? 1 : 0) + '/1', desc: LM.sup[1] + ' limes in every Champion fight, up from ' + LM.sup[0] + '.', cost: sv.lm < 2 ? LM.cost[1] : 0, st: sv.lm >= 2 ? 'Maxed' : '', lock: sv.lm < 1 });
+  rows.push({ k: 'lm', demo: dm('Lots of Limes', 'boss', { lm: 3 }), title: 'Lots of Limes ' + (sv.lm >= 3 ? 1 : 0) + '/1', desc: LM.sup[2] + ' limes in every Champion fight, up from ' + LM.sup[1] + '.', cost: sv.lm < 3 ? LM.cost[2] : 0, st: sv.lm >= 3 ? 'Maxed' : '', lock: sv.lm < 2 });
   rows.push({ k: 'gu', demo: dm('Gull Pals', 'fish', { gu: Math.min(3, sv.gu + 1) }), title: 'Gull Pals ' + sv.gu + '/3', desc: 'A gull swoops in and snatches ' + (sv.gu ? 'about ' + Math.round(GULL_P[sv.gu] * 100) + '% of' : 'some of') + ' the falling fish, so fewer penguins level up.' + (sv.gu < 3 ? ' Next: ' + Math.round(GULL_P[sv.gu + 1] * 100) + '%.' : ''), cost: sv.gu < 3 ? SHOP.cost.gu[sv.gu] : 0, st: sv.gu >= 3 ? 'Maxed' : '' });
   rows.push({ k: 'um', demo: dm('Paper Umbrellas', 'umb', { um: Math.min(3, sv.um + 1) }), title: 'Paper Umbrellas ' + sv.um + '/3', desc: 'Paper drink umbrellas wait on your table. If a penguin is about to knock the cheer down, one snaps open and flings him away. Now: ' + sv.um + ' per stage.' + (sv.um < 3 ? ' Next: ' + (sv.um + 1) + '.' : ''), cost: sv.um < 3 ? SHOP.cost.um[sv.um] : 0, st: sv.um >= 3 ? 'Maxed' : '' });
   rows.push({ k: 'ra', demo: dm('Air Raid', 'raid', { ra: Math.min(2, sv.ra + 1) }), title: 'Air Raid ' + sv.ra + '/2', desc: 'Press the Raid button under the cheer bar and a row of classic pineapples falls across the lanes. Now: ' + sv.ra + ' per stage.' + (sv.ra < 2 ? ' Next: ' + (sv.ra + 1) + '.' : ''), cost: sv.ra < 2 ? SHOP.cost.ra[sv.ra] : 0, st: sv.ra >= 2 ? 'Maxed' : '' });
@@ -1965,7 +1976,7 @@ function updateGoal() {
   var g = [], el = $('goal'), best = null, i, tx;
   if (!el) return;
   if (!sv.au) g.push(['the Auto Slingshot', SHOP.cost.au]); else { if (sv.ar < 3) g.push(['Faster Fling', SHOP.cost.ar[sv.ar]]); if (sv.ap < 2) g.push(['Better Pineapples', SHOP.cost.ap[sv.ap]]); }
-  if (sv.lm < 3) g.push([['the Lime Launcher', 'Rapid Limes', 'Lime Volley'][sv.lm], LM.cost[sv.lm]]);
+  if (sv.lm < 3) g.push([['the Lime Launcher', 'More Limes', 'Lots of Limes'][sv.lm], LM.cost[sv.lm]]);
   if (sv.gu < 3) g.push(['Gull Pals', SHOP.cost.gu[sv.gu]]); if (sv.um < 3) g.push(['Paper Umbrellas', SHOP.cost.um[sv.um]]); if (sv.ra < 2) g.push(['Air Raid', SHOP.cost.ra[sv.ra]]);
   for (i = 0; i < g.length; i++) if (!best || g[i][1] < best[1]) best = g[i];
   if (!best) { el.hidden = true; return; }
