@@ -14,16 +14,17 @@ function gtSvg(markup) {
 /* ---------- the fish ---------- */
 function fishFree(pg) { return pg.st === 'walk' && !(pg.ev > 0) && pg.kind !== 'gt' && pg.p > 0.12; }
 function tryDrop() {
-  var c = [], i, pg, T = 3.0, pL, b = S.boss, ok;
+  var c = [], i, pg, T = 2.6, pL = 0.36 + Math.random() * 0.18, b = S.boss, ok;
+  /* the fish lands mid-field, so the penguin still has room to eat it and walk on; only penguins that will not have passed that spot by then qualify */
   for (i = 0; i < penguins.length; i++) {
-    pg = penguins[i]; if (!fishFree(pg) || pg.p > 0.66) continue;
-    pL = Math.min(0.88, pg.p + pg.v * T + 0.13); ok = true;
+    pg = penguins[i]; if (!fishFree(pg) || pg.p + pg.v * T + 0.05 > pL) continue;
+    ok = true;
     if (b && b.st !== 'slide' && b.st !== 'gone' && Math.abs(pg.xn - b.xn) < 0.6 && pL > b.p - 0.16 && pL < b.p + 0.16) ok = false;
-    if (ok) c.push({ pg: pg, pL: pL });
+    if (ok) c.push({ pg: pg });
   }
   if (!c.length) return false;
   c = c[Math.floor(Math.random() * c.length)];
-  S.fish.push({ isFish: true, st: 'fall', t: 0, T: T, xn: c.pg.xn, p: c.pL, pg: null, hop: Math.random() * 6 });
+  S.fish.push({ isFish: true, st: 'fall', t: 0, T: T, xn: c.pg.xn, p: pL, pg: null, hop: Math.random() * 6 });
   return true;
 }
 function startEvolve(pg, f) {

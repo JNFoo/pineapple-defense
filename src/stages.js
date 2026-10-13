@@ -8,10 +8,57 @@ function hband(g, y0, y1, tL, tR, bL, bR) {
   for (i = 0; i < n; i++) { u = i / (n - 1); gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, mixc(tL, bL, u)); gr.addColorStop(1, mixc(tR, bR, u)); g.fillStyle = gr; g.fillRect(0, y0 + (y1 - y0) * i / n, W, (y1 - y0) / n + 1.5); }
 }
 function hgrad(g, cL, cR) { var gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, cL); gr.addColorStop(1, cR); return gr; }
-function laneLines(g, col) {
-  g.strokeStyle = col; g.lineWidth = 2;
-  for (var l = -3; l <= 2; l++) { var xn = (l + 0.5) * 0.4; g.beginPath(); g.moveTo(px(xn, 0.06), py(0.06)); g.lineTo(px(xn, 1.05), py(1.05)); g.stroke(); }
+/* ---------- the lanes: each stage paints its own ground pattern in perspective ---------- */
+function rnd(i) { var x = Math.sin(i * 12.9898 + 7.13) * 43758.5453; return x - Math.floor(x); }
+function lq(g, xa, xb, p0, p1, fill) { g.fillStyle = fill; g.beginPath(); g.moveTo(px(xa, p0), py(p0)); g.lineTo(px(xb, p0), py(p0)); g.lineTo(px(xb, p1), py(p1)); g.lineTo(px(xa, p1), py(p1)); g.closePath(); g.fill(); }
+function scatter(g, n, seed, fn) { for (var i = 0; i < n; i++) { var p = 0.09 + 0.88 * rnd(seed + i * 3.1), xn = (rnd(seed + i * 7.7) - 0.5) * 2.5; fn(g, px(xn, p), py(p), psz(p), rnd(seed + i * 5.3), i, xn, p); } }
+function starfish(g, x, y, s, c) { g.fillStyle = c; g.strokeStyle = 'rgba(120,50,10,.35)'; g.lineWidth = 1; g.beginPath(); for (var i = 0; i < 10; i++) { var a = i * 0.628 - 1.57, r = i % 2 ? s * 0.045 : s * 0.12; g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.55); } g.closePath(); g.fill(); g.stroke(); }
+function shell(g, x, y, s, c) { g.fillStyle = c; g.strokeStyle = 'rgba(150,100,60,.5)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x, y + s * 0.03); g.quadraticCurveTo(x - s * 0.13, y - s * 0.06, x - s * 0.07, y - s * 0.1); g.quadraticCurveTo(x, y - s * 0.14, x + s * 0.07, y - s * 0.1); g.quadraticCurveTo(x + s * 0.13, y - s * 0.06, x, y + s * 0.03); g.fill(); g.stroke(); g.beginPath(); g.moveTo(x, y + s * 0.02); g.lineTo(x - s * 0.04, y - s * 0.1); g.moveTo(x, y + s * 0.02); g.lineTo(x + s * 0.04, y - s * 0.1); g.moveTo(x, y + s * 0.02); g.lineTo(x, y - s * 0.12); g.stroke(); }
+function prints(g, x, y, s, a) { g.fillStyle = 'rgba(70,90,120,.22)'; for (var k = 0; k < 2; k++) { g.beginPath(); g.ellipse(x + (k ? 1 : -1) * s * 0.05 + a * s * 0.04, y + k * s * 0.03, s * 0.025, s * 0.045, 0.2, 0, 6.3); g.fill(); } }
+function crack(g, x, y, s, r) { g.strokeStyle = 'rgba(100,150,190,.45)'; g.lineWidth = 1.4; g.lineCap = 'round'; g.beginPath(); g.moveTo(x, y); for (var k = 1; k <= 4; k++) g.lineTo(x + k * s * 0.07 * (r > 0.5 ? 1 : -1), y + (k % 2 ? -1 : 1) * s * 0.03 * (1 + r)); g.moveTo(x + s * 0.14 * (r > 0.5 ? 1 : -1), y); g.lineTo(x + s * 0.2 * (r > 0.5 ? 1 : -1), y + s * 0.07); g.stroke(); }
+function laneDeco(g, st) {
+  var l, k, x0, x1, p0, y, i, u;
+  var pw = function (k2) { return Math.pow(k2, 1.7) * 1.04; };
+  if (st === 1) {
+    for (l = -2; l <= 2; l++) lq(g, (l - 0.5) * 0.4, (l + 0.5) * 0.4, 0.03, 1.06, l & 1 ? 'rgba(255,248,225,.16)' : 'rgba(190,150,80,.07)');
+    g.strokeStyle = 'rgba(160,120,60,.16)'; g.lineWidth = 1.8; g.lineCap = 'round';
+    for (k = 1; k <= 9; k++) { p0 = pw(k / 9); y = py(p0); g.beginPath(); for (i = 0; i <= 24; i++) { u = i / 24; var yy = y + Math.sin(u * 14 + k * 1.9) * (2 + 5 * p0) * 0.6; if (i) g.lineTo(u * W, yy); else g.moveTo(0, yy); } g.stroke(); }
+    scatter(g, 16, 11, function (g2, x, yb, s, r, i) { if (i % 3 === 0) starfish(g2, x, yb, s, i % 2 ? '#ff9a4a' : '#ff7a6a'); else if (i % 3 === 1) shell(g2, x, yb, s, '#fff0dc'); else { g2.fillStyle = 'rgba(120,100,80,.35)'; g2.beginPath(); g2.ellipse(x, yb, s * 0.05, s * 0.025, 0, 0, 6.3); g2.fill(); } });
+  } else if (st === 2) {
+    for (l = -2; l <= 2; l++) lq(g, (l - 0.5) * 0.4, (l + 0.5) * 0.4, 0.03, 1.06, l & 1 ? 'rgba(255,255,255,.2)' : 'rgba(120,170,210,.1)');
+    scatter(g, 9, 31, function (g2, x, yb, s, r) { crack(g2, x, yb, s, r); });
+    scatter(g, 8, 47, function (g2, x, yb, s, r) { prints(g2, x, yb, s, r); prints(g2, x + s * 0.12, yb - s * 0.09, s, r); });
+    scatter(g, 12, 53, function (g2, x, yb, s) { g2.fillStyle = 'rgba(255,255,255,.55)'; g2.beginPath(); g2.ellipse(x, yb, s * 0.07, s * 0.025, 0, 0, 6.3); g2.fill(); });
+  } else if (st === 3) {
+    /* dock boards: three boards per lane, each its own wood tone, with seams, knots, cross beams and nails */
+    for (l = -2; l <= 2; l++) for (k = 0; k < 3; k++) { var xa = (l - 0.5 + k / 3) * 0.4, xb = (l - 0.5 + (k + 1) / 3) * 0.4, tn = rnd(l * 13 + k * 5 + 2); lq(g, xa, xb, 0.03, 1.06, 'rgba(' + (tn > 0.5 ? '110,66,28' : '150,98,48') + ',' + (0.13 + tn * 0.12) + ')'); }
+    g.strokeStyle = 'rgba(50,25,8,.3)'; g.lineWidth = 1.3;
+    for (l = -6; l <= 6; l++) { g.beginPath(); g.moveTo(px(l * 0.4 / 3 - 0.2 / 3 * 0 - 0.0, 0.03) + 0, py(0.03)); g.lineTo(px(l * 0.4 / 3, 1.06), py(1.06)); g.stroke(); }
+    for (k = 1; k <= 6; k++) { p0 = pw(k / 6); g.strokeStyle = 'rgba(45,22,6,.34)'; g.lineWidth = 2.6 * (0.4 + p0); g.beginPath(); g.moveTo(0, py(p0)); g.lineTo(W, py(p0)); g.stroke();
+      g.fillStyle = 'rgba(30,15,5,.55)'; for (l = -6; l <= 6; l++) { g.beginPath(); g.arc(px(l * 0.4 / 3 + 0.4 / 6, p0), py(p0), Math.max(1.1, psz(p0) * 0.012), 0, 6.3); g.fill(); } }
+    scatter(g, 10, 71, function (g2, x, yb, s, r) { g2.strokeStyle = 'rgba(60,30,10,.35)'; g2.lineWidth = 1.2; g2.beginPath(); g2.ellipse(x, yb, s * 0.05, s * 0.022, 0, 0, 6.3); g2.ellipse(x, yb, s * 0.025, s * 0.01, 0, 0, 6.3); g2.stroke(); });
+    scatter(g, 4, 83, function (g2, x, yb, s) { g2.fillStyle = 'rgba(120,180,215,.35)'; g2.beginPath(); g2.ellipse(x, yb, s * 0.12, s * 0.04, 0, 0, 6.3); g2.fill(); g2.fillStyle = 'rgba(255,255,255,.5)'; g2.beginPath(); g2.ellipse(x - s * 0.03, yb - s * 0.01, s * 0.04, s * 0.012, 0, 0, 6.3); g2.fill(); });
+    /* rope coils */
+    [[-0.95, 0.5], [1.0, 0.78]].forEach(function (c) { var x = px(c[0], c[1]), yb = py(c[1]), s = psz(c[1]); g.strokeStyle = '#c9a063'; g.lineWidth = Math.max(2, s * 0.035); for (var q = 0; q < 3; q++) { g.beginPath(); g.ellipse(x, yb, s * (0.1 - q * 0.025), s * (0.04 - q * 0.01), 0, 0, 6.3); g.stroke(); } });
+  } else if (st === 4) {
+    for (l = -2; l <= 2; l++) lq(g, (l - 0.5) * 0.4, (l + 0.5) * 0.4, 0.03, 1.06, l & 1 ? 'rgba(255,255,255,.07)' : 'rgba(20,20,60,.08)');
+    g.lineCap = 'round';
+    for (l = -3; l <= 2; l++) { var xe = (l + 0.5) * 0.4; g.strokeStyle = 'rgba(255,255,255,.3)'; g.lineWidth = 2.4; g.beginPath(); for (i = 0; i <= 18; i++) { u = 0.06 + 0.98 * i / 18; var xx = px(xe + Math.sin(u * 9 + l * 1.7) * 0.05, u), yy2 = py(u); if (i) g.lineTo(xx, yy2); else g.moveTo(xx, yy2); } g.stroke(); }
+    scatter(g, 14, 97, function (g2, x, yb, s, r) { g2.strokeStyle = 'rgba(255,255,255,.4)'; g2.lineWidth = 1.2; g2.beginPath(); g2.arc(x, yb, s * (0.02 + r * 0.03), 0, 6.3); g2.stroke(); });
+    scatter(g, 7, 101, function (g2, x, yb, s, r) { g2.fillStyle = 'rgba(255,255,255,.28)'; g2.beginPath(); g2.ellipse(x, yb, s * (0.1 + r * 0.1), s * 0.03, 0, 0, 6.3); g2.fill(); });
+  } else {
+    /* the fortress courtyard: a long carpet in each lane, warm on the pineapple side and cool on the penguin side, with gold trim and diamonds */
+    var cols = ['rgba(224,87,90,.34)', 'rgba(255,170,120,.3)', 'rgba(255,214,120,.34)', 'rgba(110,200,220,.3)', 'rgba(60,150,190,.34)'];
+    for (l = -2; l <= 2; l++) {
+      lq(g, (l - 0.42) * 0.4, (l + 0.42) * 0.4, 0.03, 1.06, cols[l + 2]);
+      g.strokeStyle = 'rgba(255,214,90,.75)'; g.lineWidth = 2;
+      [(l - 0.42) * 0.4, (l + 0.42) * 0.4].forEach(function (xe) { g.beginPath(); g.moveTo(px(xe, 0.03), py(0.03)); g.lineTo(px(xe, 1.06), py(1.06)); g.stroke(); });
+      for (k = 1; k <= 8; k++) { p0 = pw(k / 8) * 0.98 + 0.02; var cx2 = px(l * 0.4, p0), cy2 = py(p0), ds = psz(p0) * 0.09; g.fillStyle = 'rgba(255,240,200,.55)'; g.beginPath(); g.moveTo(cx2, cy2 - ds * 0.5); g.lineTo(cx2 + ds, cy2); g.lineTo(cx2, cy2 + ds * 0.5); g.lineTo(cx2 - ds, cy2); g.closePath(); g.fill(); }
+    }
+    scatter(g, 8, 131, function (g2, x, yb, s) { g2.fillStyle = 'rgba(255,255,255,.6)'; g2.beginPath(); g2.ellipse(x, yb, s * 0.1, s * 0.03, 0, 0, 6.3); g2.fill(); });
+  }
 }
+function laneLines(g, col) { laneDeco(g, stageNo()); }
 function tileLines(g, col) {
   var k, y, x0, x1, xn;
   g.strokeStyle = col; g.lineWidth = 1.6;
@@ -65,10 +112,10 @@ function flag(x, y, s, t, c1, c2) {
 /* ---------- Champions: a recolored Coach Waddles with their own gear ---------- */
 var CHAMP = [null,
   { n: 'Coach Waddles', s: 'Waddles', rank: 'Bronze', kind: 'cw', hp: 3, shield: 4, help: 3.6, big: 1.35 },
-  { n: 'Captain Flipper', s: 'Flipper', rank: 'Silver', kind: 'c2', hp: 3, dodge: 0.55, om: 1.1, help: 4.4, big: 1.35 },
-  { n: 'Sir Slidealot', s: 'Slidealot', rank: 'Gold', kind: 'c3', hp: 3, slide: 4.2, help: 4.4, big: 1.35 },
-  { n: 'Madame Mohawk', s: 'Mohawk', rank: 'Platinum', kind: 'c4', hp: 3, call: 2, help: 2.4, big: 1.4 },
-  { n: 'Grand Champion Bernard', s: 'Bernard', rank: 'Grand', kind: 'c5', hp: 4, shield: 2, dodge: 0.32, om: 1.5, slide: 4.8, call: 1, help: 3, big: 1.5 }
+  { n: 'Captain Flipper', s: 'Flipper', rank: 'Silver', kind: 'c2', hp: 4, shield: 3, dodge: 0.6, om: 1.6, help: 3.8, big: 1.35 },
+  { n: 'Sir Slidealot', s: 'Slidealot', rank: 'Gold', kind: 'c3', hp: 5, shield: 3, slide: 3.2, help: 3.6, big: 1.35 },
+  { n: 'Madame Mohawk', s: 'Mohawk', rank: 'Platinum', kind: 'c4', hp: 5, shield: 3, call: 2, help: 2.2, big: 1.4 },
+  { n: 'Grand Champion Bernard', s: 'Bernard', rank: 'Grand', kind: 'c5', hp: 6, shield: 3, dodge: 0.32, om: 1.7, slide: 3.4, call: 1, help: 2.6, big: 1.5 }
 ];
 var CHAMP_LOOK = {
   c2: { cap: '#24457a', band: '#a82a1f', medal: '#c4ccd8', medal2: '#f0f4fa', ribbon: '#1f9aa8', vars: '--ad-hi:#6f7f9a;--ad-mid:#34425e;--ad-lo:#141b2e',
@@ -184,8 +231,6 @@ function sceneHarbor(g) {
   g.fillStyle = 'rgba(255,255,255,.3)'; for (i = 0; i < 12; i++) g.fillRect(W * (i * 0.083 + 0.02), hy + H * (0.008 + (i % 3) * 0.012), W * 0.04, 2);
   /* the boardwalk: warm planks on the left, frosty ones on the right */
   groundBand(g, wy);
-  g.strokeStyle = 'rgba(70,40,15,.18)'; g.lineWidth = 1.8;
-  for (i = 1; i <= 9; i++) { var yy = py(Math.pow(i / 9, 1.7)) + (wy - hy) * 0.2; if (yy < wy) continue; g.beginPath(); g.moveTo(0, yy); g.lineTo(W, yy); g.stroke(); }
   laneLines(g, 'rgba(70,40,15,.12)');
   /* a lighthouse, a stack of fruit crates and lanterns on the sunny side */
   var lx = W * 0.1, lh = H * 0.24, lw = W * 0.06;
@@ -319,7 +364,7 @@ function sceneFort(g) {
     g.fillStyle = '#e0472f'; g.fillRect(-pw * 0.36, ph0 * 0.84, pw * 0.72, 3); g.restore();
   });
   groundBand(g, wy);
-  tileLines(g, 'rgba(110,150,190,.22)');
+  tileLines(g, 'rgba(110,150,190,.16)'); laneDeco(g, 5);
   g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(0, wy, W, 3);
 }
 function animFort(t) {
@@ -339,11 +384,60 @@ function animFort(t) {
   /* flags on both towers */
   flag(W * 0.09, hy - H * 0.27 - H * 0.1, H * 0.08, t, '#ffd23f', '#e0472f'); flag(W * 0.91, hy - H * 0.27 - H * 0.1, H * 0.08, t + 1, '#ff6f9c', '#fff7e3');
   /* a penguin cheerleader on the wall waves pom-poms and hops */
-  var cx = W * 0.5, cy = hy - wh - H * 0.002, s = Math.min(H * 0.06, W * 0.12), hop = Math.abs(Math.sin(t * 4)) * s * 0.25, im = IMG.ad && IMG.ad.giggle;
-  if (im) {
-    ctx.save(); ctx.translate(cx, cy - hop); ctx.drawImage(im, -s * 0.5, -s * 0.94, s, s); ctx.restore();
-    for (i = -1; i <= 1; i += 2) { var px1 = cx + i * s * 0.55, py1 = cy - hop - s * 0.5 + Math.sin(t * 8 + i) * s * 0.18; ctx.strokeStyle = i < 0 ? '#ff6f9c' : '#5bb8f0'; ctx.lineWidth = Math.max(2, s * 0.05); ctx.lineCap = 'round'; ctx.beginPath(); for (var q = 0; q < 6; q++) { var an = q * 1.05 + t * 3; ctx.moveTo(px1, py1); ctx.lineTo(px1 + Math.cos(an) * s * 0.2, py1 + Math.sin(an) * s * 0.2); } ctx.stroke(); dot(ctx, px1, py1, s * 0.05, '#fff7e3'); }
+  var cp = cheerPos(), cx = cp.x, cy = cp.y + cp.s * 0.45, s = cp.s, hop = Math.abs(Math.sin(t * 4)) * s * 0.25, age = S.t - S.chT, vis = true, ox = 0, oy = 0, rot = 0, al = 1, sc = 1, im = IMG.ad && (age < 0.9 ? IMG.ad.wow : IMG.ad.giggle);
+  if (age < 0.9) { ox = age * s * 1.6; oy = age * age * s * 3 - age * s * 1.2; rot = age * 11; al = 1 - age / 0.9; }
+  else if (age < 5.6) vis = false;
+  else if (age < 6.4) { var u = (age - 5.6) / 0.8; sc = 1 + Math.sin(u * Math.PI) * 0.35; al = u; }
+  if (im && vis) {
+    ctx.save(); ctx.globalAlpha = al; ctx.translate(cx + ox, cy + oy); ctx.rotate(rot); ctx.scale(sc, sc);
+    ctx.drawImage(im, -s * 0.5, -hop - s * 0.94, s, s);
+    for (i = -1; i <= 1; i += 2) { var px1 = i * s * 0.55, py1 = -hop - s * 0.5 + Math.sin(t * 8 + i) * s * 0.18; ctx.strokeStyle = i < 0 ? '#ff6f9c' : '#5bb8f0'; ctx.lineWidth = Math.max(2, s * 0.05); ctx.lineCap = 'round'; ctx.beginPath(); for (var q = 0; q < 6; q++) { var an = q * 1.05 + t * 3; ctx.moveTo(px1, py1); ctx.lineTo(px1 + Math.cos(an) * s * 0.2, py1 + Math.sin(an) * s * 0.2); } ctx.stroke(); dot(ctx, px1, py1, s * 0.05, '#fff7e3'); }
+    ctx.restore();
   }
   snowfall(t, 22, 'rgba(255,255,255,.9)', 0.06);
   if (qLevel < 2) for (i = 0; i < 6; i++) { var a2 = Math.pow(Math.max(0, Math.sin(t * 1.9 + i * 1.7)), 6); if (a2 < 0.05) continue; var tx = W * (0.08 + ((i * 0.151) % 0.84)), ty = wy + H * (0.06 + (i % 3) * 0.13), r = H * 0.011 * (0.5 + a2); ctx.globalAlpha = a2; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(tx - r, ty); ctx.lineTo(tx + r, ty); ctx.moveTo(tx, ty - r); ctx.lineTo(tx, ty + r); ctx.stroke(); ctx.globalAlpha = 1; }
+}
+
+/* ---------- hidden bonus zones: one on each side of every stage; tap them for credits ---------- */
+var ZONES = [null,
+  [{ x: 0.14, y: 0.53 }, { x: 0.82, y: 0.16 }],
+  [{ x: 0.2, y: 0.5 }, { x: 0.9, y: 0.51 }],
+  [{ x: 0.1, y: 0.35 }, { x: 0.85, y: 0.38 }],
+  [{ x: 0.06, y: 0.5 }, { x: 0.72, y: 0.19 }],
+  [{ x: 0.09, y: 0.33 }, { x: 0.91, y: 0.33 }]
+];
+function zoneR() { return Math.max(28, Math.min(W, H) * 0.1); }
+function zoneHit(p) {
+  var z = ZONES[stageNo()], i, r = zoneR();
+  if (!z || S.over || S.paused) return false;
+  for (i = 0; i < 2; i++) {
+    if (!(S.zones & (1 << i)) && Math.hypot(p.x - z[i].x * W, p.y - z[i].y * H) <= r) { zoneFound(i, z[i].x * W, z[i].y * H); return true; }
+  }
+  return false;
+}
+function zoneFound(i, x, y) {
+  var n = 25 * stageNo(), bp = bankPos();
+  S.zones |= 1 << i; earn(n); toast('Secret spot found! +' + n);
+  popText(x, y - H * 0.03, '+' + n, '#d9007a', 2); coinBurst(x, y, 26, true); sparkBurst(x, y, 20, ['#ffd23f', '#fff7e3', '#ff6fa8', '#8fe0ff']); flyCoins(x, y, bp.x, bp.y, 8, false);
+  rings.push({ x: x, y: y, t: 0, ttl: 0.7, r: zoneR() * 1.3, c: '255,111,168' }); rings.push({ x: x, y: y, t: -0.1, ttl: 0.7, r: zoneR() * 0.9, c: '255,210,63' });
+  burst(x, y, 10, ['#ffd23f', '#fff7e3']);
+}
+/* a very faint twinkle now and then lets sharp eyes spot where a zone is */
+function drawZoneHints(t) {
+  var z = ZONES[stageNo()], i, ph, a, x, y, r;
+  if (!z || calm) return;
+  for (i = 0; i < 2; i++) {
+    if (S.zones & (1 << i)) continue;
+    ph = (t + i * 9 + stageNo() * 3) % 17; if (ph > 1.1) continue;
+    a = Math.sin(ph / 1.1 * Math.PI) * 0.55; x = z[i].x * W; y = z[i].y * H; r = Math.max(7, Math.min(W, H) * 0.022);
+    ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = '#fff7c8'; ctx.beginPath(); ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.quadraticCurveTo(x, y, x, y + r); ctx.quadraticCurveTo(x, y, x - r, y); ctx.quadraticCurveTo(x, y, x, y - r); ctx.fill(); ctx.restore();
+  }
+}
+
+/* the cheerleader on the fortress wall: a flick that lines up with him bonks him off the wall for a bonus (the first time each stage run) */
+function cheerPos() { var s = Math.min(H * 0.06, W * 0.12); return { x: W * 0.5, y: hy - H * 0.15 - H * 0.002 - s * 0.45, s: s }; }
+function cheerHit(x, y) {
+  S.chT = S.t; S.chN++; sparkBurst(x, y, 14, ['#ff6f9c', '#5bb8f0', '#fff7e3', '#ffd23f']); burst(x, y, 10, SNOW_COL);
+  if (S.chN === 1) { var bp = bankPos(); earn(40); popText(x, y - H * 0.04, '+40', '#d9007a', 2); popText(x, y + H * 0.01, 'Whoa!', '#2f8fbf', 0); coinBurst(x, y, 20, true); flyCoins(x, y, bp.x, bp.y, 6, false); rings.push({ x: x, y: y, t: 0, ttl: 0.6, r: H * 0.07, c: '255,111,168' }); }
+  else popText(x, y - H * 0.03, 'Whoa!', '#2f8fbf', 0);
 }

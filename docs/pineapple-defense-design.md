@@ -292,6 +292,14 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Champions block the lane:** normal penguins, including summoned helpers, walk around a Champion and never through him, even when he dodges or slides.
 - **Parachute fish:** every 9 to 14 seconds a fish floats down on a handkerchief parachute and lands in front of a walking penguin. When the penguin reaches it, it stops for about a second, eats the fish and levels up with a glow, stars and a ring: Rockhopper to Adélie (faster), Adélie to Gentoo (faster and takes two hits). The penguin can be hit at any moment, including mid-meal. An uneaten fish waits about 11 seconds, and any other walking penguin in that lane can grab it.
 
+## Decisions, round 26: harder Champions, lanes, secrets (Oct 12)
+- **Champion ladder:** Waddles stays the baseline (4 snowballs, 3 hits). Each later Champion is harder: Captain Flipper (4 hits, 3 snowballs, faster and wider dodge), Sir Slidealot (5 hits, 3 snowballs, a belly-slide every 3.2 s), Madame Mohawk (5 hits, 3 snowballs, helpers every 2.2 s), Grand Champion Bernard (6 hits, 3 snowballs, dodge, slide and helpers). While a Champion fights, his health shows as a tall bar on the left edge.
+- **Lanes:** each stage paints its own ground: sand with starfish and shells, ice with cracks and footprints, a plank dock with nails and rope coils, foamy water streams, and a courtyard with a carpet in every lane (warm to cool).
+- **Secret spots:** each stage hides one tap zone on each side. Each pays 25 times the stage number once per stage run and twinkles very rarely. The stage 5 cheerleader on the wall can be bonked by a flick for a one-time 40.
+- **Toasty! replaces Brrr!:** penguins like the cold, so the slow-down pickup is now a warm orange glow that makes them sleepy for 6 seconds.
+- **Fish timing:** the fish lands mid-field, only in front of penguins that have not passed that spot yet, so there is time to eat, level up and keep walking.
+- **Pause:** the P key pauses and resumes, like Escape and the pause button.
+
 ## Change log
 - 2026.10.12.1556: first title screen, logo and original pineapple and Rockhopper sprites.
 - 2026.10.12.1620: story card text approved; stage titles, Champion names and rosters decided.
@@ -316,3 +324,4 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - 2026.10.12.2020: more polish.
 - 2026.10.12.2112: five stages of 5 waves, stage scenery and five Champions.
 - 2026.10.12.2205: live bank and costs, Champion lane blocking, parachute fish and evolving penguins.
+- 2026.10.12.2223: harder Champions, Champion health bar, new lanes, secret spots, Toasty!, P to pause.
