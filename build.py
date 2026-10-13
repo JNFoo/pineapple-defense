@@ -57,6 +57,7 @@ def main():
         "<!--{{rockhopper}}-->": (sp / "rockhopper.svg").read_text(),
         "<!--{{land}}-->": (sp / "land.svg").read_text(),
         "<!--{{logo-defs}}-->": (sp / "logo-defs.svg").read_text(),
+        "<!--{{icons}}-->": (sp / "icons.svg").read_text(),
         "/*{{FONTS}}*/": font_face("Bricolage Grotesque", "bricolage-grotesque-latin-800-normal.woff", 800)
                          + "\n" + font_face("Figtree", "figtree-latin-700-normal.woff", 700),
         "/*{{STICKER_CSS}}*/": (S / "vendor/sticker-text/sticker-text.css").read_text(),

@@ -138,13 +138,25 @@ await T('no giggling anywhere in the page text', async () => {
   const html = document.documentElement.innerHTML; if (/giggl/i.test(html)) throw new Error('found giggl in ' + html.match(/.{30}giggl.{30}/i)[0]);
 });
 
-await T('penguin outfits: most penguins dress up, mecha penguins do not', async () => {
-  await go(2, 3); P.bot = false; const S = P.S; for (let i = 0; i < 300 && P.penguins.length < 6; i++) { P.step(0.1, 0.1); S.cheer = 100; }
-  const L = P.penguins.filter(p => p.kind !== 'mc'); if (L.length < 4) throw new Error('too few penguins: ' + L.length);
-  const dressed = L.filter(p => p.gear && p.gear.some(x => x)).length; if (dressed < L.length * 0.5) throw new Error('only ' + dressed + ' of ' + L.length + ' are dressed');
+await T('penguin outfits: props are rare, two at once are rarer, mecha penguins have none', async () => {
+  await go(2, 3); P.bot = false; const S = P.S; for (let i = 0; i < 300 && P.penguins.length < 4; i++) { P.step(0.1, 0.1); S.cheer = 100; }
+  const L = P.penguins.filter(p => p.kind !== 'mc'); if (L.length < 2) throw new Error('too few penguins: ' + L.length);
   if (L.some(p => !Array.isArray(p.gear) || p.gear.length !== 4)) throw new Error('bad gear shape');
-  P.penguins[0].kind = 'mc'; P.step(0.1, 0.05, 1); /* a mecha draws without error */ P.penguins[0].kind = 'ad'; P.step(0.1, 0.05, 1);
-  return dressed + ' of ' + L.length + ' dressed';
+  /* roll many outfits the way the spawner does (a fresh spawn each) and count: about 33% have a prop, 8% two or more */
+  let one = 0, two = 0, N = 3000, i;
+  for (i = 0; i < N; i++) { const g = P.rollGear(); const c = g.filter(x => x).length; if (c) one++; if (c > 1) two++; }
+  const pa = one / N, pb = two / N; if (pa < 0.26 || pa > 0.41) throw new Error('props on ' + Math.round(pa * 100) + '% of penguins, wanted about 33%'); if (pb < 0.04 || pb > 0.13) throw new Error('two or more props on ' + Math.round(pb * 100) + '%, wanted about 8%');
+  P.penguins[0].gear = [1, 1, 1, 1]; P.penguins[0].kind = 'mc'; P.step(0.1, 0.05, 1); /* a mecha draws without error */ P.penguins[0].kind = 'ad'; P.step(0.1, 0.05, 1);
+  return Math.round(pa * 100) + '% have a prop, ' + Math.round(pb * 100) + '% two or more';
+});
+
+await T('every trophy and shop upgrade has its own icon', async () => {
+  $('bTro').click(); await new Promise(r => setTimeout(r, 50));
+  const us = [...document.querySelectorAll('#trList use')].map(u => u.getAttribute('href')); if (us.length !== 21) throw new Error('trophy rows ' + us.length);
+  const miss = us.filter(h => !document.querySelector(h)); if (miss.length) throw new Error('missing icon symbols: ' + miss.join()); if (new Set(us).size !== 21) throw new Error('trophy icons repeat');
+  $('cardOk').click(); $('bShop').click(); await new Promise(r => setTimeout(r, 50));
+  const rows = [...document.querySelectorAll('#shList .ti')]; const ic = rows.map(r => r.querySelector('use')); if (rows.length < 9 || ic.some(u => !u || !document.querySelector(u.getAttribute('href')))) throw new Error('shop rows without an icon');
+  $('cardOk').click(); return us.length + ' trophy icons, ' + rows.length + ' shop icons';
 });
 
 await T('the wave counter pill is gone from play (the progress bar shows it)', async () => {

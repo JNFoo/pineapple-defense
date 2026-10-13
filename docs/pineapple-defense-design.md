@@ -376,6 +376,12 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Roll feel:** `SK_AIM` 0.3 (was 0.7), speed band `(spd - 1) / 7.5` (was `(spd - 1.2) / 5.3`), `SK_DIN` 1.25 (was 0.9). The lane and the board use fixed 1/240 s steps (`SK_H`, accumulator `b.acc`) so the roll is the same at any frame rate, and `skSim` replays a launch silently (used by the tests; `skSimOn` mutes the crowd). Measured by simulation with a human wobble (normal noise, 6 degrees and 12%): 58% of flicks sink, up from 33%, and a random flick sinks 38% of the time (19% before). All hole values (10 to 100) stay reachable. No aim assist on purpose (the player asked for none).
 - **Audit:** see docs/ideas-qol-and-performance.md.
 
+### Round 36: rarer props, icons, logo, README
+- **Props:** `rollGear` picks a count (0 for 66.7%, 1 for 25%, 2 for 7.3%, 3 for 1%) and fills distinct slots by weight (hat .34, scarf .30, mittens .22, item .14). Test hook `__pd.rollGear()`.
+- **Icons:** `tools/make_icons.py` writes `src/sprites/icons.svg` (symbols `ia-0` to `ia-20` for trophies in `achAll()` order, `iu-*` for upgrades and pickups) and standalone SVGs in `docs/icons/`. `build.py` inlines it at `<!--{{icons}}-->`. `fillTrophies` uses `#ia-N`; `fillShop` maps the demo name through `SHOP_IC`. Shop icons ignore the gray "not owned" filter.
+- **Logo:** `lr-art` (the title penguin) gained a beanie and scarf. `assets/logo.png` is a transparent capture of the live `h1.logo`.
+- **README:** players first; screenshots in `docs/img/*.jpg`.
+
 ### Round 35: rim drama, penguin outfits, stage 4 and 5 scenery
 - **Rim model (`skStep`):** each ring has a lip at radius `min(r * SK_LIP, ro - 0.012)` (SK_LIP 1.3) with a ball-sized lip radius `SK_RC` 0.085 and lip restitution `SK_RIME` 0.62. While `d < re` and the ball is near the ring height, the free middle sinks (`gap >= SK_RC * 0.92`), otherwise it is sphere-versus-edge contact: normal from the lip center, position correction, impulse `-(1 + SK_RIME) * vn`, tangential speed x0.97, and `b.lh/b.lt` mark recent contact. The flat-top landing hop is `max(1.0, imp * SK_RIM)` pushed away from the middle.
 - **The invisible catch:** the wall branch slide push had the wrong sign (uphill), which balanced gravity on the flank. It is now `imp = (nx >= 0 ? -1 : 1) * (0.5 + max(0, -vn) * 0.4)`, applied downhill. `drawHoleFront` redraws the cup front over a sinking ball.

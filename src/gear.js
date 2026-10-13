@@ -94,12 +94,15 @@ function gearJobs(push) {
   Object.keys(GEAR_DEF).forEach(function (k) { push(function () { var d = GEAR_DEF[k]; return toImage(gearSvg(d), { w: Math.ceil(d.w * GEAR_K), h: Math.ceil(d.h * GEAR_K) }).then(function (c) { GEAR_IMG[k] = c; }); }); });
 }
 function rollGear() {
-  var g = [0, 0, 0, 0], r = Math.random;
-  if (r() < 0.5) g[0] = 1 + Math.floor(r() * GEAR_N.h);
-  if (r() < 0.42) g[1] = 1 + Math.floor(r() * GEAR_N.s);
-  if (r() < 0.36) g[2] = 1 + Math.floor(r() * GEAR_N.m);
-  if (r() < 0.2) g[3] = 1 + Math.floor(r() * GEAR_N.i);
-  if (!g[0] && !g[1] && !g[2] && !g[3] && r() < 0.7) g[r() < 0.5 ? 0 : 1] = 1 + Math.floor(r() * 6);
+  /* props are a treat: about 2 in 3 penguins wear nothing, 1 in 4 wear one prop, 1 in 12 wear two (and a rare few, three) */
+  var g = [0, 0, 0, 0], r = Math.random(), n = r < 0.667 ? 0 : r < 0.917 ? 1 : r < 0.99 ? 2 : 3, W = [0.34, 0.3, 0.22, 0.14], i, k, t, tot;
+  for (i = 0; i < n; i++) {
+    for (tot = 0, k = 0; k < 4; k++) if (!g[k]) tot += W[k];
+    t = Math.random() * tot;
+    for (k = 0; k < 3; k++) { if (g[k]) continue; if (t < W[k]) break; t -= W[k]; }
+    if (g[k]) for (k = 0; k < 4 && g[k]; k++);
+    g[k] = 1 + Math.floor(Math.random() * GEAR_N[['h', 's', 'm', 'i'][k]]);
+  }
   return g;
 }
 /* draw one overlay at the penguin's current scale: the sprite sits at (-s/2, -0.965 s) and is 200 units wide */

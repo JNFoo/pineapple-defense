@@ -2141,7 +2141,7 @@ function fillTrophies() {
   var got = 0, i, h = '', AL = achAll();
   for (i = 0; i < AL.length; i++) {
     var on = hasAch(i); got += on;
-    h += '<div class="ti" data-got="' + on + '"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#ic-trophy"/></svg><span><b></b><i></i></span></div>';
+    h += '<div class="ti" data-got="' + on + '"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#ia-' + i + '"/></svg><span><b></b><i></i></span></div>';
   }
   box.innerHTML = h;
   var rows = box.children;
@@ -2156,6 +2156,7 @@ var SHOP = {
   cost: { au: 40, ar: [50, 80, 120], ap: [60, 100], gu: [60, 100, 150], um: [50, 80, 120], ra: [250, 400] },
   pine: ['Classic pineapples (free)', 'Lobber pineapples: splashy, slower, 2 each', 'Mega pineapples: super splash, slowest, 3 each']
 };
+var SHOP_IC = { 'Auto Slingshot': 'au', 'Faster Fling': 'ar', 'Better Pineapples': 'ap', 'Lime Launcher': 'lm', 'More Limes': 'lm2', 'Lots of Limes': 'lm3', 'Gull Pals': 'gu', 'Paper Umbrellas': 'um', 'Pineapple Rain': 'ra' };
 function fillShop() {
   var box = $('cardBody').querySelector('#shList'); if (!box) return;
   var note = $('cardBody').querySelector('#shNote');
@@ -2174,7 +2175,8 @@ function fillShop() {
   box.textContent = '';
   rows.forEach(function (r) {
     var d = document.createElement('div'); d.className = 'ti sh'; d.setAttribute('data-got', r.st ? '1' : '0');
-    var sp = document.createElement('span'), b = document.createElement('b'), i = document.createElement('i'), bx = document.createElement('div');
+    var sp = document.createElement('span'), b = document.createElement('b'), i = document.createElement('i'), bx = document.createElement('div'), ik = SHOP_IC[r.demo ? r.demo.name : ''];
+    if (ik) { var sv0 = document.createElementNS('http://www.w3.org/2000/svg', 'svg'), us = document.createElementNS('http://www.w3.org/2000/svg', 'use'); sv0.setAttribute('viewBox', '0 0 40 40'); sv0.setAttribute('aria-hidden', 'true'); us.setAttribute('href', '#iu-' + ik); sv0.appendChild(us); d.appendChild(sv0); }
     b.textContent = r.title; i.textContent = r.desc; sp.appendChild(b); sp.appendChild(i); d.appendChild(sp); bx.className = 'sbs';
     var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn sb';
     if (r.st) { btn.textContent = r.st; btn.disabled = true; }
@@ -2251,7 +2253,7 @@ $('bShop').addEventListener('click', fillShop);
 /* test hook, only with #qa in the address */
 var qa = null;
 if (location.hash === '#qa') {
-  qa = window.__pd = { stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
+  qa = window.__pd = { rollGear: function () { return rollGear(); }, stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
     /* fast-forward without waiting for frames: sec game seconds in steps of dt, drawing every `every` steps (0 = never, one final draw) */
     step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
     win: function () { endStage(true); }, flick: function (dx, dy, spd) { var o = pouchPos(); throwAt(o.x, o.y, dx, dy, spd); }, get sh() { return shots; }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, sim: function (dx, dy, spd, dA, dF) { var h = skSim(skLaunch({ dx: dx, dy: dy, spd: spd }, dA, dF)); return h ? h.v : 0; }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };

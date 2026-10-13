@@ -2,6 +2,12 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.13.1614
+- **Penguin props are rarer.** About 1 in 3 penguins wears something now, about 1 in 12 wears two, and three at once is very rare. It makes a full outfit a treat to spot.
+- **An icon for every trophy, upgrade and pickup:** 21 glossy round trophy badges (they show in color when earned and gray when not), nine shop upgrade icons and four pickup icons, now in the Trophies and Shop screens.
+- **New logo:** the little penguin in the title wears a beanie and scarf. The banner in the README is rendered from the live title.
+- **New README** written for players, with screenshots of all five stages, Pineapple Roll, the trophies and the shop, and icon tables for every upgrade, pickup and trophy. Developer notes moved to the bottom.
+
 ## 2026.10.13.1537
 - **Pineapple Roll rims have drama.** Each ring now has a rounded lip: a ball that clips the edge rattles around it and can drop in, lip out, or pop in and straight back out like a basketball. The invisible "catch" is gone: the push that slid a ball off a ring's flank pointed uphill and balanced gravity, so it now runs downhill and balls roll off instead of hanging (longest hang in the test 0.00 s; about half of rolls now touch a rim). The cup front is redrawn over a ball that is dropping in so it really goes inside. The share of balls that sink stays at 40% or more.
 - **Penguins dress up.** Almost every penguin now wears a random mix of warm hats (beanie, ear flaps, Santa cap, earmuffs, party cone), scarves, mittens and a held item (hot chocolate with steam, a candy cane, a cookie or a snowball). Scarves and hats sway as they waddle. Mecha penguins and the Champions keep their own look.
