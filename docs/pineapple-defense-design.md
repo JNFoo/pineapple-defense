@@ -4,7 +4,7 @@ Copyright © 2026 JNFoo. All Rights Reserved.
 Brief date: 2026.10.12 (version stamps use year.month.day.HHMM, US Eastern)
 
 ## Status
-Design phase. No code written and no checks or benchmarks run yet (held until the design is final).
+Built and playable (see the changelog for the current version). This file is the design record; later rounds are at the end of each section.
 
 ## Decisions made (your answers)
 - Audience and tone: kids first, all ages welcome. Silliness only: no cruelty, no gore, no blood, nobody gets hurt (corrected Oct 12, 3:31 PM; the earlier "splatted" wording is retired). Simple, addictive, free play.
@@ -144,39 +144,20 @@ Pure silliness: the penguins' own jealous signs, never mean and never about real
   - Stage 5, Glacier fortress: "Home Is Where The Snow Is!", "Champions Say NO To Pineapples!", "Penguin Power!"
 - **Story link:** the posters show the penguins can't eat tropical fruit or visit the tropics, and are a little jealous; each stage's posters get sillier, and the Grand Champion's fortress is wallpapered with them.
 
-## Upgrade shops: PLACEHOLDERS (fill in later; nothing here is decided except the rules)
-Rules already decided: points are Golden Pineapple points earned only by playing; no purchases, no random boxes, no streaks, nothing missable; every upgrade can be earned by any player eventually.
+## Upgrade shop (built)
+Rules decided and kept: points are Golden Pineapples earned only by playing; no purchases, no random boxes, no streaks, nothing missable; every upgrade can be earned by any player eventually. The shop opens from the title screen and between stages. Costs live in `SHOP.cost` and `LM.cost` in `src/game.js`.
 
-**Shop slots (names are placeholders):**
-| Slot | Working name | Opens | Contents (placeholder) |
+| Upgrade | Steps | Cost (Golden Pineapples) | Needs |
 |---|---|---|---|
-| S1 | Stand Shop | Always, between stages | Four tabs below |
-| S2 | Shop B | PLACEHOLDER (a later stage or a milestone) | TBD |
-| S3 | Shop C | PLACEHOLDER | TBD |
+| Auto Slingshot | 1 | 40 | none |
+| Faster Fling | 3 | 50, 80, 120 | Auto Slingshot |
+| Better Pineapples (Lobber, Mega) | 2 | 60, 100 | Auto Slingshot |
+| Lime Launcher, More Limes, Lots of Limes | 3 | see `LM.cost` | none |
+| Gull Pals | 3 | 60, 100, 150 | none |
+| Paper Umbrellas | 3 | 50, 80, 120 | none |
+| Pineapple Rain | 2 | 250, 400 | none |
 
-**Stand Shop tabs (placeholders):**
-| Tab | Holds | Example rows (all TBD) |
-|---|---|---|
-| Pineapples | New pineapple types and upgrades to each type | unlock a type; faster reload; bigger splash |
-| Stand | The stand's cheer meter and how fast it recovers | more cheer; faster recovery; tougher boop-proofing |
-| Throwing | How the flick feels | aim-assist strength; flick power; arc height |
-| Looks | Cosmetics only | stand decorations; crown colors; flight trails |
-
-**Upgrade rows (fill in):**
-| ID | Name | Tab | Effect | Steps | Cost curve | Needs | Status |
-|---|---|---|---|---|---|---|---|
-| U01 | TBD | Pineapples | TBD | TBD | TBD | none | PLACEHOLDER |
-| U02 | TBD | Pineapples | TBD | TBD | TBD | U01 | PLACEHOLDER |
-| U03 | Rail Gun | Pineapples | Top upgrade: charge-meter shot that pierces a whole column | TBD | TBD | TBD (where it sits in the order is open) | PLACEHOLDER |
-| U04 | TBD | Stand | TBD | TBD | TBD | none | PLACEHOLDER |
-| U05 | TBD | Stand | TBD | TBD | TBD | none | PLACEHOLDER |
-| U06 | TBD | Throwing | TBD | TBD | TBD | none | PLACEHOLDER |
-| U07 | TBD | Throwing | TBD | TBD | TBD | none | PLACEHOLDER |
-| U08 | TBD | Looks | TBD | TBD | TBD | none | PLACEHOLDER |
-| U09 | TBD | Looks | TBD | TBD | TBD | none | PLACEHOLDER |
-| U10 | TBD | any | TBD | TBD | TBD | TBD | PLACEHOLDER |
-
-Open for the shop: how many points a wave earns, the cost curve (the idle-core module has cost and milestone math that may fit), and whether upgrades carry over after the final stage as in Fancy.
+"Try it" runs a ten-second demo before buying and the last purchase can be undone until the next stage starts (Round 39 and the shop rounds). Open question that stayed open: whether upgrades should carry over after the final stage as in Fancy (today a finished run keeps upgrades and credits, and "Reset completely" clears them).
 
 ## Friends from other games: visible nods (decided Oct 12, 3:41 PM)
 Fun references to Apple Press and Fancy, the Banana, kept small and in the same silly spirit. Most cameos are hidden Easter eggs (details in the private file); these few are visible so kids can laugh at them.
@@ -375,6 +356,15 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Roll limit:** save field `rl` (0 to 9) counts plays in the run (`newSkee` adds one); it is reset wherever `cd` is reset (run complete, reset, and a fresh start from the title). `ROLL_MAX = 2`; `startSkee` refuses when none are left (shake of the secret spot, or on to stage 5 from the stage 4 card); the stage 4 offer is only shown while rolls remain; the end card names the rolls left and hides Roll again after the last.
 - **Roll feel:** `SK_AIM` 0.3 (was 0.7), speed band `(spd - 1) / 7.5` (was `(spd - 1.2) / 5.3`), `SK_DIN` 1.25 (was 0.9). The lane and the board use fixed 1/240 s steps (`SK_H`, accumulator `b.acc`) so the roll is the same at any frame rate, and `skSim` replays a launch silently (used by the tests; `skSimOn` mutes the crowd). Measured by simulation with a human wobble (normal noise, 6 degrees and 12%): 58% of flicks sink, up from 33%, and a random flick sinks 38% of the time (19% before). All hole values (10 to 100) stay reachable. No aim assist on purpose (the player asked for none).
 - **Audit:** see docs/ideas-qol-and-performance.md.
+
+### Round 43: eight more ideas from the research report
+- **Keep screen on (Q27):** field `wl` (default 1), row `cmWake`. `WakeKeeper` (vendored from JS-modules `wake-keeper`) wants the lock when `wakeOn()` is true (`sv.wl`, not Battery saver, `running`, not paused, not over). `run()` and `applyPrefs()` call `wakeSet()`; `halt()` releases (every card and the title call `halt()`); pointer and key events `poke()` the 60 s idle timer. A refusal is only counted (`wk.refusals`); no message, because the browser does not say why.
+- **Hint ledger (Q21):** field `hh` (helper hint shown, max 2). The Champion tip toast needs `sv.cleared < S.stage` and not a replay or demo, so it stops after the first win over that Champion; no new field.
+- **Assist offer (Q26):** field `ao` (offered once). `endStage(false)` counts consecutive losses of the same `stage:wave` (`lossKey`, `lossN`, this visit only, cleared by `waveClear`). The second loss, if `!ao`, not a replay, and Little hands is not already on, shows the three-button card and sets `ao = 1` whatever the answer. The help is `applyLittle()`, the same values as the Little hands row. Slower game speed is deliberately not offered, because it would pause two trophies.
+- **Two tabs (P09):** `TabGuard` (vendored) with name `pd-open` (`pd-lab-open` in the tester). A twin sets `twin = true`; `kit.save` is wrapped to a no-op that returns true. `twinCard()` shows a title-screen card (`#twUse`, `#twLook`) or a game card (Use this tab / Keep playing without saving / Title). Use this tab calls `takeOver()`, the other copy gets the twin card and this one reloads to read the latest save. Not started with `#qa`, so test pages do not fight each other; `__pd.twinTest()` drives the same code.
+- **Context loss (P13):** `contextlost` on the main canvas is prevented (so the browser can restore it) and calls `ctxLost()`: pause (which writes the Round 42 resume note) and a Reload card. `contextrestored` does the same, because baked sprites are blank after a restore and the game has no per-sprite recipes to re-run. Reload plus the resume note is the recovery.
+- **Color view (Q48):** tester only. SVG `feColorMatrix` filters (protan, deutan, tritan, luminance gray) applied to `<body>` (Firefox ignores a filter on `<html>`; found by measurement). `__cb(i)` hook.
+- **Docs drift (P66):** see `tools/docs_check.py` and `tools/test_docs_check.py` (9 planted-drift cases). **Hooks (P06):** `tools/hooks` copied from JS-modules, installed with `sh tools/hooks/install.sh`, tested by `tools/hooks/test.sh`.
 
 ### Round 42: safety net, game feel, grown-ups card, cheaper checks
 - **Back swipe (Q01):** `src/vendor/back-close/back-close.js` (from JS-modules) watches the hidden `#bcGuard` span. `run()` shows it and `halt()` hides it, so a `CloseWatcher` exists exactly while the game runs; its close handler calls `pause()`. The Paused card has none, so a second back leaves the page. `__pd.backArmed()` reports it.

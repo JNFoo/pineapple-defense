@@ -159,3 +159,11 @@ Each item says what it is and where to find it. If you are starting a new game, 
 - **Make slow checks a rolling sample while iterating.** `--quick` runs every fast check and a seeded quarter of the slow ones (the day number rolls the seed, so four days cover all of them); the full run stays the release gate.
 - **Run the suite under reduced motion once.** It found two checks that quietly assumed effects Calm mode removes on purpose.
 - **Freeze a real save from each release** and make every later build load it, keep its values, default the new fields and Continue.
+
+## Added in Round 43
+- **Measure before you trust a CSS filter.** A color-blindness filter on `<html>` worked in Chromium and silently did nothing in Firefox; screenshots compared in numbers (difference from Normal, leftover color in Gray) caught it. It belongs on `<body>`.
+- **A docs check needs its own tests.** `docs_check.py` is only trustworthy because nine planted drifts (a placeholder, a missing path, an unknown flag, a wrong count) are each caught in a throwaway copy. Its first real run found four true drifts in the project's own docs.
+- **Write the release stamp once.** `release.py` now replaces `2026.10.14.1256` in the changelog and docs with the stamp it just built, then runs the strict docs check, so nobody types a version by hand.
+- **Offer help as a choice, once.** After the same wave is lost twice, one card names exactly what the help does, says it can be undone, and never returns; it does not slow the game, because slowing would pause two trophies.
+- **A guard against two tabs must not run in test pages.** Test pages open side by side would each be "the second tab"; the guard is off for the `#qa` page and driven by a hook, with one separate real two-page check.
+- **Recovery can be a reload when the work is saved.** After a lost canvas context the game cannot re-bake every sprite from recipes, but pausing writes the wave note first, so Reload plus Continue is a full recovery.

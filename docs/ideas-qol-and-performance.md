@@ -2,7 +2,7 @@
 
 Pineapple Defense. Written 2026-10-12. Copyright (c) 2026 JNFoo. All rights reserved.
 
-Status as of version 2026.10.13.0008: every item below is done except haptics (excluded on request) and the two atlas ideas (judged not worth it, see the audit at the end). Reference for the canvas ideas: MDN, "Optimizing canvas" (cache repeated drawing in offscreen canvases, batch calls, avoid per-frame state changes, avoid fractional coordinates where it matters, scale with CSS or the backing store on purpose).
+Status (see the changelog for versions): every item below is done except haptics (excluded on request) and the two atlas ideas (judged not worth it, see the audit at the end). Reference for the canvas ideas: MDN, "Optimizing canvas" (cache repeated drawing in offscreen canvases, batch calls, avoid per-frame state changes, avoid fractional coordinates where it matters, scale with CSS or the backing store on purpose).
 
 ## 10 quality-of-life ideas for the player
 

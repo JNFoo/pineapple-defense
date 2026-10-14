@@ -99,6 +99,36 @@ def oldsaves(br):
         q.close(); out.append((os.path.basename(fx), bad))
     return out
 
+# 3c. two real tabs, and the tester's color view (screenshots of the lab build, compared in numbers)
+def twintabs(br):
+    bad = []; u0 = 'file://' + page; ctx = br.new_context(viewport={'width': 500, 'height': 827}); title = "(()=>{const c=document.getElementById('cw');return c&&!c.hidden?document.getElementById('cardTitle').textContent:''})()"
+    a = ctx.new_page(); a.goto(u0); a.wait_for_timeout(500); b = ctx.new_page(); b.goto(u0); b.wait_for_timeout(1500)
+    if b.evaluate(title) != 'Open in another tab': bad.append('the second tab did not show the twin card (it shows %r)' % b.evaluate(title))
+    if a.evaluate(title) == 'Open in another tab': bad.append('the first tab was called a twin')
+    if not bad:
+        b.evaluate("document.getElementById('twUse').click()"); a.wait_for_timeout(1500)
+        if a.evaluate(title) != 'Open in another tab': bad.append('after Use this tab, the first tab did not become the twin (it shows %r)' % a.evaluate(title))
+        if b.evaluate(title) == 'Open in another tab': bad.append('after taking over, the second tab is still a twin')
+    ctx.close(); return bad
+CBV = "(()=>{document.getElementById('bLab').click();})()"
+def labview(shoot, run_js, name):
+    import io
+    from PIL import Image
+    import numpy as np
+    bad = []; run_js(CBV); time.sleep(0.3); imgs = []
+    for i in range(5):
+        if i: run_js("document.querySelector('[data-a=cb]').click()"); time.sleep(0.25)
+        imgs.append(np.asarray(Image.open(io.BytesIO(shoot())).convert('RGB')).astype(float))
+    base = imgs[0]
+    for i, nm in ((1, 'Protan'), (2, 'Deutan'), (3, 'Tritan'), (4, 'Gray')):
+        d = float(np.abs(imgs[i] - base).mean())
+        if d < 1.0: bad.append('%s: the %s view looks the same as Normal (difference %.2f)' % (name, nm, d))
+    sat = lambda im: float((np.abs(im[..., 0] - im[..., 1]) + np.abs(im[..., 1] - im[..., 2])).mean())
+    if sat(imgs[4]) > 2.0: bad.append('%s: Gray view still has color (%.1f)' % (name, sat(imgs[4])))
+    if sat(base) < 4.0: bad.append('%s: Normal view has almost no color (%.1f), so the test cannot tell' % (name, sat(base)))
+    if float(np.abs(imgs[1] - imgs[2]).mean()) < 0.3: bad.append('%s: Protan and Deutan look identical' % name)
+    return bad
+
 # 4. Chromium: one browser, one page for the suite, one fresh page per viewport for layout
 from playwright.sync_api import sync_playwright
 url = 'file://' + page + '#qa'
@@ -119,8 +149,17 @@ with sync_playwright() as p:
         if SHOTS: q.screenshot(path=os.path.join(SHOTS, 'layout-%dx%d.png' % (vw, vh)))
         q.close()
     old = oldsaves(br) if not QUICK and not ONLY else []
+    extra = []
+    if not QUICK and not ONLY:
+        extra.append(('two real tabs', twintabs(br)))
+        run([sys.executable, '-I', 'build.py', '--lab'])
+        lp = br.new_page(viewport={'width': 500, 'height': 827}); lp.goto('file://' + os.path.join(ROOT, 'dist/lab/index.html') + '#qa'); lp.wait_for_function('window.__pd')
+        extra.append(('tester color view', labview(lambda: lp.screenshot(), lp.evaluate, 'chromium'))); lp.close()
     br.close()
 print('[%s] Chromium%s' % (stamp(), ' (reduced motion on)' if CALM else '')); report('chromium', res, lay)
+for nm, bad in extra:
+    print('  %-4s %s %s' % ('ok' if not bad else 'FAIL', nm, '; '.join(bad)))
+    for x in bad: fails.append('%s: %s' % (nm, x))
 for fx, bad in old:
     print('  %-4s old save %s %s' % ('ok' if not bad else 'FAIL', fx, '; '.join(bad)))
     for x in bad: fails.append('old save %s: %s' % (fx, x))
@@ -141,6 +180,10 @@ if flag('--ff'):
         d.set_window_size(412, 915); d.get(url); time.sleep(0.4)
         out = d.execute_async_script('var cb=arguments[arguments.length-1];(async()=>{' + layout + '})().then(cb,e=>cb({vw:0,vh:0,bad:[String(e)]}))'); lay.append((out['vw'], out['vh'], out['bad']))
         print('[%s] Firefox' % stamp()); report('firefox', res, lay)
+        if not QUICK and not ONLY:
+            d.set_window_size(500, 900); d.get('file://' + os.path.join(ROOT, 'dist/lab/index.html') + '#qa'); time.sleep(0.6)
+            bad = labview(d.get_screenshot_as_png, d.execute_script, 'firefox'); print('  %-4s tester color view (Firefox) %s' % ('ok' if not bad else 'FAIL', '; '.join(bad)))
+            for x in bad: fails.append('tester color view: ' + x)
     finally:
         d.quit()
 

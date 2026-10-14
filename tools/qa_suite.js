@@ -362,12 +362,13 @@ await T('smoother flick speed: many pointer samples still make a throw', async (
 
 await T('Little hands setup: one tap sets five comfort options, leaves speed alone, and undoes', async () => {
   const sv = P.sv(); Object.assign(sv, { hp: 0, bb: 0, lt: 0, ib: 0, aim: 1, sp: 2 }); document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bSet').click(); await wait(50);
-  for (const id of ['cmLittle', 'cmHs', 'cmSk', 'cmSa', 'cmCp', 'cmGrown']) if (!$(id)) throw new Error('row missing: ' + id);
+  for (const id of ['cmLittle', 'cmHs', 'cmSk', 'cmSa', 'cmCp', 'cmGrown', 'cmWake']) if (!$(id)) throw new Error('row missing: ' + id);
   $('cmLittle').click(); if (!(sv.hp && sv.bb && sv.lt && sv.ib) || sv.aim !== 0) throw new Error('preset values: ' + [sv.hp, sv.bb, sv.lt, sv.ib, sv.aim]); if (sv.sp !== 2) throw new Error('the preset changed game speed to ' + sv.sp);
   if ($('cmLittle').getAttribute('aria-pressed') !== 'true') throw new Error('row does not show On');
   $('cmLittle').click(); if (sv.hp || sv.bb || sv.lt || sv.ib || sv.aim !== 1) throw new Error('undo did not restore: ' + [sv.hp, sv.bb, sv.lt, sv.ib, sv.aim]);
   const k0 = sv.sk; $('cmSk').click(); if (sv.sk !== (k0 + 1) % 4) throw new Error('shake row did not step'); $('cmSk').click(); $('cmSk').click(); $('cmSk').click(); if (sv.sk !== k0) throw new Error('shake row did not cycle');
   for (const id of ['cmHs', 'cmSa', 'cmCp']) { $(id).click(); $(id).click(); }
+  const w0 = sv.wl; $('cmWake').click(); if (sv.wl === w0) throw new Error('keep-screen-on row did not switch'); $('cmWake').click();
   sv.sp = 0; $('cardOk').click(); return 'preset on and off, speed untouched, rows cycle';
 });
 
@@ -389,6 +390,54 @@ await T('canvas work per frame stays under its ceiling in every stage (counts, n
     if (r.saveRestore.leakFrames > 0 || r.saveRestore.restoreWithoutSave > 0) throw new Error('stage ' + st + ': save/restore out of balance (' + r.saveRestore.leakFrames + ' leaking frames, ' + r.saveRestore.restoreWithoutSave + ' extra restores)');
   }
   sv.au = 0; sv.um = 0; sv.ra = 0; return 'median calls per frame by stage ' + out.join(' ');
+});
+
+await T('hints: a Champion tip shows until you beat that Champion; the helper hint shows twice in total', async () => {
+  const sv = P.sv(); sv.au = 1; sv.hh = 0; const tip = 'Pop the snowballs, then hit him!';
+  sv.cleared = 0; await go(1, 5); P.bot = false; P.step(3.2, 0.05); if (!P.S.toast || P.S.toast.txt !== tip) throw new Error('first meeting: no Champion tip (' + (P.S.toast && P.S.toast.txt) + ')');
+  sv.cleared = 1; await go(1, 5); P.bot = false; P.step(3.2, 0.05); if (P.S.toast && P.S.toast.txt === tip) throw new Error('the tip came back after the Champion was beaten');
+  sv.hh = 0; const seen = []; for (let i = 0; i < 3; i++) { await go(1, 0); P.bot = false; seen.push(sv.hh); } sv.au = 0; sv.cleared = 0;
+  if (seen.join() !== '1,2,2') throw new Error('helper hint count ' + seen.join()); return 'tip once per unbeaten Champion; helper hint ' + seen.join('>');
+});
+
+await T('keep screen on: held only while playing; Battery saver and the setting turn it off', async () => {
+  const sv = P.sv(); sv.wl = 1; sv.bv = 0; await go(1, 2); P.bot = false; await wait(120); let w = P.wake();
+  if (!w.want) throw new Error('not asking for the lock while playing'); if (w.sup && !w.held && !w.refusals) throw new Error('supported, not refused, but not held');
+  $('bPause').click(); await wait(60); w = P.wake(); if (w.want || w.held) throw new Error('lock kept on the Paused card'); $('gBtn1').click(); await wait(120); w = P.wake(); if (!w.want) throw new Error('not asking again after Resume');
+  sv.bv = 1; if (P.wake().want) throw new Error('Battery saver should turn the lock off'); sv.bv = 0; sv.wl = 0; if (P.wake().want) throw new Error('the setting should turn the lock off'); sv.wl = 1;
+  return (w.sup ? (w.held ? 'held' : 'refused by this browser') : 'not supported here') + ' while playing; off when paused, in Battery saver, or when switched off';
+});
+
+await T('assist offer: the same wave lost twice gets one kind offer, never again', async () => {
+  const sv = P.sv(); Object.assign(sv, { ao: 0, hp: 0, bb: 0, lt: 0, ib: 0, aim: 1 }); await go(1, 2); P.bot = false; P.lose(); await wait(30);
+  if (!cardUp() || card().t !== 'Oh no!' || card().b1 !== 'Try again') throw new Error('first loss should be the plain card: ' + JSON.stringify(card()));
+  $('gBtn1').click(); await wait(60); P.bot = false; P.lose(); await wait(30);
+  if (card().b1 !== 'Yes, a little help' || card().b2 !== 'No thanks, try again' || card().b3 !== 'Title') throw new Error('second loss should offer help: ' + JSON.stringify(card()));
+  if (!/Settings/.test(card().body)) throw new Error('the offer does not say it can be undone');
+  $('gBtn1').click(); await wait(80); if (!(sv.hp && sv.bb && sv.lt && sv.ib) || sv.aim !== 0 || sv.ao !== 1) throw new Error('accepting did not set the help: ' + [sv.hp, sv.bb, sv.lt, sv.ib, sv.aim, sv.ao]);
+  Object.assign(sv, { hp: 0, bb: 0, lt: 0, ib: 0, aim: 1 }); P.bot = false; P.lose(); await wait(30); $('gBtn1').click(); await wait(60); P.bot = false; P.lose(); await wait(30);
+  if (card().b1 !== 'Try again') throw new Error('the offer came back: ' + JSON.stringify(card())); $('gBtn1').click(); await wait(50); sv.ao = 0; return 'plain, then the offer, accept sets the help, never again';
+});
+
+await T('context loss: the game pauses on a lost picture and offers a reload', async () => {
+  await go(1, 2); P.bot = false; const e = new Event('contextlost', { cancelable: true }); $('cv').dispatchEvent(e);
+  if (!e.defaultPrevented) throw new Error('contextlost was not prevented, so the browser would never restore the canvas'); await wait(30);
+  if (!cardUp() || card().t !== 'The picture hiccuped' || card().b1 !== 'Reload') throw new Error('no reload card: ' + JSON.stringify(card()));
+  if (!P.S.paused) throw new Error('the game kept running'); $('cv').dispatchEvent(new Event('contextlost', { cancelable: true })); if (!cardUp()) throw new Error('a second event closed the card');
+  $('gBtn2').click(); await wait(60); if (P.S.paused || cardUp() || P.ctxCardOpen()) throw new Error('Keep trying did not resume'); return 'prevented, paused, reload offered, Keep trying resumes';
+});
+
+await T('second tab: a twin copy plays without saving and can take over', async () => {
+  const sv = P.sv(), raw = () => localStorage.getItem('pd-save');
+  document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bSet').click(); await wait(30);
+  sv.hc = 0; $('cmHc').click(); const r1 = raw(); P.twinTest(true); await wait(30);   /* title screen first: the card has two big buttons */
+  if (!$('twUse') || !$('twLook') || $('cardTitle').textContent !== 'Open in another tab') throw new Error('no twin card on the title screen');
+  document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('twLook').click(); $('bSet').click(); await wait(30);
+  $('cmHc').click(); if (raw() !== r1) throw new Error('a twin tab wrote the save'); $('cmHc').click(); if (raw() !== r1) throw new Error('a twin tab wrote the save (second click)');
+  P.twinTest(false); $('cmHc').click(); if (raw() === r1) throw new Error('saving did not come back after leaving twin mode'); $('cmHc').click(); $('cardOk').click(); sv.hc = 0;
+  await go(1, 2); P.bot = false; P.twinTest(true); await wait(30); if (!cardUp() || card().t !== 'Open in another tab' || card().b1 !== 'Use this tab' || card().b2 !== 'Keep playing without saving') throw new Error('in-game twin card: ' + JSON.stringify(card()));
+  if (!P.S.paused) throw new Error('the game kept running under the twin card'); $('gBtn2').click(); await wait(60); if (P.S.paused) throw new Error('Keep playing did not resume'); P.twinTest(false);
+  return 'title card, in-game card, no writes while twin, saving returns';
 });
 
 await T('every trophy and shop upgrade has its own icon', async () => {

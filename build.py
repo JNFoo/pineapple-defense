@@ -31,7 +31,7 @@ MIN = "--min" in sys.argv
 def game_js():
     g = (S / "game.js").read_text(encoding="utf-8")
     if LAB:
-        g = g.replace("key: 'pd-save'", "key: 'pd-lab-save'")  # the tester keeps its own save
+        g = g.replace("key: 'pd-save'", "key: 'pd-lab-save'").replace("'pd-open'", "'pd-lab-open'")  # the tester keeps its own save (and its own one-tab lock)
     g = g.replace("/*{{STAGES_JS}}*/", (S / "stages.js").read_text(encoding="utf-8"))
     g = g.replace("/*{{EVOLVE_JS}}*/", (S / "evolve.js").read_text(encoding="utf-8"))
     g = g.replace("/*{{GEAR_JS}}*/", (S / "gear.js").read_text(encoding="utf-8"))
@@ -55,7 +55,7 @@ def minify(t):
 
 def main():
     now = datetime.datetime.now(zoneinfo.ZoneInfo("America/New_York"))
-    ver = now.strftime("%Y.%-m.%-d.%H%M")
+    ver = now.strftime("%Y.%m.%d.%H%M")   # zero-padded, as in 2026.10.08.2320
     t = (S / "title.html").read_text(encoding="utf-8")
     sp = S / "sprites"
     rep = {
@@ -72,6 +72,8 @@ def main():
         "/*{{QGOV}}*/": (S / "vendor/frame-kit/quality-governor.js").read_text(),
         "/*{{FRAMEMETER}}*/": (S / "vendor/frame-kit/frame-meter.js").read_text(),
         "/*{{BACKCLOSE}}*/": (S / "vendor/back-close/back-close.js").read_text(),
+        "/*{{WAKEKEEPER}}*/": (S / "vendor/wake-keeper/wake-keeper.js").read_text(),
+        "/*{{TABGUARD}}*/": (S / "vendor/tab-guard/tab-guard.js").read_text(),
         "/*{{SAVEKIT}}*/": (S / "vendor/save-kit/save-kit.js").read_text(),
         "/*{{GAME_JS}}*/": game_js(),
         "<!--{{adelie}}-->": (sp / "adelie.svg").read_text(),

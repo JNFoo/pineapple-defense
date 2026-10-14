@@ -2,6 +2,15 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.14.1256
+- **Keep screen on (Settings, on by default):** the screen does not dim while you play. It is let go when you pause, open a menu or card, leave the game alone for a minute, hide the tab, or turn on Battery saver. If the phone refuses (low power), nothing happens.
+- **Hints remember:** a Champion's tip now shows only until you have beaten that Champion once (before, it showed every fight), and the "helpers join in" hint shows twice in total, not twice per visit.
+- **A kind offer after losing the same wave twice:** "Want a little help?" with three buttons (Yes, a little help / No thanks, try again / Title). Yes turns on the Little hands setup and says exactly what it turned on. It asks once, ever, and never when that help is already on.
+- **Two tabs, one save:** a second copy of the game opened in another tab or window plays without saving and says so, with a big Use this tab button. Nothing is overwritten.
+- **If the picture drops out** (a graphics reset or low-memory event), the game pauses, keeps your place in the wave and offers Reload.
+- **Tester only:** Test Lab has a Color view button (Normal, Protan, Deutan, Tritan, Gray) for checking colors the way a color-blind player sees them.
+- **Developer:** `tools/docs_check.py` fails a release on drift in the docs (missing paths, unknown flags, placeholders, wrong trophy or stage counts, stale Status lines); this release fixed four real drifts it found (an old "design phase, no code" line, a stale shop plan, a version in the README status line, one in the ideas file). House-rule git hooks are in `tools/hooks` and checked at release; they now also reject a version stamp that is not year.month.day.HHMM. `build.py` now zero-pads the month and day in stamps. New JS-modules piece: `wake-keeper`.
+
 ## 2026.10.14.0817
 - **Back swipe pauses.** On Android (Chrome 126+, Firefox 149+) the back swipe or back button now pauses the game instead of leaving the page. On the Paused card a second back leaves as before. Esc still pauses too.
 - **A thrown-away tab costs less.** Pausing (which also happens when the tab is hidden or the phone is locked) notes how many penguins were left. If the browser throws the tab away, Continue picks that wave up with only those penguins, the same Golden Pineapples and the cheer you had, and says "Welcome back!". A cleared wave, a lost wave or a new game drops the note.

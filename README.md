@@ -15,7 +15,7 @@
 
 A silly, glossy toy-box game for kids of all ages. The penguins are jealous of your tropical fruit and march down the ice toward your stand. Flick a pineapple to bonk them, chain combos, collect trophies, and beat a different Champion at the end of every stage. It works on phones, tablets and computers, in any modern browser.
 
-> **Status:** alpha, version 2026.10.13.1614 (see the [changelog](CHANGELOG.md)). All five stages, five Champions, the Pineapple Roll bonus game and a shop are playable. The art is still being polished.
+> **Status:** alpha (see the [changelog](CHANGELOG.md) for the current version). All five stages, five Champions, the Pineapple Roll bonus game and a shop are playable. The art is still being polished.
 
 ## How to play
 
@@ -35,7 +35,7 @@ A short picture tour shows the first time you open the game (you can skip it, an
 - Tap the **pickups** that appear on your table, and the little **surprises** hiding in the scenery (a talking cloud, a duck, a whale, balloons you can pop). Each stage also hides one secret tap spot on each side.
 - After stage 4 you can play **Pineapple Roll**, a carnival bonus game: flick a ball up the lane into the holes. The harder holes score more, and a ball that rattles around a rim can still drop in. You get two plays per run, and what you win becomes Golden Pineapples.
 - **Runs:** clearing all five stages is a run. Each finished run makes penguins and Champions 10% faster (up to double speed) and brings a new challenge and more trophies.
-- **Settings** (title screen): game speed (100% down to 60%), left-handed layout, aim help, the dotted aim arc, high contrast, larger text, large buttons, a calm mode that turns off bobbing, confetti and other motion, a battery saver, an FPS counter with a plain-words verdict, tap or hold to throw (for very young players), an early flick helper, a one-tap Little hands setup, four game-feel options (hit pause, screen shake, sticky aim, smoother flick speed), a For grown-ups card and full screen. A new game asks once whether you want to Flick or Tap. On Android the back swipe pauses the game.
+- **Settings** (title screen): game speed (100% down to 60%), left-handed layout, aim help, the dotted aim arc, high contrast, larger text, large buttons, a calm mode that turns off bobbing, confetti and other motion, a battery saver, an FPS counter with a plain-words verdict, tap or hold to throw (for very young players), an early flick helper, a one-tap Little hands setup, four game-feel options (hit pause, screen shake, sticky aim, smoother flick speed), a For grown-ups card, keep screen on and full screen. A new game asks once whether you want to Flick or Tap. On Android the back swipe pauses the game. A second copy opened in another tab plays without saving, so two tabs never overwrite each other.
 - Keys on a keyboard: **P** or **Esc** pauses, **R** calls the Pineapple Rain, **1** and **2** pick the pineapple.
 
 ## The five stages

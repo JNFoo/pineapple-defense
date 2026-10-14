@@ -87,15 +87,19 @@ function loadAssets() {
 
 /* ---------- save ---------- */
 var kit = SaveKit.create({ key: 'pd-save', prefix: 'PD1',
-  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1', hp: 'int:1', fp: 'int:1', ib: 'int:1', tc: 'int:1', sl: 'int:99', sg: 'int:9999', sc: 'int:100', hs: 'int:1', sk: 'int:3', sa: 'int:1', cp: 'int:1' },
-  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0, hp: 0, fp: 0, ib: 0, tc: 0, sl: 0, sg: 0, sc: 0, hs: 0, sk: 2, sa: 0, cp: 0 } });
+  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1', hp: 'int:1', fp: 'int:1', ib: 'int:1', tc: 'int:1', sl: 'int:99', sg: 'int:9999', sc: 'int:100', hs: 'int:1', sk: 'int:3', sa: 'int:1', cp: 'int:1', hh: 'int:2', wl: 'int:1', ao: 'int:1' },
+  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0, hp: 0, fp: 0, ib: 0, tc: 0, sl: 0, sg: 0, sc: 0, hs: 0, sk: 2, sa: 0, cp: 0, hh: 0, wl: 1, ao: 0 } });
 var sv = kit.load() || kit.validate({});
 sv.ach = sv.ach | 0; sv.au = sv.au | 0; sv.ar = sv.ar | 0; sv.ap = sv.ap | 0; sv.ac2 = sv.ac2 | 0; sv.gu = sv.gu | 0; sv.um = sv.um | 0; sv.ra = sv.ra | 0; sv.run = sv.run | 0; sv.cd = sv.cd | 0; sv.lm = sv.lm | 0;
-['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'hp', 'fp', 'ib', 'tc', 'sl', 'sg', 'sc', 'hs', 'sk', 'sa', 'cp', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
+['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'hp', 'fp', 'ib', 'tc', 'sl', 'sg', 'sc', 'hs', 'sk', 'sa', 'cp', 'hh', 'wl', 'ao', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
 var HINT_FLICK = 'Flick up from the bottom toward a penguin!', HINT_TAP = 'Tap a penguin to throw! Hold to keep throwing.';
 function hintSet() { if (typeof elHint === 'undefined' || !elHint || !elHint.lastChild || (typeof K !== 'undefined' && K)) return; HINT_TXT = sv.hp ? HINT_TAP : HINT_FLICK; elHint.lastChild.textContent = HINT_TXT; }
 /* comfort settings travel with the save (and so with the save code) */
-function applyPrefs() { root.setAttribute('data-lh', sv.lh ? '1' : '0'); root.setAttribute('data-hc', sv.hc ? '1' : '0'); root.setAttribute('data-lt', sv.lt ? '1' : '0'); root.setAttribute('data-big', sv.bb ? '1' : '0'); hintSet(); fpsShow(); }
+/* Keep the screen awake while you play (WakeKeeper, from JS-modules): only while running, not paused, no card open, not in Battery saver, and not after 60 s without a touch */
+var wk = typeof WakeKeeper === 'object' ? WakeKeeper.create({ idleMs: 60000 }) : null;
+function wakeOn() { return !!(sv.wl && !sv.bv && typeof running !== 'undefined' && running && S && !S.paused && !S.over); }
+function wakeSet() { if (wk) wk.want(wakeOn()); }
+function applyPrefs() { root.setAttribute('data-lh', sv.lh ? '1' : '0'); root.setAttribute('data-hc', sv.hc ? '1' : '0'); root.setAttribute('data-lt', sv.lt ? '1' : '0'); root.setAttribute('data-big', sv.bb ? '1' : '0'); hintSet(); fpsShow(); wakeSet(); }
 var SPEEDS = [100, 90, 80, 70, 60];
 function spdK() { return SPEEDS[sv.sp | 0] / 100; }   /* the game speed setting (title screen only), 1 to 0.6 */
 function mx(f) { return W * (sv.lh ? 1 - f : f); }
@@ -509,14 +513,13 @@ function drawAutoMark() {
 
 /* ---------- waves and penguins ---------- */
 function effW() { return S.wave + (S.stage - 1) * 2; }
-var helpHint = 0;
 function beginWave(n) {
   S.wave = n; S.spawned = 0; S.toSpawn = WAVE_N[n - 1]; S.spawnT = 0.6; S.bumps = 0; S.pt = false;
   if (n >= NWAVES - 1) S.fishT = Math.min(S.fishT, 2.2);   /* the last two waves of a stage start the fish early */
   S.mode = 'intro'; S.modeT = 0;
   if (n === 1 && !demo) banner('Stage ' + S.stage + '\n' + STAGES[S.stage].title, 2300);
   else banner(n === NWAVES ? 'Final wave!' : 'Wave ' + n, 1500);
-  if (n === 1 && (sv.au || sv.lm) && !demo && helpHint < 2) { helpHint++; toast('Your helpers join in after your first throw each round!', 3.4); }
+  if (n === 1 && (sv.au || sv.lm) && !demo && sv.hh < 2) { sv.hh++; saveSoon(); toast('Your helpers join in after your first throw each round!', 3.4); }
 }
 function spawn() {
   var w = effW(), lane;
@@ -725,6 +728,7 @@ function doReset() {
   sv.bank = 0; sv.au = 0; sv.ar = 0; sv.ap = 0; sv.gu = 0; sv.um = 0; sv.ra = 0; sv.run = 0; sv.cd = 0; sv.rl = 0; sv.lm = 0; sv.bs1 = sv.bs2 = sv.bs3 = sv.bs4 = sv.bs5 = 0; sv.sl = 0; sv.stage = 1; sv.wave = 0; sv.golden = 0; sv.cheer = 100; sv.cleared = 0;
   kit.save(sv); updateContinue(); startAgain();
 }
+var lossKey = '', lossN = 0;   /* how many times in a row the same wave was lost (this visit only) */
 function endStage(win) {
   if (demo) { endDemo(); return; }
   S.over = true;
@@ -746,10 +750,15 @@ function endStage(win) {
     else if (st === NSTAGES - 1 && rollsLeft() > 0) showCard('Stage ' + st + ' clear!', CH.n + ' is happy and heads home! You got ' + S.golden + ' Golden Pineapples.' + more + ' Bonus game time: Pineapple Roll!', 'Roll for bonus credits', function () { startSkee(true); }, 'Skip to stage ' + (st + 1), function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
     else showCard('Stage ' + st + ' clear!', CH.n + ' is happy and heads home! You got ' + S.golden + ' Golden Pineapples.' + more + ' Next up: ' + STAGES[st + 1].title.replace('\n', ' ') + '.', 'Next stage', function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
   } else {
-    showCard('Oh no!', 'The penguins got too close to your fruit stand. Let us try this wave again!', 'Try again', retryWave);
+    var lk = S.stage + ':' + (S.inBoss ? 'b' : S.wave); lossN = lk === lossKey ? lossN + 1 : 1; lossKey = lk;
+    if (lossN >= 2 && !sv.ao && !S.replay && !littleOn()) {   /* the same wave twice: offer help once, as a choice, never again */
+      sv.ao = 1; kit.save(sv);
+      showCard('Oh no!', 'That wave is a tricky one! Want a little help? It turns on tap or hold to throw, large buttons, larger text, an early flick helper and the most forgiving aim. You can undo it any time in Settings.', 'Yes, a little help', function () { applyLittle(); retryWave(); }, 'No thanks, try again', retryWave, 'Title', toTitle);
+    } else showCard('Oh no!', 'The penguins got too close to your fruit stand. Let us try this wave again!', 'Try again', retryWave);
   }
 }
 function waveClear() {
+  lossN = 0;
   S.mode = 'clear'; S.modeT = 0; S.fish = [];
   if (S.bumps === 0) award(3);
   if (S.cheer < 30) award(8);
@@ -768,7 +777,7 @@ function startBoss() {
 function spawnBoss() {
   var CH = CHAMP[S.stage];
   S.boss = { id: ++S.id, kind: CH.kind, xn: 0, p: 0.05, v: 0.07, st: 'walk', t: 0, mood: 'happy', ph: 0, hat: false, a: 1, big: CH.big, hp: CH.hp, shield: CH.shield || 0, sp: 0, puff: 0, vx: 0, dph: 0, nd: CH.slide || 0, tele: false, x0: 0, x1: 0, rs: 0 };
-  champInit(S.boss); if (CH.tip) toast(CH.tip, 3.6);
+  champInit(S.boss); if (CH.tip && !demo && !S.replay && sv.cleared < S.stage) toast(CH.tip, 3.6);   /* a Champion's tip shows until you have beaten that Champion once */
   if (!demo) { S.boss.rs = 1; banner('Ready…', 2600); }
 }
 function updateBoss(b, dt) {
@@ -1985,8 +1994,8 @@ function frame(now) {
   if (K) { updateSkee(dt); drawSkee(); hudSkee(); } else { update(dt); draw(); hud(); }
   if (w0) fmWork = performance.now() - w0;
 }
-function run() { if (running) return; running = true; $('bcGuard').hidden = false; last = 0; even.reset(); fpsShow(); raf = requestAnimationFrame(frame); }
-function halt() { running = false; $('bcGuard').hidden = true; cancelAnimationFrame(raf); hold = null; if (elFps) elFps.hidden = true; }
+function run() { if (running) return; running = true; $('bcGuard').hidden = false; wakeSet(); last = 0; even.reset(); fpsShow(); raf = requestAnimationFrame(frame); }
+function halt() { running = false; $('bcGuard').hidden = true; if (wk) wk.want(false); cancelAnimationFrame(raf); hold = null; if (elFps) elFps.hidden = true; }
 
 /* ---------- FPS badge (Settings: FPS counter) ---------- */
 var elFps = $('fps'), fm = new FrameMeter(), fmWork = 0;
@@ -1997,6 +2006,7 @@ function fpsTick(gap, now) { if (fm.frame(now, fmWork, gap)) elFps.textContent =
 var drag = null;
 function rel(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, t: e.timeStamp }; }
 cv.addEventListener('pointerdown', function (e) {
+  if (wk) wk.poke();
   if (sv.fp) fm.input(e.timeStamp);
   if (S.paused || S.over || drag || S.rc > 0) return;
   try { cv.setPointerCapture(e.pointerId); } catch (x) {}
@@ -2097,6 +2107,18 @@ function setType(t) { if (t !== 'classic' && sv.bank < (COST[t] || 0) && S.fx.me
 Array.prototype.forEach.call(picks, function (b) { b.addEventListener('click', function () { setType(b.getAttribute('data-t')); }); });
 document.addEventListener('keydown', function (e) { if (gameEl.hidden) return; if (e.key === '1') setType('classic'); else if (e.key === '2') setType('lobber'); else if (e.key === '3') collectPU(); else if (e.key === '4') collectTro(false); });
 
+/* ---------- context loss safety net ---------- */
+/* A graphics reset or low-memory event can blank the canvas and every baked sprite. Pause (which saves the wave), and offer a reload: Continue then picks the wave up. */
+var ctxCard = false;
+function ctxLost() {
+  if (ctxCard) return; ctxCard = true;
+  if (gameEl.hidden === false && running && !S.over && !S.paused) pause();
+  var wasPaused = gameEl.hidden === false && S.paused;
+  showCard('The picture hiccuped', 'Your device dropped the game picture. Reload to bring it back. Your place in this wave is saved.', 'Reload', function () { location.reload(); }, wasPaused ? 'Keep trying' : 'Title', function () { ctxCard = false; if (wasPaused) resume(); else toTitle(); });
+}
+cv.addEventListener('contextlost', function (e) { e.preventDefault(); ctxLost(); });
+cv.addEventListener('contextrestored', ctxLost);
+
 /* ---------- cards, pause, screens ---------- */
 var gcw = $('gcw');
 function showCard(title, body, btn1, fn1, btn2, fn2, btn3, fn3) {
@@ -2129,6 +2151,7 @@ window.addEventListener('pagehide', function () { if (gameEl.hidden === false &&
 window.addEventListener('orientationchange', function () { if (gameEl.hidden === false && running && !S.over) pause(); });
 $('bPause').addEventListener('click', pause);
 document.addEventListener('keydown', function (e) {
+  if (wk && gameEl.hidden === false) wk.poke();
   if (gameEl.hidden !== false) return;
   if ((e.key === 'r' || e.key === 'R') && !e.repeat && !K) callRaid();
   if (e.key === 'Escape' && !S.paused) pause();
@@ -2146,6 +2169,24 @@ function start() {
   loadAssets().then(function () { resize(); startStage(); run(); });
 }
 $('bPlay').addEventListener('click', start);
+
+/* ---------- one open copy at a time (TabGuard, from JS-modules) ---------- */
+/* Two tabs would each save the whole game and the last writer would win. The second copy plays without saving and offers "Use this tab". */
+var twin = false, tg = null, rawSave = kit.save;
+kit.save = function (o) { return twin ? true : rawSave.call(kit, o); };   /* true: not a failure, so no "browser is not keeping your progress" warning */
+var TWIN_MSG = 'Pineapple Defense is open in another tab or window. If you play here, nothing is saved, so the other copy would win. Use this tab instead, or close one of them.';
+function twinCard() {
+  if (gameEl.hidden === false) {
+    if (running && !S.paused && !S.over) pause();
+    showCard('Open in another tab', TWIN_MSG, 'Use this tab', function () { if (tg) tg.takeOver(); else twin = false; }, 'Keep playing without saving', function () { if (S.paused) resume(); }, 'Title', toTitle);
+  } else {
+    $('cardTitle').textContent = 'Open in another tab';
+    $('cardBody').innerHTML = '<p>' + TWIN_MSG + '</p><div class="tch"><button class="tchoice" id="twUse" type="button"><b>Use this tab</b></button><button class="tchoice" id="twLook" type="button"><b>Just look</b><small>Nothing is saved</small></button></div>';
+    $('twUse').onclick = function () { $('cardOk').click(); if (tg) tg.takeOver(); else twin = false; }; $('twLook').onclick = function () { $('cardOk').click(); };
+    $('cw').hidden = false; document.documentElement.setAttribute('data-dlg', '1'); $('twUse').focus();
+  }
+}
+if (location.hash !== '#qa' && typeof TabGuard === 'object') tg = TabGuard.start({ name: 'pd-open', onTwin: function () { twin = true; twinCard(); }, onTakeOver: function () { location.reload(); } });
 
 /* ---------- the first-load tour: five short picture cards for kids; shown once, with a big Skip and a replay in How to play ---------- */
 var TOUR = [
@@ -2191,25 +2232,27 @@ $('bHow').addEventListener('click', function () {
   var b = $('cardBody'), r = b.querySelector('.tl'); if (!r || b.querySelector('#tourBtn')) return;
   var p = document.createElement('button'); p.type = 'button'; p.className = 'btn'; p.id = 'tourBtn'; p.textContent = 'Play the tour'; p.addEventListener('click', function () { $('cardOk').click(); tourStart(); }); b.appendChild(p);
 });
-if (location.hash !== '#qa' && !sv.tr && !sv.thr && !sv.cleared && !(sv.stage > 1)) setTimeout(function () { tourStart(true); }, 900);
+if (location.hash !== '#qa' && !sv.tr && !sv.thr && !sv.cleared && !(sv.stage > 1)) setTimeout(function () { if (!twin) tourStart(true); }, 900);
 btnCont.addEventListener('click', function () { if (!btnCont.disabled) continueGame(); });
 
 /* ---------- save code and file (Settings card) ---------- */
 var LITTLE = { hp: 1, bb: 1, lt: 1, ib: 1, aim: 0 }, littlePrev = null, SHAKE = ['Off', 'Low', 'Normal', 'Strong'];   /* Little hands setup: leaves game speed alone, so no trophy is affected */
 function littleOn() { return !!(sv.hp && sv.bb && sv.lt && sv.ib && sv.aim === 0); }
+function applyLittle() { var k; littlePrev = {}; for (k in LITTLE) { littlePrev[k] = sv[k]; sv[k] = LITTLE[k]; } sv.tc = 1; applyPrefs(); kit.save(sv); toast('Little hands setup is on. You can undo it in Settings.', 3.2); }
 function wireComfort($b) {
   var AIM = ['Generous', 'Normal', 'Off'], ARC = ['First 5 throws', 'Always', 'Never'], fs = document.fullscreenEnabled && document.documentElement.requestFullscreen;
   function row(id, text, on) { var b = $b(id); b.querySelector('.st').textContent = text; if (on !== undefined) b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
   function paint() {
     row('cmSp', SPEEDS[sv.sp | 0] + '%'); row('cmLh', sv.lh ? 'On' : 'Off', sv.lh); row('cmAim', AIM[sv.aim]); row('cmArc', ARC[sv.arc]);
     row('cmHc', sv.hc ? 'On' : 'Off', sv.hc); row('cmLt', sv.lt ? 'On' : 'Off', sv.lt); row('cmBig', sv.bb ? 'On' : 'Off', sv.bb);
-    var c = root.getAttribute('data-calm') === '1'; row('cmCalm', c ? 'On' : 'Off', c); row('cmSave', sv.bv ? 'On' : 'Off', sv.bv); row('cmHold', sv.hp ? 'On' : 'Off', sv.hp); row('cmBuf', sv.ib ? 'On' : 'Off', sv.ib); row('cmLittle', littleOn() ? 'On' : 'Off', littleOn()); row('cmHs', sv.hs ? 'On' : 'Off', sv.hs); row('cmSk', SHAKE[sv.sk]); row('cmSa', sv.sa ? 'On' : 'Off', sv.sa); row('cmCp', sv.cp ? 'On' : 'Off', sv.cp); row('cmFps', sv.fp ? 'On' : 'Off', sv.fp);
+    var c = root.getAttribute('data-calm') === '1'; row('cmCalm', c ? 'On' : 'Off', c); row('cmSave', sv.bv ? 'On' : 'Off', sv.bv); row('cmHold', sv.hp ? 'On' : 'Off', sv.hp); row('cmBuf', sv.ib ? 'On' : 'Off', sv.ib); row('cmWake', sv.wl && !sv.bv ? 'On' : 'Off', sv.wl); row('cmLittle', littleOn() ? 'On' : 'Off', littleOn()); row('cmHs', sv.hs ? 'On' : 'Off', sv.hs); row('cmSk', SHAKE[sv.sk]); row('cmSa', sv.sa ? 'On' : 'Off', sv.sa); row('cmCp', sv.cp ? 'On' : 'Off', sv.cp); row('cmFps', sv.fp ? 'On' : 'Off', sv.fp);
     $b('cmFull').hidden = !fs; row('cmFull', document.fullscreenElement ? 'On' : 'Off', !!document.fullscreenElement);
   }
   function bind(id, fn) { $b(id).addEventListener('click', function () { fn(); applyPrefs(); kit.save(sv); paint(); }); }
   bind('cmSp', function () { sv.sp = ((sv.sp | 0) + 1) % SPEEDS.length; }); bind('cmLh', function () { sv.lh = sv.lh ? 0 : 1; }); bind('cmAim', function () { sv.aim = (sv.aim + 1) % 3; }); bind('cmArc', function () { sv.arc = (sv.arc + 1) % 3; if (sv.arc === 0) sv.thr = 0; });
   bind('cmHc', function () { sv.hc = sv.hc ? 0 : 1; }); bind('cmLt', function () { sv.lt = sv.lt ? 0 : 1; }); bind('cmBig', function () { sv.bb = sv.bb ? 0 : 1; }); bind('cmSave', function () { sv.bv = sv.bv ? 0 : 1; }); bind('cmHold', function () { sv.hp = sv.hp ? 0 : 1; sv.tc = 1; }); bind('cmBuf', function () { sv.ib = sv.ib ? 0 : 1; });
-  bind('cmLittle', function () { var k; if (littleOn()) { var p = littlePrev || { hp: 0, bb: 0, lt: 0, ib: 0, aim: 1 }; for (k in LITTLE) sv[k] = p[k]; littlePrev = null; } else { littlePrev = {}; for (k in LITTLE) { littlePrev[k] = sv[k]; sv[k] = LITTLE[k]; } sv.tc = 1; } });
+  bind('cmLittle', function () { var k; if (littleOn()) { var p = littlePrev || { hp: 0, bb: 0, lt: 0, ib: 0, aim: 1 }; for (k in LITTLE) sv[k] = p[k]; littlePrev = null; } else { littlePrev = {}; for (k in LITTLE) { littlePrev[k] = sv[k]; sv[k] = LITTLE[k]; } sv.tc = 1; } });   /* same values as applyLittle(), without the toast */
+  bind('cmWake', function () { sv.wl = sv.wl ? 0 : 1; });
   bind('cmHs', function () { sv.hs = sv.hs ? 0 : 1; }); bind('cmSk', function () { sv.sk = (sv.sk + 1) % 4; }); bind('cmSa', function () { sv.sa = sv.sa ? 0 : 1; }); bind('cmCp', function () { sv.cp = sv.cp ? 0 : 1; });
   $b('cmGrown').addEventListener('click', function () { $('cardBody').replaceChildren($('t-grown').content.cloneNode(true)); $('cardTitle').textContent = 'For grown-ups'; }); bind('cmFps', function () { sv.fp = sv.fp ? 0 : 1; });
   $b('cmCalm').addEventListener('click', function () { $('bCalm').click(); paint(); });
@@ -2374,7 +2417,7 @@ $('bShop').addEventListener('click', fillShop);
 /* test hook, only with #qa in the address */
 var qa = null;
 if (location.hash === '#qa') {
-  qa = window.__pd = { tour: tourStart, choice: throwChoice, pouch: function () { return pouchPos(); }, snap: function () { return { sl: sv.sl, sg: sv.sg, sc: sv.sc }; }, cont: function () { titleEl.hidden = true; gameEl.hidden = false; startStage(sv); run(); }, pause: function () { pause(); }, backArmed: function () { return !$('bcGuard').hidden; }, backOk: BackClose.supported, rsg: function () { return rsg(); }, rollGear: function () { return rollGear(); }, stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, center: function (pg) { return penCenter(pg); }, hp: function (x, y, id) { return penAt({ x: x, y: y }); }, holdOn: function () { return !!hold; }, fpsTxt: function () { return elFps ? elFps.textContent : ''; }, get S() { return S; }, get penguins() { return penguins; },
+  qa = window.__pd = { lose: function () { S.cheer = 0; endStage(false); }, twinTest: function (on) { twin = !!on; if (on) twinCard(); }, get twin() { return twin; }, ctxLost: ctxLost, ctxCardOpen: function () { return ctxCard; }, wake: function () { return { sup: !!(wk && wk.supported), held: !!(wk && wk.held), want: wakeOn(), idle: !!(wk && wk.idle), refusals: wk ? wk.refusals : 0 }; }, tour: tourStart, choice: throwChoice, pouch: function () { return pouchPos(); }, snap: function () { return { sl: sv.sl, sg: sv.sg, sc: sv.sc }; }, cont: function () { titleEl.hidden = true; gameEl.hidden = false; startStage(sv); run(); }, pause: function () { pause(); }, backArmed: function () { return !$('bcGuard').hidden; }, backOk: BackClose.supported, rsg: function () { return rsg(); }, rollGear: function () { return rollGear(); }, stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, center: function (pg) { return penCenter(pg); }, hp: function (x, y, id) { return penAt({ x: x, y: y }); }, holdOn: function () { return !!hold; }, fpsTxt: function () { return elFps ? elFps.textContent : ''; }, get S() { return S; }, get penguins() { return penguins; },
     /* fast-forward without waiting for frames: sec game seconds in steps of dt, drawing every `every` steps (0 = never, one final draw) */
     step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (hold) holdTick(); if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
     win: function () { endStage(true); }, flick: function (dx, dy, spd) { var o = pouchPos(); throwAt(o.x, o.y, dx, dy, spd); }, get sh() { return shots; }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, sim: function (dx, dy, spd, dA, dF) { var h = skSim(skLaunch({ dx: dx, dy: dy, spd: spd }, dA, dF)); return h ? h.v : 0; }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
