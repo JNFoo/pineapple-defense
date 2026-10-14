@@ -24,7 +24,15 @@ function inv(tag) {
   if (S.umL < 0 || S.raL < 0) bad.push('negative stock');
   if (bad.length) throw new Error(tag + ': ' + bad.join('; '));
 }
+/* Quick tier (tools/qa.py --quick SEED): every fast check runs; a slow check runs only when its name hash plus the seed is a multiple of 4,
+   so four seeds in a row (the day number rolls daily) cover every slow check once. Never a release gate. */
+const QUICK = window.__qaQuick | 0, ONLY = window.__qaOnly ? new RegExp(window.__qaOnly, 'i') : null, CALM = document.documentElement.getAttribute('data-calm') === '1';
+const SLOW = new Set(['lime launcher: tiers set the limes per Champion fight', 'lime launcher: shield first, then Champion', 'champion 2 (Flipper): hits only count while he is up', 'champion 3 (Slidealot): charges, hits knock him back', 'champion 4 (Mohawk): shielded by her squad, then open', 'champion 5 (Bernard): clones pop, only the real one is hurt', 'bonus game: balls roll off ring walls instead of hanging, and rims rattle', 'bonus game: the last ball gets a chase camera with slow-mo at the hole', 'shop: try it restores the save; undo refunds', 'auto slingshot is slower and sometimes misses', 'auto slingshot only turns slightly', 'helpers wait for the first throw each round', 'more fish fall in the last two waves', 'screen shake: strength setting; Strong adds a little on every hit', 'canvas work per frame stays under its ceiling in every stage (counts, not time)', 'settings: rows, game speed, large buttons, battery saver', 'FPS counter: row, badge, numbers']);
+const qHash = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+let skipped = 0;
 async function T(name, fn) {
+  if (ONLY && !ONLY.test(name)) return;
+  if (QUICK && SLOW.has(name) && (qHash(name) + QUICK) % 4 !== 0) { skipped++; return; }
   const t0 = performance.now(), e0 = ERR.length; let ok = true, d = '';
   try { const r = await fn(); if (typeof r === 'string') d = r; } catch (e) { ok = false; d = String(e && e.message || e); }
   if (ERR.length > e0) { ok = false; d += ' | page errors: ' + ERR.slice(e0).join(' // ').slice(0, 300); }
@@ -282,6 +290,107 @@ await T('fonts are WOFF2 when the build machine can compress them', async () => 
   return m[1] + ', ' + loaded + ' faces loaded';
 });
 
+await T('back swipe: pauses while playing; nothing watches on the Paused card', async () => {
+  await go(1, 2); P.bot = false; if (!P.backArmed()) throw new Error('not watching for a back swipe while playing');
+  $('bPause').click(); await wait(30); if (!cardUp()) throw new Error('no Paused card'); if (P.backArmed()) throw new Error('still watching on the Paused card: a second back swipe could never leave');
+  $('gBtn1').click(); await wait(60); if (!P.backArmed()) throw new Error('not watching again after Resume');
+  P.pause(); await wait(30); if (!cardUp() || P.S.paused !== true) throw new Error('the back handler (pause) did not pause'); $('gBtn1').click(); await wait(30);
+  return P.backOk ? 'CloseWatcher supported; armed only while playing' : 'CloseWatcher not supported here; the guard still follows play and pause';
+});
+
+await T('resume snapshot: pausing notes the penguins left; Continue picks the wave up', async () => {
+  const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.stage = 2; sv.wave = 2; sv.sl = 0; await go(2, 2); P.bot = false; const S = P.S;
+  P.bot = true; for (let i = 0; i < 800 && !(S.mode === 'run' && S.spawned >= 4 && S.toSpawn - S.spawned + P.penguins.filter(p => p.st === 'walk').length < S.toSpawn - 1); i++) P.step(0.1, 0.05); P.bot = false;
+  const full = S.toSpawn, left = S.toSpawn - S.spawned + P.penguins.filter(p => p.st === 'walk').length;
+  $('bPause').click(); await wait(30); const sn = P.snap();
+  if (sn.sl !== left || left < 1 || left >= full) throw new Error('snapshot says ' + sn.sl + ' left, the wave has ' + left + ' of ' + full);
+  $('gBtn2').click(); await wait(60);   /* "a phone threw the tab away": back to the title, then Continue from the save */
+  P.cont(); await wait(150); const S2 = P.S;
+  if (S2.wave !== 3 || S2.toSpawn !== sn.sl) throw new Error('Continue gave wave ' + S2.wave + ' with ' + S2.toSpawn + ' penguins, wanted wave 3 with ' + sn.sl);
+  P.bot = true; for (let i = 0; i < 4000 && S2.mode !== 'clear'; i++) P.step(0.1, 0.05); P.bot = false;
+  if (S2.mode !== 'clear') throw new Error('the picked-up wave never cleared'); if (P.snap().sl !== 0) throw new Error('snapshot not cleared after the wave: ' + P.snap().sl);
+  sv.sl = 0; return left + ' of ' + full + ' left were kept, wave resumed and cleared, snapshot dropped';
+});
+
+await T('hit pause: only the hit penguin freezes; the clock runs; off and Calm do nothing', async () => {
+  const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 1; sv.thr = 99; const root = document.documentElement, cv = $('cv');
+  const fire = (type, x, y, id) => { const r = cv.getBoundingClientRect(); cv.dispatchEvent(new PointerEvent(type, { pointerId: id, clientX: r.left + x, clientY: r.top + y, bubbles: true, cancelable: true, pointerType: 'touch' })); };
+  const hitOne = async (hs) => {
+    sv.hs = hs; await go(1, 3); P.bot = false; const S = P.S;
+    for (let i = 0; i < 300 && !P.penguins.some(p => p.st === 'walk' && p.p > 0.25); i++) P.step(0.1, 0.05);
+    const pg = P.penguins.find(p => p.st === 'walk' && p.p > 0.25); if (!pg) throw new Error('no penguin'); pg.hp = 1; S.cd = 0; const c = P.center(pg); fire('pointerdown', c.x, c.y, 71); fire('pointerup', c.x, c.y, 71);
+    for (let i = 0; i < 80 && pg.st !== 'hit'; i++) P.step(0.02, 0.01); if (pg.st !== 'hit') throw new Error('penguin never got hit');
+    const fz = pg.fz || 0, t0 = pg.t, s0 = S.t; if (fz > 0) P.step(0.02, 0.01);
+    return { fz, still: pg.t === t0, clock: S.t > s0 };
+  };
+  const wasCalm = root.getAttribute('data-calm') === '1'; if (wasCalm) $('bCalm').click();   /* a reduced-motion run starts with Calm on; hit pause is meant to be off then */
+  const on = await hitOne(1); if (!(on.fz > 0.02 && on.fz < 0.21)) throw new Error('hit pause on, but fz = ' + on.fz); if (!on.still) throw new Error('the hit penguin kept animating'); if (!on.clock) throw new Error('the game clock stopped');
+  const off = await hitOne(0); if (off.fz > 0) throw new Error('hit pause is off but the penguin froze'); sv.hs = 1;
+  $('bCalm').click(); const cm = await hitOne(1); if (cm.fz > 0) throw new Error('Calm mode still froze a penguin'); if (!wasCalm) $('bCalm').click();
+  sv.hs = 0; sv.hp = 0; return 'froze ' + Math.round(on.fz * 1000) + ' ms, clock kept running, off and Calm froze nothing';
+});
+
+await T('screen shake: strength setting; Strong adds a little on every hit', async () => {
+  const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 1; sv.thr = 99; const cv = $('cv'), root = document.documentElement;
+  const fire = (type, x, y, id) => { const r = cv.getBoundingClientRect(); cv.dispatchEvent(new PointerEvent(type, { pointerId: id, clientX: r.left + x, clientY: r.top + y, bubbles: true, cancelable: true, pointerType: 'touch' })); };
+  const wasCalm = root.getAttribute('data-calm') === '1'; if (wasCalm) $('bCalm').click();
+  const shakeAfterHit = async (sk) => { sv.sk = sk; await go(1, 3); P.bot = false; const S = P.S; S.shk = 0; for (let i = 0; i < 300 && !P.penguins.some(p => p.st === 'walk' && p.p > 0.25); i++) P.step(0.1, 0.05); const pg = P.penguins.find(p => p.st === 'walk' && p.p > 0.25); pg.hp = 1; S.cd = 0; const c = P.center(pg); fire('pointerdown', c.x, c.y, 72); fire('pointerup', c.x, c.y, 72); let mx = 0; for (let i = 0; i < 60; i++) { P.step(0.02, 0.01, 1); mx = Math.max(mx, S.shk); } return mx; };
+  const n = await shakeAfterHit(2), st = await shakeAfterHit(3); if (n > 0.01) throw new Error('Normal shook on a single hit: ' + n); if (st < 0.1) throw new Error('Strong did not shake on a hit: ' + st);
+  for (const sk of [0, 1, 2, 3]) { sv.sk = sk; P.S.shk = 1; P.step(0.1, 0.05, 1); }   /* every strength draws without an error */
+  sv.sk = 2; sv.hp = 0; if (wasCalm) $('bCalm').click(); return 'Normal ' + n.toFixed(2) + ', Strong ' + st.toFixed(2) + ' after one hit; all four strengths draw';
+});
+
+await T('sticky aim: the last target keeps the throw for a moment; off, it does not', async () => {
+  const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 0; sv.aim = 0; sv.thr = 99; await go(1, 3); P.bot = false; const S = P.S;
+  for (let i = 0; i < 400 && P.penguins.filter(p => p.st === 'walk').length < 2; i++) P.step(0.1, 0.05);
+  const w = P.penguins.filter(p => p.st === 'walk'); if (w.length < 2) throw new Error('need two penguins');
+  const a = w[0], b = w[1]; for (const p of [a, b]) { p.v = 0; p.vx = 0; p.ev = 0; p.p = 0.5; p.hp = 9; p.aut = false; } a.xn = -0.1; b.xn = 0.1;
+  const o = P.pouch(), ca = P.center(a), cb = P.center(b), M = { x: ca.x + 0.55 * (cb.x - ca.x), y: ca.y + 0.55 * (cb.y - ca.y) };
+  const towards = async (pt) => { S.cd = 0; const n0 = P.sh.length; P.flick(pt.x - o.x, pt.y - o.y, 2); if (P.sh.length !== n0 + 1) throw new Error('no throw'); const s = P.sh[P.sh.length - 1]; return Math.abs(s.xE - ca.x) < Math.abs(s.xE - cb.x) ? 'a' : 'b'; };
+  sv.sa = 0; await towards(ca); const plain = await towards(M); if (plain !== 'b') throw new Error('without sticky aim the nearer penguin should win (got ' + plain + ')');
+  sv.sa = 1; S.stk = null; const first = await towards(ca); if (first !== 'a') throw new Error('flick at a went to ' + first); const kept = await towards(M); if (kept !== 'a') throw new Error('sticky aim did not keep the last target');
+  S.stk = S.stk && { pg: S.stk.pg, t: S.t - 2 }; const later = await towards(M); sv.sa = 0; if (later !== 'b') throw new Error('sticky aim outlived its window');
+  return 'plain b, sticky a, after the window b';
+});
+
+await T('smoother flick speed: many pointer samples still make a throw', async () => {
+  const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 0; sv.cp = 1; sv.thr = 99; await go(1, 3); P.bot = false; const S = P.S, cv = $('cv'), r = cv.getBoundingClientRect();
+  const ev = (type, x, y) => cv.dispatchEvent(new PointerEvent(type, { pointerId: 73, clientX: r.left + x, clientY: r.top + y, bubbles: true, cancelable: true, pointerType: 'touch' }));
+  S.cd = 0; const x = r.width / 2; ev('pointerdown', x, r.height * 0.9); for (let i = 1; i <= 60; i++) ev('pointermove', x + i * 0.2, r.height * (0.9 - i * 0.006)); ev('pointerup', x + 12, r.height * 0.5);
+  if (!(S.cd > 0)) throw new Error('the flick did not throw with the setting on'); sv.cp = 0; return 'throws; ' + (typeof PointerEvent.prototype.getCoalescedEvents === 'function' ? 'getCoalescedEvents exists here' : 'getCoalescedEvents missing here');
+});
+
+await T('Little hands setup: one tap sets five comfort options, leaves speed alone, and undoes', async () => {
+  const sv = P.sv(); Object.assign(sv, { hp: 0, bb: 0, lt: 0, ib: 0, aim: 1, sp: 2 }); document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bSet').click(); await wait(50);
+  for (const id of ['cmLittle', 'cmHs', 'cmSk', 'cmSa', 'cmCp', 'cmGrown']) if (!$(id)) throw new Error('row missing: ' + id);
+  $('cmLittle').click(); if (!(sv.hp && sv.bb && sv.lt && sv.ib) || sv.aim !== 0) throw new Error('preset values: ' + [sv.hp, sv.bb, sv.lt, sv.ib, sv.aim]); if (sv.sp !== 2) throw new Error('the preset changed game speed to ' + sv.sp);
+  if ($('cmLittle').getAttribute('aria-pressed') !== 'true') throw new Error('row does not show On');
+  $('cmLittle').click(); if (sv.hp || sv.bb || sv.lt || sv.ib || sv.aim !== 1) throw new Error('undo did not restore: ' + [sv.hp, sv.bb, sv.lt, sv.ib, sv.aim]);
+  const k0 = sv.sk; $('cmSk').click(); if (sv.sk !== (k0 + 1) % 4) throw new Error('shake row did not step'); $('cmSk').click(); $('cmSk').click(); $('cmSk').click(); if (sv.sk !== k0) throw new Error('shake row did not cycle');
+  for (const id of ['cmHs', 'cmSa', 'cmCp']) { $(id).click(); $(id).click(); }
+  sv.sp = 0; $('cardOk').click(); return 'preset on and off, speed untouched, rows cycle';
+});
+
+await T('For grown-ups card: opens from Settings and says what is true', async () => {
+  document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bSet').click(); await wait(50); $('cmGrown').click(); await wait(30);
+  const tx = $('cardBody').textContent; for (const w of ['No ads and no purchases', 'No accounts', 'makes no network requests', 'What is saved', 'Reset completely']) if (tx.indexOf(w) < 0) throw new Error('card lacks: ' + w);
+  if ($('cardTitle').textContent !== 'For grown-ups') throw new Error('title ' + $('cardTitle').textContent); $('cardOk').click(); if (!$('cw').hidden) throw new Error('card stayed open'); return 'five statements present';
+});
+
+await T('canvas work per frame stays under its ceiling in every stage (counts, not time)', async () => {
+  if (typeof CanvasProbe === 'undefined') return 'skipped: the probe was not loaded';
+  const CEIL = [0, 620, 600, 750, 950, 670], out = [], sv = P.sv(); sv.au = 1; sv.um = 3; sv.ra = 2;
+  for (let st = 1; st <= 5; st++) {
+    await go(st, st === 5 ? 6 : 3); P.bot = true; P.step(4, 0.033, 0); const probe = CanvasProbe.install({ keep: 100 });
+    for (let i = 0; i < 100; i++) { P.step(0.033, 0.033, 1); probe.frame(); }
+    const r = probe.report(); probe.uninstall(); P.bot = false;
+    const total = Object.keys(r.calls).reduce((a, k) => a + r.calls[k].median, 0); out.push(st + ':' + total);
+    if (total > CEIL[st]) throw new Error('stage ' + st + ' draws ' + total + ' canvas calls a frame, ceiling ' + CEIL[st] + ' (' + probe.text().slice(0, 160) + ')');
+    if (r.saveRestore.leakFrames > 0 || r.saveRestore.restoreWithoutSave > 0) throw new Error('stage ' + st + ': save/restore out of balance (' + r.saveRestore.leakFrames + ' leaking frames, ' + r.saveRestore.restoreWithoutSave + ' extra restores)');
+  }
+  sv.au = 0; sv.um = 0; sv.ra = 0; return 'median calls per frame by stage ' + out.join(' ');
+});
+
 await T('every trophy and shop upgrade has its own icon', async () => {
   $('bTro').click(); await new Promise(r => setTimeout(r, 50));
   const us = [...document.querySelectorAll('#trList use')].map(u => u.getAttribute('href')); if (us.length !== 21) throw new Error('trophy rows ' + us.length);
@@ -451,7 +560,8 @@ await T('bonus game: the last ball gets a chase camera with slow-mo at the hole'
   K.balls = 2; P.roll(Math.sin(f[0] * Math.PI / 180), -Math.cos(f[0] * Math.PI / 180), f[1]); P.step(0.3, 0.016); if (K.cam.z > 1.01) throw new Error('camera moved with balls left: ' + K.cam.z);
   K.cool = 0; K.balls = 1; P.roll(Math.sin(f[0] * Math.PI / 180), -Math.cos(f[0] * Math.PI / 180), f[1]); let zMax = 1, tsMin = 1;
   for (let i = 0; i < 160; i++) { P.step(0.016, 0.016); zMax = Math.max(zMax, K.cam.z); tsMin = Math.min(tsMin, K.ts); if (!K.bl.length) break; }
-  if (zMax < 1.3) throw new Error('chase cam never zoomed in: ' + zMax.toFixed(2)); if (tsMin > 0.5) throw new Error('no slow-mo at the hole: ' + tsMin.toFixed(2));
+  if (CALM) { if (zMax > 1.05) throw new Error('calm mode still zoomed the chase camera: ' + zMax.toFixed(2)); }   /* calm mode removes the zoom on purpose */
+  else { if (zMax < 1.3) throw new Error('chase cam never zoomed in: ' + zMax.toFixed(2)); if (tsMin > 0.5) throw new Error('no slow-mo at the hole: ' + tsMin.toFixed(2)); }
   P.step(3, 0.033, 6); if (K.cam.z > 1.05 || K.ts < 0.95) throw new Error('view did not ease back: z ' + K.cam.z.toFixed(2) + ' ts ' + K.ts.toFixed(2));
   P.endSk(0); P.step(0.2, 0.033); await wait(50); if (cardUp()) $('gBtn1').click(); await wait(50); sv.rl = 0;
   return 'zoom up to ' + zMax.toFixed(2) + 'x, slow to ' + tsMin.toFixed(2);
@@ -480,7 +590,8 @@ await T('bonus game: balls roll off ring walls instead of hanging, and rims ratt
 
 await T('grand finale fireworks delay the card', async () => {
   P.sv().rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('no minigame'); const had = !!(P.sv().ac2 & (1 << 10));
-  P.endSk(100); P.step(0.3, 0.033); if (cardUp()) throw new Error('card came before the fireworks'); P.step(4, 0.033, 12);
+  P.endSk(100); P.step(0.3, 0.033); if (!CALM && cardUp()) throw new Error('card came before the fireworks');   /* calm mode skips the fireworks, so the card may come at once */
+   P.step(4, 0.033, 12);
   if (!cardUp()) throw new Error('card never came'); if (!had && !/Grand Finale/.test(card().body)) throw new Error('trophy text missing'); $('gBtn2').click(); await wait(100);
 });
 
@@ -534,4 +645,5 @@ await T('fuzz ' + FUZZ + 's per stage, random actions', async () => {
   return 'card clicks ' + clicks + ', stages seen ' + [...stages].join(',');
 });
 
+if (skipped) R.push({ n: 'quick tier', ok: true, ms: 0, d: 'skipped ' + skipped + ' slow checks (seed ' + QUICK + '); the full run covers them' });
 return { r: R, errs: ERR.slice(0, 20) };

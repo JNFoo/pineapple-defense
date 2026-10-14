@@ -71,6 +71,7 @@ def main():
         "/*{{EVEN_DT}}*/": (S / "vendor/frame-kit/even-dt.js").read_text(),
         "/*{{QGOV}}*/": (S / "vendor/frame-kit/quality-governor.js").read_text(),
         "/*{{FRAMEMETER}}*/": (S / "vendor/frame-kit/frame-meter.js").read_text(),
+        "/*{{BACKCLOSE}}*/": (S / "vendor/back-close/back-close.js").read_text(),
         "/*{{SAVEKIT}}*/": (S / "vendor/save-kit/save-kit.js").read_text(),
         "/*{{GAME_JS}}*/": game_js(),
         "<!--{{adelie}}-->": (sp / "adelie.svg").read_text(),

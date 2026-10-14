@@ -7,7 +7,7 @@ var titleEl = $('title'), gameEl = $('game'), cv = $('cv'), ctx = cv.getContext(
 
 /* ---------- settings ---------- */
 var NWAVES = 5, WAVE_N = [4, 5, 6, 7, 8], NSTAGES = 5;
-var TAP_MIN = 0.03, FLICK_MIN = 0.025, COOLDOWN = 0.42, BUF_S = 0.15;   /* Early flick helper: a flick this close to ready (seconds) is kept and thrown the moment the sling is ready */
+var TAP_MIN = 0.03, FLICK_MIN = 0.025, COOLDOWN = 0.42, BUF_S = 0.15, STICKY_S = 0.9;   /* Early flick helper: a flick this close to ready (seconds) is kept and thrown the moment the sling is ready */
 var TYPES = {
   classic: { cd: 0.42, arc: 1, T: 1, rad: 0.55, splash: 0, size: 1, img: 'pa' },
   lobber: { cd: 0.9, arc: 2.2, T: 1.6, rad: 0.55, splash: 1.0, size: 1.3, img: 'pl' }
@@ -87,11 +87,11 @@ function loadAssets() {
 
 /* ---------- save ---------- */
 var kit = SaveKit.create({ key: 'pd-save', prefix: 'PD1',
-  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1', hp: 'int:1', fp: 'int:1', ib: 'int:1', tc: 'int:1' },
-  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0, hp: 0, fp: 0, ib: 0, tc: 0 } });
+  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1', hp: 'int:1', fp: 'int:1', ib: 'int:1', tc: 'int:1', sl: 'int:99', sg: 'int:9999', sc: 'int:100', hs: 'int:1', sk: 'int:3', sa: 'int:1', cp: 'int:1' },
+  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0, hp: 0, fp: 0, ib: 0, tc: 0, sl: 0, sg: 0, sc: 0, hs: 0, sk: 2, sa: 0, cp: 0 } });
 var sv = kit.load() || kit.validate({});
 sv.ach = sv.ach | 0; sv.au = sv.au | 0; sv.ar = sv.ar | 0; sv.ap = sv.ap | 0; sv.ac2 = sv.ac2 | 0; sv.gu = sv.gu | 0; sv.um = sv.um | 0; sv.ra = sv.ra | 0; sv.run = sv.run | 0; sv.cd = sv.cd | 0; sv.lm = sv.lm | 0;
-['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'hp', 'fp', 'ib', 'tc', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
+['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'hp', 'fp', 'ib', 'tc', 'sl', 'sg', 'sc', 'hs', 'sk', 'sa', 'cp', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
 var HINT_FLICK = 'Flick up from the bottom toward a penguin!', HINT_TAP = 'Tap a penguin to throw! Hold to keep throwing.';
 function hintSet() { if (typeof elHint === 'undefined' || !elHint || !elHint.lastChild || (typeof K !== 'undefined' && K)) return; HINT_TXT = sv.hp ? HINT_TAP : HINT_FLICK; elHint.lastChild.textContent = HINT_TXT; }
 /* comfort settings travel with the save (and so with the save code) */
@@ -539,11 +539,12 @@ function bump(pg) {
 function hitPenguin(pg, x, y) {
   cmbHit(x, y);
   if (pg.hp > 1) {
+    stopHit(pg, 0.035); shakeAdd(0.08);
     pg.hp--; pg.hat = true; pg.mood = 'pout'; if (pg.ev > 0) { pg.ev = 0; pg.v = pg.vs || pg.v; }
     S.cheer = Math.min(100, S.cheer + 1); burst(x, y, 10, PINE_COL); sparkBurst(x, y, 6, ['#ffd23f', '#fff7e3']);
     popText(x, y - psz(pg.p) * 0.3, pg.kind === 'mc' ? 'Clang!' : 'Tough one!', pg.kind === 'mc' ? '#1d7fa8' : '#7a3a9a', 0); return;
   }
-  pg.ev = 0;
+  pg.ev = 0; stopHit(pg, 0.05); shakeAdd(0.14);
   pg.st = 'hit'; pg.t = 0; pg.mood = 'wow'; pg.hat = true;
   reward(PAY[pg.kind] || 1, x, y, pg.kind === 'rh' ? 0 : 1);
   S.cheer = Math.min(100, S.cheer + 2);
@@ -564,6 +565,7 @@ function avoidBoss(pg, dt) {
   pg.xn += Math.max(-step, Math.min(step, want - pg.xn));
 }
 function updatePenguin(pg, dt) {
+  if (pg.fz > 0) { pg.fz -= dt; return; }   /* hit pause */
   pg.t += dt; pg.ph += dt * (6 + pg.v * 40);
   if (pg.st === 'walk' || pg.st === 'slide') avoidBoss(pg, dt);
   if (pg.pop > 0) pg.pop = Math.max(0, pg.pop - dt * 1.4);
@@ -610,16 +612,17 @@ function throwAt(ox, oy, dx, dy, spd, tapPoint, want) {
   if (!S.pt) { S.pt = true; S.au.cd = Math.max(S.au.cd, 0.45); S.lm.cd = Math.max(S.lm.cd, 0.7); }   /* the helpers wait one beat after the player's first throw */
   var ty = effType(), len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
   if (ty.img !== 'pa') S.fancy = 1;
-  var best = null, bs = 1e9, ttf = 0.6, list = targets(), i;
+  var best = null, bs = 1e9, ttf = 0.6, list = targets(), i, stk = sv.sa && sv.aim < 2 && S.stk && S.t - S.stk.t < STICKY_S ? S.stk.pg : null;
   for (i = 0; i < list.length; i++) {
     var pg = list[i], c = penCenter(pg), wx = c.x - ox, wy = c.y - oy, t = wx * dx + wy * dy;
     if (t <= 0) continue;
     var perp = Math.abs(wx * dy - wy * dx);
-    if (perp > c.s * AIMW[sv.aim]) continue;
-    var score = perp / c.s - 0.25 * pg.p + ((pg.aut || pg === S.au.tgt) ? 0.5 : 0);
+    if (perp > c.s * AIMW[sv.aim] * (pg === stk ? 1.3 : 1)) continue;
+    var score = perp / c.s - 0.25 * pg.p + ((pg.aut || pg === S.au.tgt) ? 0.5 : 0) - (pg === stk ? 0.4 : 0);
     if (score < bs) { bs = score; best = pg; }
   }
   if (want && list.indexOf(want) >= 0) best = want;   /* tap or hold on a penguin: that penguin is the target */
+  S.stk = best ? { pg: best, t: S.t } : null;
   var xE, yE, pEnd, cheerShot = null;
   if (!best && stageNo() === 5 && S.t - S.chT > 6.4) { var cp = cheerPos(), cwx = cp.x - ox, cwy = cp.y - oy; if (cwx * dx + cwy * dy > 0 && Math.abs(cwx * dy - cwy * dx) < cp.s * 0.9) cheerShot = cp; }
   if (best) {
@@ -645,16 +648,20 @@ function hitBoss(units, c) {
   var b = S.boss; cmbHit(c.x, c.y);
   if (b.shield > 0) {
     var had = b.shield; b.shield = Math.max(0, b.shield - units); if (had > 0 && b.shield === 0) award(4);
-    burst(c.x, c.y, 8, SNOW_COL); popText(c.x, c.y - c.s * 0.35, 'poof!', '#2f6f9f'); champHit(b, 0);
+    burst(c.x, c.y, 8, SNOW_COL); popText(c.x, c.y - c.s * 0.35, 'poof!', '#2f6f9f'); champHit(b, 0); stopHit(b, 0.04); shakeAdd(0.15);
     return true;
   }
   b.hp--; if (b.hp <= 0) award(5); S.bossHp = Math.max(0, b.hp); b.st = 'hit'; b.t = 0; b.mood = 'wow'; b.hat = true;
-  S.cheer = Math.min(100, S.cheer + 4); champHit(b, 1);
+  S.cheer = Math.min(100, S.cheer + 4); champHit(b, 1); stopHit(b, b.hp <= 0 ? 0.16 : 0.09); shakeAdd(b.hp <= 0 ? 0.6 : 0.35);
   burst(c.x, c.y, 18, PINE_COL); popText(c.x, c.y - c.s * 0.4, 'whoa!', '#b86e00');
   if (b.hp <= 0) reward(PAY.champ, c.x, c.y - c.s * 0.2, 2); else sparkBurst(c.x, c.y, 8, ['#ffd23f', '#fff7e3']);
   return true;
 }
 var curSrc = 0;
+/* Hit pause (Settings, off by default): freeze only the thing that was hit, for a blink. The game clock never stops. Off in Calm mode. */
+function stopHit(o, sec) { if (sv.hs && !calm) { o.fz = Math.max(o.fz || 0, sec); o.fz0 = o.fz; } }
+/* Screen shake strength: S.shk is the shake amount 0..1 (combos raise it; on Strong every hit does too, and Champion hits a lot) */
+function shakeAdd(v) { if (sv.sk === 3 && !calm) S.shk = Math.min(1, S.shk + v); }
 function landShot(s, soft) {
   curSrc = s.auto ? 1 : 2;
   var ty = s.ty, hit = false, i, c, d, best = null, bd = ty.rad, nh = 0;
@@ -704,6 +711,7 @@ function startStage(from) {
   if (from) { S.golden = from.golden; S.cheer = Math.max(60, from.cheer); }
   hud(); runToast(); setTimeout(warmUmb, 60);
   if (from && from.wave >= NWAVES) startBoss(); else beginWave(from ? from.wave + 1 : 1);
+  if (from === sv && sv.sl > 0 && from.wave < NWAVES && !S.replay && !demo) { S.toSpawn = Math.min(S.toSpawn, sv.sl); S.cheer = Math.max(60, sv.sc || 0); S.golden = Math.max(S.golden, sv.sg || 0); toast('Welcome back! Picking up this wave.', 3); }
 }
 function continueGame() { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage(sv); run(); }); }
 function retryWave() { var w = S.inBoss ? NWAVES : S.wave - 1, g = S.golden; startStage({ stage: S.stage, wave: w, golden: g, cheer: 60, replay: S.replay }); run(); }
@@ -714,7 +722,7 @@ function confirmReset() {
   showCard('Reset everything?', 'This clears your upgrades, Golden Pineapples and progress. Your trophies stay. It cannot be undone, so ask a grown-up if you are not sure.', 'Keep my stuff', runEndCard, 'Yes, reset', doReset);
 }
 function doReset() {
-  sv.bank = 0; sv.au = 0; sv.ar = 0; sv.ap = 0; sv.gu = 0; sv.um = 0; sv.ra = 0; sv.run = 0; sv.cd = 0; sv.rl = 0; sv.lm = 0; sv.bs1 = sv.bs2 = sv.bs3 = sv.bs4 = sv.bs5 = 0; sv.stage = 1; sv.wave = 0; sv.golden = 0; sv.cheer = 100; sv.cleared = 0;
+  sv.bank = 0; sv.au = 0; sv.ar = 0; sv.ap = 0; sv.gu = 0; sv.um = 0; sv.ra = 0; sv.run = 0; sv.cd = 0; sv.rl = 0; sv.lm = 0; sv.bs1 = sv.bs2 = sv.bs3 = sv.bs4 = sv.bs5 = 0; sv.sl = 0; sv.stage = 1; sv.wave = 0; sv.golden = 0; sv.cheer = 100; sv.cleared = 0;
   kit.save(sv); updateContinue(); startAgain();
 }
 function endStage(win) {
@@ -731,7 +739,7 @@ function endStage(win) {
       kit.save(sv); showCard('Stage ' + st + ' clear!', CH.n + ' is happy and heads home! You got ' + S.golden + ' Golden Pineapples (your best here: ' + sv['bs' + st] + '). Your saved game is safe.', 'Play it again', function () { startStage({ stage: st, wave: 0, golden: 0, cheer: 100, replay: true }); run(); }, 'Title');
       return;
     }
-    sv.golden = 0; sv.wave = 0; sv.cheer = 100; sv.cleared = Math.max(sv.cleared, st); sv.stage = last ? 1 : st + 1;
+    sv.sl = 0; sv.golden = 0; sv.wave = 0; sv.cheer = 100; sv.cleared = Math.max(sv.cleared, st); sv.stage = last ? 1 : st + 1;
     kit.save(sv); updateContinue();
     if (last) runEndText = 'Hooray! ' + CH.n + ' is happy and you cleared every stage! You got ' + S.golden + ' Golden Pineapples.' + more + ' Keep your upgrades and credits and play again, or start fresh?';
     if (last) runEndCard();
@@ -748,7 +756,7 @@ function waveClear() {
   S.cheer = Math.min(100, S.cheer + 15);
   earn(S.bumps === 0 ? 10 : 5);
   banner(S.bumps === 0 ? 'Perfect wave!' : 'Wave clear!', 1300);
-  if (!S.replay) { sv.stage = S.stage; sv.wave = S.wave; sv.golden = S.golden; sv.cheer = Math.round(S.cheer); kit.save(sv); updateContinue(); }
+  if (!S.replay) { sv.stage = S.stage; sv.wave = S.wave; sv.golden = S.golden; sv.cheer = Math.round(S.cheer); sv.sl = 0; kit.save(sv); updateContinue(); }
 }
 
 /* ---------- boss: Coach Waddles ---------- */
@@ -764,6 +772,7 @@ function spawnBoss() {
   if (!demo) { S.boss.rs = 1; banner('Ready…', 2600); }
 }
 function updateBoss(b, dt) {
+  if (b.fz > 0) { b.fz -= dt; return; }   /* hit pause */
   var CH = CHAMP[S.stage];
   b.t += dt; b.ph += dt * 5; b.sp += dt; b.vx = 0;
   if (b.st === 'walk') {
@@ -905,6 +914,7 @@ function drawShadow(x, y, w, a) {
 }
 function drawPenguin(pg) {
   var s = psz(pg.p) * (pg.big || 1), x = px(pg.xn, pg.p), y = py(pg.p);
+  if (pg.fz > 0) x += Math.sin(S.t * 140) * s * 0.03 * (pg.fz / (pg.fz0 || pg.fz));   /* a frozen hit trembles, less and less */
   ctx.save(); ctx.globalAlpha = pg.a;
   var rot = 0, hop = 0, sx = 1, sy = 1, tt = calm ? 0 : S.t;
   if (pg.ice) drawIceAura(x, y, s);
@@ -1283,7 +1293,10 @@ var TXT_FONT = '800 24px "Bricolage Grotesque",sans-serif';
 var DL = [];
 function draw() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  if (S.shk > 0 && !calm) ctx.translate((Math.random() - .5) * 9 * S.shk, (Math.random() - .5) * 9 * S.shk);
+  if (S.shk > 0 && !calm && sv.sk) {
+    if (sv.sk === 3) { var tr = S.shk * S.shk, tn = S.t * 31; ctx.translate(W / 2, H / 2); ctx.rotate(Math.sin(tn * 1.3) * 0.012 * tr); ctx.translate(-W / 2 + Math.sin(tn) * 14 * tr, -H / 2 + Math.sin(tn * 1.7 + 2) * 14 * tr); }   /* Strong: shake is trauma squared, smooth, with a tiny turn */
+    else { var sf = sv.sk === 1 ? 0.5 : 1; ctx.translate((Math.random() - .5) * 9 * S.shk * sf, (Math.random() - .5) * 9 * S.shk * sf); }
+  }
   ctx.drawImage(bg, 0, 0, W, H);
   var drift = calm ? 0 : (S.t * 6) % (W * 1.4);
   var cl = Math.min(W, H) * 0.12;
@@ -1972,8 +1985,8 @@ function frame(now) {
   if (K) { updateSkee(dt); drawSkee(); hudSkee(); } else { update(dt); draw(); hud(); }
   if (w0) fmWork = performance.now() - w0;
 }
-function run() { if (running) return; running = true; last = 0; even.reset(); fpsShow(); raf = requestAnimationFrame(frame); }
-function halt() { running = false; cancelAnimationFrame(raf); hold = null; if (elFps) elFps.hidden = true; }
+function run() { if (running) return; running = true; $('bcGuard').hidden = false; last = 0; even.reset(); fpsShow(); raf = requestAnimationFrame(frame); }
+function halt() { running = false; $('bcGuard').hidden = true; cancelAnimationFrame(raf); hold = null; if (elFps) elFps.hidden = true; }
 
 /* ---------- FPS badge (Settings: FPS counter) ---------- */
 var elFps = $('fps'), fm = new FrameMeter(), fmWork = 0;
@@ -2055,7 +2068,9 @@ function hoverFlick(e) {
 cv.addEventListener('pointermove', function (e) {
   if (!drag) { hoverFlick(e); return; }
   if (e.pointerId !== drag.id) return;
-  drag.pts.push(rel(e)); if (drag.pts.length > (K ? 48 : 10)) drag.pts.shift();
+  if (sv.cp && e.getCoalescedEvents) { var ce = e.getCoalescedEvents(), cj; for (cj = 0; cj < ce.length; cj++) drag.pts.push(rel(ce[cj])); if (!ce.length) drag.pts.push(rel(e)); }   /* smoother flick speed: every sample the device reports */
+  else drag.pts.push(rel(e));
+  while (drag.pts.length > (K ? 48 : sv.cp ? 40 : 10)) drag.pts.shift();
 });
 cv.addEventListener('pointercancel', function () { drag = null; hold = null; });
 cv.addEventListener('pointerup', function (e) {
@@ -2095,12 +2110,22 @@ function hideCard() { gcw.hidden = true; }
 function startAgain() { startStage(); run(); }
 function pause() {
   if (S.paused || S.over || !running) return;
-  S.paused = true; halt();
+  S.paused = true; snapSave(); halt();
   showCard('Paused', 'Take your time. Press P to pause or resume.', 'Resume', resume);
   $('gX').hidden = false; $('gX').onclick = function () { hideCard(); resume(); };
   $('gBtn2').textContent = 'Back to title';
 }
+/* Resume snapshot (Q08): pausing (which also happens when the tab is hidden) notes how many penguins were left, so a phone that throws the tab away can pick the wave up again from Continue */
+function snapSave() {
+  if (demo || K || S.replay || S.over || S.inBoss || S.wave < 1 || (S.mode !== 'run' && S.mode !== 'intro')) return;
+  var nl = Math.max(0, S.toSpawn - S.spawned), j; for (j = 0; j < penguins.length; j++) if (penguins[j].st === 'walk') nl++;
+  if (nl < 1 || sv.wave !== S.wave - 1 || sv.stage !== S.stage) return;
+  sv.sl = Math.min(99, nl); sv.sg = Math.min(9999, S.golden); sv.sc = Math.max(1, Math.min(100, Math.round(S.cheer))); kit.save(sv);
+}
 function resume() { S.paused = false; if (!K) S.rc = RESUME_S; run(); }
+/* Back swipe, back button or Escape while playing pauses (CloseWatcher, from JS-modules back-close). On the Paused card there is no watcher, so a second back leaves as usual. */
+var backW = typeof BackClose === 'object' ? BackClose.watch($('bcGuard'), function () { pause(); }) : null;
+window.addEventListener('pagehide', function () { if (gameEl.hidden === false && running && !S.over) snapSave(); });
 window.addEventListener('orientationchange', function () { if (gameEl.hidden === false && running && !S.over) pause(); });
 $('bPause').addEventListener('click', pause);
 document.addEventListener('keydown', function (e) {
@@ -2115,6 +2140,7 @@ $('gBtn2').textContent = 'Title';
 window.addEventListener('resize', function () { if (gameEl.hidden === false) { resize(); if (!running) { draw(); } } });
 
 function start() {
+  sv.sl = 0;
   if (sv.stage > 1 || sv.wave > 0) { sv.run = 0; sv.cd = 0; sv.rl = 0; kit.save(sv); }
   titleEl.hidden = true; gameEl.hidden = false;
   loadAssets().then(function () { resize(); startStage(); run(); });
@@ -2169,18 +2195,23 @@ if (location.hash !== '#qa' && !sv.tr && !sv.thr && !sv.cleared && !(sv.stage > 
 btnCont.addEventListener('click', function () { if (!btnCont.disabled) continueGame(); });
 
 /* ---------- save code and file (Settings card) ---------- */
+var LITTLE = { hp: 1, bb: 1, lt: 1, ib: 1, aim: 0 }, littlePrev = null, SHAKE = ['Off', 'Low', 'Normal', 'Strong'];   /* Little hands setup: leaves game speed alone, so no trophy is affected */
+function littleOn() { return !!(sv.hp && sv.bb && sv.lt && sv.ib && sv.aim === 0); }
 function wireComfort($b) {
   var AIM = ['Generous', 'Normal', 'Off'], ARC = ['First 5 throws', 'Always', 'Never'], fs = document.fullscreenEnabled && document.documentElement.requestFullscreen;
   function row(id, text, on) { var b = $b(id); b.querySelector('.st').textContent = text; if (on !== undefined) b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
   function paint() {
     row('cmSp', SPEEDS[sv.sp | 0] + '%'); row('cmLh', sv.lh ? 'On' : 'Off', sv.lh); row('cmAim', AIM[sv.aim]); row('cmArc', ARC[sv.arc]);
     row('cmHc', sv.hc ? 'On' : 'Off', sv.hc); row('cmLt', sv.lt ? 'On' : 'Off', sv.lt); row('cmBig', sv.bb ? 'On' : 'Off', sv.bb);
-    var c = root.getAttribute('data-calm') === '1'; row('cmCalm', c ? 'On' : 'Off', c); row('cmSave', sv.bv ? 'On' : 'Off', sv.bv); row('cmHold', sv.hp ? 'On' : 'Off', sv.hp); row('cmBuf', sv.ib ? 'On' : 'Off', sv.ib); row('cmFps', sv.fp ? 'On' : 'Off', sv.fp);
+    var c = root.getAttribute('data-calm') === '1'; row('cmCalm', c ? 'On' : 'Off', c); row('cmSave', sv.bv ? 'On' : 'Off', sv.bv); row('cmHold', sv.hp ? 'On' : 'Off', sv.hp); row('cmBuf', sv.ib ? 'On' : 'Off', sv.ib); row('cmLittle', littleOn() ? 'On' : 'Off', littleOn()); row('cmHs', sv.hs ? 'On' : 'Off', sv.hs); row('cmSk', SHAKE[sv.sk]); row('cmSa', sv.sa ? 'On' : 'Off', sv.sa); row('cmCp', sv.cp ? 'On' : 'Off', sv.cp); row('cmFps', sv.fp ? 'On' : 'Off', sv.fp);
     $b('cmFull').hidden = !fs; row('cmFull', document.fullscreenElement ? 'On' : 'Off', !!document.fullscreenElement);
   }
   function bind(id, fn) { $b(id).addEventListener('click', function () { fn(); applyPrefs(); kit.save(sv); paint(); }); }
   bind('cmSp', function () { sv.sp = ((sv.sp | 0) + 1) % SPEEDS.length; }); bind('cmLh', function () { sv.lh = sv.lh ? 0 : 1; }); bind('cmAim', function () { sv.aim = (sv.aim + 1) % 3; }); bind('cmArc', function () { sv.arc = (sv.arc + 1) % 3; if (sv.arc === 0) sv.thr = 0; });
-  bind('cmHc', function () { sv.hc = sv.hc ? 0 : 1; }); bind('cmLt', function () { sv.lt = sv.lt ? 0 : 1; }); bind('cmBig', function () { sv.bb = sv.bb ? 0 : 1; }); bind('cmSave', function () { sv.bv = sv.bv ? 0 : 1; }); bind('cmHold', function () { sv.hp = sv.hp ? 0 : 1; sv.tc = 1; }); bind('cmBuf', function () { sv.ib = sv.ib ? 0 : 1; }); bind('cmFps', function () { sv.fp = sv.fp ? 0 : 1; });
+  bind('cmHc', function () { sv.hc = sv.hc ? 0 : 1; }); bind('cmLt', function () { sv.lt = sv.lt ? 0 : 1; }); bind('cmBig', function () { sv.bb = sv.bb ? 0 : 1; }); bind('cmSave', function () { sv.bv = sv.bv ? 0 : 1; }); bind('cmHold', function () { sv.hp = sv.hp ? 0 : 1; sv.tc = 1; }); bind('cmBuf', function () { sv.ib = sv.ib ? 0 : 1; });
+  bind('cmLittle', function () { var k; if (littleOn()) { var p = littlePrev || { hp: 0, bb: 0, lt: 0, ib: 0, aim: 1 }; for (k in LITTLE) sv[k] = p[k]; littlePrev = null; } else { littlePrev = {}; for (k in LITTLE) { littlePrev[k] = sv[k]; sv[k] = LITTLE[k]; } sv.tc = 1; } });
+  bind('cmHs', function () { sv.hs = sv.hs ? 0 : 1; }); bind('cmSk', function () { sv.sk = (sv.sk + 1) % 4; }); bind('cmSa', function () { sv.sa = sv.sa ? 0 : 1; }); bind('cmCp', function () { sv.cp = sv.cp ? 0 : 1; });
+  $b('cmGrown').addEventListener('click', function () { $('cardBody').replaceChildren($('t-grown').content.cloneNode(true)); $('cardTitle').textContent = 'For grown-ups'; }); bind('cmFps', function () { sv.fp = sv.fp ? 0 : 1; });
   $b('cmCalm').addEventListener('click', function () { $('bCalm').click(); paint(); });
   $b('cmFull').addEventListener('click', function () { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (e) {} setTimeout(paint, 300); });
   var warn = $b('svWarn'); if (warn) warn.hidden = kit.save(sv) !== false;   /* the browser is not keeping the save (private window?) */
@@ -2343,7 +2374,7 @@ $('bShop').addEventListener('click', fillShop);
 /* test hook, only with #qa in the address */
 var qa = null;
 if (location.hash === '#qa') {
-  qa = window.__pd = { tour: tourStart, choice: throwChoice, rsg: function () { return rsg(); }, rollGear: function () { return rollGear(); }, stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, center: function (pg) { return penCenter(pg); }, hp: function (x, y, id) { return penAt({ x: x, y: y }); }, holdOn: function () { return !!hold; }, fpsTxt: function () { return elFps ? elFps.textContent : ''; }, get S() { return S; }, get penguins() { return penguins; },
+  qa = window.__pd = { tour: tourStart, choice: throwChoice, pouch: function () { return pouchPos(); }, snap: function () { return { sl: sv.sl, sg: sv.sg, sc: sv.sc }; }, cont: function () { titleEl.hidden = true; gameEl.hidden = false; startStage(sv); run(); }, pause: function () { pause(); }, backArmed: function () { return !$('bcGuard').hidden; }, backOk: BackClose.supported, rsg: function () { return rsg(); }, rollGear: function () { return rollGear(); }, stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, center: function (pg) { return penCenter(pg); }, hp: function (x, y, id) { return penAt({ x: x, y: y }); }, holdOn: function () { return !!hold; }, fpsTxt: function () { return elFps ? elFps.textContent : ''; }, get S() { return S; }, get penguins() { return penguins; },
     /* fast-forward without waiting for frames: sec game seconds in steps of dt, drawing every `every` steps (0 = never, one final draw) */
     step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (hold) holdTick(); if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
     win: function () { endStage(true); }, flick: function (dx, dy, spd) { var o = pouchPos(); throwAt(o.x, o.y, dx, dy, spd); }, get sh() { return shots; }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, sim: function (dx, dy, spd, dA, dF) { var h = skSim(skLaunch({ dx: dx, dy: dy, spd: spd }, dA, dF)); return h ? h.v : 0; }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };

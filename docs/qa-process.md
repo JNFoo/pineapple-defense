@@ -37,6 +37,8 @@ Round 33 additions: the fuzz test also plays all five Champion fights with every
 
 Round 39 additions: the settings rows (each has a help line and a state), game speed steps and wraps and really slows the game clock (60% ran at about 60%), large buttons and battery saver switch, and no storage warning when saving works.
 
+Round 42 additions: `--quick` (about 25 s), `--calm`, `--only REGEX`; back swipe guard follows play and pause; the resume snapshot is kept, resumed and dropped; hit pause freezes only the hit object and nothing in Calm; shake strengths; sticky aim and its window; coalesced-event flick; Little hands setup and undo; the grown-ups card text; canvas calls per frame under a ceiling and `save()`/`restore()` balanced; the old-save fixture loads; no network call or link in the shipped page. Time budget: full run about 70 s in Chromium plus about 70 s in Firefox; quick tier about 25 s. Use quick while iterating and the full run once before a release.
+
 Round 41 additions: the layout check runs a Large-buttons combination; edge touches at the screen edge reach the pills and pause; the first-run card sets Flick or Tap and closes; the early flick helper keeps a flick 0.1 s early, drops one 0.3 s early, and does nothing when off; the FPS badge text accepts the tap line and the verdict; fonts are embedded as WOFF2.
 
 Round 40 additions: tap or hold on a penguin throws at it and the hold repeats at the cooldown on the Champion, a flick still works, off means taps do nothing, and the FPS badge shows only when on, has three lines of numbers and covers no button. Count throws by the cooldown jump, since the live shots array shrinks as shots land.

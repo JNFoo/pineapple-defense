@@ -149,3 +149,13 @@ Each item says what it is and where to find it. If you are starting a new game, 
 - **Ask a young player's preference once.** Flick or Tap is a card after the tour that sets one setting and remembers it was asked (`tc`).
 - **A tiny input buffer (0.15 s, one flick) forgives early taps** without changing speed or costs; keep it off by default and independent of Calm.
 - **Earlier tests can leave a card open.** A test that checks hits on the play screen should close cards first and assert they are closed.
+
+## Added in the next release (Round 42)
+- **A claim on a parents' card should be checked by a machine.** The For grown-ups card says there is no network and no link out, so `qa.py` scans the shipped page for network calls and links and fails if one appears.
+- **A guard element is the simplest way to use a `hidden`-driven watcher.** `back-close` arms while an element is shown, so a hidden span that `run()` shows and `halt()` hides gives "watch while playing, not while paused" in two lines.
+- **Persist what a lost tab costs, not the whole world.** The resume note is three small numbers (penguins left, Golden Pineapples, cheer) that make a thrown-away tab cost nothing; a stale note can only ever give the player more penguins, never fewer.
+- **Hit pause is per object.** Freezing one sprite's own update (and drawing a shrinking tremble) gives the feel without ever stopping the game clock.
+- **A sticky-aim window must outlast the sling cooldown.** Remembering a target for 100 to 150 ms does nothing when throws are 420 ms apart; 0.9 s does.
+- **Make slow checks a rolling sample while iterating.** `--quick` runs every fast check and a seeded quarter of the slow ones (the day number rolls the seed, so four days cover all of them); the full run stays the release gate.
+- **Run the suite under reduced motion once.** It found two checks that quietly assumed effects Calm mode removes on purpose.
+- **Freeze a real save from each release** and make every later build load it, keep its values, default the new fields and Continue.

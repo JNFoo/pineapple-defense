@@ -2,6 +2,14 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.14.0817
+- **Back swipe pauses.** On Android (Chrome 126+, Firefox 149+) the back swipe or back button now pauses the game instead of leaving the page. On the Paused card a second back leaves as before. Esc still pauses too.
+- **A thrown-away tab costs less.** Pausing (which also happens when the tab is hidden or the phone is locked) notes how many penguins were left. If the browser throws the tab away, Continue picks that wave up with only those penguins, the same Golden Pineapples and the cheer you had, and says "Welcome back!". A cleared wave, a lost wave or a new game drops the note.
+- **Little hands setup (Settings):** one tap sets tap or hold to throw, large buttons, larger text, the early flick helper and the most forgiving aim help. Game speed is not touched, so no trophy is affected. Tap again to undo.
+- **Game feel (Settings, all for you to try):** *Hit pause* (off): only the penguin you hit freezes for a blink, 35 to 160 ms, never the game clock. *Screen shake* (Normal, as before): Off, Low, Normal or Strong; Strong also shakes a little on every hit and a lot on a Champion hit. *Sticky aim* (off): your last target stays picked for 0.9 seconds so a neighbor does not steal the throw (needs Aim help on). *Smoother flick speed* (off): reads every finger sample the device reports. Hit pause and shake are off in Calm mode.
+- **For grown-ups (Settings):** a plain card saying no ads, no purchases, no accounts, no network, what is saved and how to clear it. The checks now fail if the shipped page ever contains a network call or a link out.
+- **Checks got cheaper and wider (developer):** `qa.py --quick` (about 25 s instead of about 70 s), `--calm` (the whole suite with reduced motion on), `--only REGEX`, a per-stage canvas-call ceiling using `canvas-probe` from JS-modules, and a frozen save from the 2026.10.13.2220 release that must still load and Continue.
+
 ## 2026.10.14.0743
 - **First-run choice, Flick or Tap:** after the tour (or when you skip it) a new game asks "How do you want to throw?" with two big picture buttons. Tap turns on tap or hold to throw; Flick leaves it off. It asks once and says you can change it later in Settings.
 - **Edge touches count:** the Classic and Lobber pills and the pause button now answer a touch a little outside their drawn edge, so a thumb at the very edge of the screen still hits them. They look the same.

@@ -8,6 +8,11 @@
   python3 -I tools/qa.py --fuzz 300 longer random-action fuzzing (game seconds per stage, default 60)
   python3 -I tools/qa.py --force    ignore the "nothing changed since the last pass" cache
   python3 -I tools/qa.py --shots DIR  save a few screenshots into DIR
+  python3 -I tools/qa.py --quick [SEED]  quick tier while you iterate: all fast checks plus a seeded quarter of the slow ones
+                                    (SEED defaults to the day number, so four days in a row cover every slow check) and 5 s of fuzzing.
+                                    Never cached and never a release gate: the full run stays mandatory before a release.
+  python3 -I tools/qa.py --only REGEX  run only the checks whose name matches REGEX (fast loop while writing a check; not cached)
+  python3 -I tools/qa.py --calm     run the suite with the system's reduced-motion setting on (calm mode starts by itself)
 
 Why it is cheap: the suite fast-forwards game time inside the page (no waiting on frames, no per-frame screenshots),
 runs everything in ONE browser session, skips work when index.html and the suite are byte-identical to the last pass,
@@ -18,7 +23,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 args = sys.argv[1:]
 flag = lambda f: f in args
 opt = lambda f, d: args[args.index(f) + 1] if f in args and args.index(f) + 1 < len(args) else d
-FUZZ = int(opt('--fuzz', 60)); SHOTS = opt('--shots', '')
+QUICK = flag('--quick'); CALM = flag('--calm')
+_qi = args.index('--quick') + 1 if QUICK else 0
+SEED = int(args[_qi]) if QUICK and _qi < len(args) and args[_qi].isdigit() else int(time.time() // 86400)
+FUZZ = int(opt('--fuzz', 5 if QUICK else 60)); SHOTS = opt('--shots', ''); ONLY = opt('--only', '')   # --only REGEX runs just the checks whose names match (never cached)
 t0 = time.time(); stamp = lambda: '%5.1fs' % (time.time() - t0)
 
 def run(cmd):
@@ -43,13 +51,20 @@ if node:
         if r.returncode: print('SYNTAX ERROR in inline script %d:\n%s' % (i, r.stderr[:800])); sys.exit(3)
 print('[%s] built and syntax ok (%d KB)' % (stamp(), len(src) // 1024))
 
+# 2b. the shipped page makes no network requests and has no links out (the "For grown-ups" card says so, so a machine checks it)
+if not lab:
+    import re as _re
+    net = _re.findall(r'\bfetch\s*\(|XMLHttpRequest|sendBeacon|WebSocket|EventSource|importScripts|<script[^>]+\ssrc=|<link[^>]+href=["\']?https?:|<a\s[^>]*href|window\.open\s*\(', src)
+    if net: print('NETWORK OR LINK FOUND in the shipped page (the grown-ups card says there is none): %s' % sorted(set(net))); sys.exit(4)
+
 # 3. skip when nothing changed since the last pass
 suite = open(os.path.join(ROOT, 'tools/qa_suite.js'), encoding='utf-8').read()
 layout = open(os.path.join(ROOT, 'tools/qa_layout.js'), encoding='utf-8').read()
-key = hashlib.sha1((src + suite + layout + str(FUZZ) + str(flag('--ff'))).encode()).hexdigest()
-cache = os.path.join(ROOT, '.qa-cache'); mode = ('lab' if lab else 'main') + ('-min' if mini else '')
+PROBE = open(os.path.join(ROOT, 'tools/canvas-probe.js'), encoding='utf-8').read()
+key = hashlib.sha1((src + suite + layout + PROBE + str(FUZZ) + str(flag('--ff')) + str(CALM)).encode()).hexdigest()
+cache = os.path.join(ROOT, '.qa-cache'); mode = ('lab' if lab else 'main') + ('-min' if mini else '') + ('-calm' if CALM else '')
 store = json.load(open(cache)) if os.path.exists(cache) else {}
-if store.get(mode) == key and not flag('--force'):
+if store.get(mode) == key and not flag('--force') and not QUICK and not ONLY:
     print('[%s] unchanged since the last passing run: skipped (use --force to rerun)' % stamp()); sys.exit(0)
 
 VIEWPORTS = [(360, 640), (412, 915), (1280, 720), (820, 1180)]
@@ -64,15 +79,35 @@ def report(label, res, lay):
         print('  %-4s layout %dx%d %s' % ('ok' if not bad else 'FAIL', vw, vh, '; '.join(bad)))
         for x in bad: fails.append('%s layout %dx%d: %s' % (label, vw, vh, x))
 
+# 3b. frozen saves from older releases must still load, keep their values and start a game (Round 41)
+OLDSAVE_JS = '''(async()=>{const raw=JSON.parse(window.__fixRaw),bad=[],sv=__pd.sv(),wait=ms=>new Promise(r=>setTimeout(r,ms));
+for(const k in raw){if(k==='seen')continue;if(sv[k]!==raw[k])bad.push(k+' is '+sv[k]+', saved as '+raw[k]);}
+const D={sl:0,sg:0,sc:0,hs:0,sk:2,sa:0,cp:0};for(const k in D)if(sv[k]!==D[k]&&!(k in raw))bad.push('new field '+k+' started as '+sv[k]+', not '+D[k]);
+const c=document.getElementById('bCont');if(!c||c.disabled)bad.push('Continue is not offered');
+__pd.cont();await wait(150);if(__pd.S.stage!==raw.stage||__pd.S.wave!==raw.wave+1)bad.push('Continue started stage '+__pd.S.stage+' wave '+__pd.S.wave);
+document.getElementById('bPause').click();await wait(50);
+return bad;})()'''
+def oldsaves(br):
+    import glob
+    out = []
+    for fx in sorted(glob.glob(os.path.join(ROOT, 'tools/fixtures/save-*.json'))):
+        d = json.load(open(fx)); q = br.new_page(viewport={'width': 500, 'height': 827}); errs = []
+        q.on('pageerror', lambda e: errs.append(str(e)))
+        q.add_init_script('localStorage.setItem(%s,%s);window.__fixRaw=%s' % (json.dumps(d['storageKey']), json.dumps(d['raw']), json.dumps(d['raw'])))
+        q.goto(url); q.wait_for_function('window.__pd')
+        bad = q.evaluate(OLDSAVE_JS) + ['page error: ' + e for e in errs]
+        q.close(); out.append((os.path.basename(fx), bad))
+    return out
+
 # 4. Chromium: one browser, one page for the suite, one fresh page per viewport for layout
 from playwright.sync_api import sync_playwright
 url = 'file://' + page + '#qa'
 with sync_playwright() as p:
     br = p.chromium.launch(executable_path='/opt/pw-browsers/chromium')
-    pg = br.new_page(viewport={'width': 500, 'height': 827}); perr = []
+    pg = br.new_page(viewport={'width': 500, 'height': 827}, **({'reduced_motion': 'reduce'} if CALM else {})); perr = []
     pg.on('pageerror', lambda e: perr.append(str(e))); pg.on('console', lambda m: perr.append(m.text) if m.type == 'error' else None)
     pg.goto(url); pg.wait_for_function('window.__pd')
-    pg.evaluate('window.__qaFuzz=%d' % FUZZ)
+    pg.evaluate('window.__qaFuzz=%d;window.__qaQuick=%d;window.__qaOnly=%s' % (FUZZ, SEED if QUICK else 0, json.dumps(ONLY))); pg.evaluate(PROBE)
     res = pg.evaluate('(async()=>{' + suite + '})()')
     if SHOTS:
         os.makedirs(SHOTS, exist_ok=True); pg.screenshot(path=os.path.join(SHOTS, 'suite-end.png'))
@@ -83,8 +118,12 @@ with sync_playwright() as p:
         out = q.evaluate('(async()=>{' + layout + '})()'); lay.append((out['vw'], out['vh'], out['bad']))
         if SHOTS: q.screenshot(path=os.path.join(SHOTS, 'layout-%dx%d.png' % (vw, vh)))
         q.close()
+    old = oldsaves(br) if not QUICK and not ONLY else []
     br.close()
-print('[%s] Chromium' % stamp()); report('chromium', res, lay)
+print('[%s] Chromium%s' % (stamp(), ' (reduced motion on)' if CALM else '')); report('chromium', res, lay)
+for fx, bad in old:
+    print('  %-4s old save %s %s' % ('ok' if not bad else 'FAIL', fx, '; '.join(bad)))
+    for x in bad: fails.append('old save %s: %s' % (fx, x))
 for e in perr: fails.append('chromium console: ' + e)
 
 # 5. Firefox (optional): the same suite, the performance and compatibility stress test
@@ -92,11 +131,11 @@ if flag('--ff'):
     from selenium import webdriver
     from selenium.webdriver.firefox.service import Service
     from selenium.webdriver.firefox.options import Options
-    o = Options(); o.add_argument('-headless'); o.binary_location = os.environ.get('PD_FF', '/opt/ff158dl/firefox/firefox')
+    o = Options(); o.add_argument('-headless'); o.set_preference('ui.prefersReducedMotion', 1) if CALM else None; o.binary_location = os.environ.get('PD_FF', '/opt/ff158dl/firefox/firefox')
     d = webdriver.Firefox(service=Service(os.environ.get('PD_GECKO', '/opt/ff158dl/geckodriver')), options=o)
     try:
         d.set_script_timeout(120); d.set_window_size(500, 900); d.get(url); time.sleep(0.4)
-        d.execute_script('window.__qaFuzz=%d' % min(FUZZ, 60))
+        d.execute_script('window.__qaFuzz=%d;window.__qaQuick=%d;window.__qaOnly=%s' % (min(FUZZ, 60), SEED if QUICK else 0, json.dumps(ONLY))); d.execute_script(PROBE)
         res = d.execute_async_script('var cb=arguments[arguments.length-1];(async()=>{' + suite + '})().then(cb,e=>cb({r:[{n:"suite crashed",ok:false,ms:0,d:String(e)}],errs:[]}))')
         lay = []
         d.set_window_size(412, 915); d.get(url); time.sleep(0.4)
@@ -107,5 +146,6 @@ if flag('--ff'):
 
 if fails:
     print('\nFAILED (%d):' % len(fails)); [print(' - ' + f) for f in fails]; sys.exit(1)
-store[mode] = key; json.dump(store, open(cache, 'w'))
+if not QUICK and not ONLY: store[mode] = key; json.dump(store, open(cache, 'w'))
+if QUICK: print('(quick tier, seed %d: not cached, not a release gate)' % SEED)
 print('\nall checks passed in %s' % stamp())
