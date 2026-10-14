@@ -376,6 +376,9 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Roll feel:** `SK_AIM` 0.3 (was 0.7), speed band `(spd - 1) / 7.5` (was `(spd - 1.2) / 5.3`), `SK_DIN` 1.25 (was 0.9). The lane and the board use fixed 1/240 s steps (`SK_H`, accumulator `b.acc`) so the roll is the same at any frame rate, and `skSim` replays a launch silently (used by the tests; `skSimOn` mutes the crowd). Measured by simulation with a human wobble (normal noise, 6 degrees and 12%): 58% of flicks sink, up from 33%, and a random flick sinks 38% of the time (19% before). All hole values (10 to 100) stay reachable. No aim assist on purpose (the player asked for none).
 - **Audit:** see docs/ideas-qol-and-performance.md.
 
+### Round 38: victory card
+- `showCard` takes optional `btn3, fn3` (`#gBtn3`, hidden unless used). `runEndCard()` shows Save and restart, Save and go to title (`kit.save(sv); toTitle()`) and Reset completely; "Keep my stuff" in the reset confirm returns to it.
+
 ### Round 37: first-load tour, calmer sling, pills, Ready block
 - **Tour:** `TOUR` (five cards: SVG scene, short sentence) in `game.js`; `tourStart/tourShow/tourEnd` reuse the title's `#cw` card. Save field `tr` (int 0 or 1, set when the tour first opens). Auto-start 900 ms after load when `!sv.tr && !sv.thr && !sv.cleared && stage <= 1` and the page is not `#qa`; `#tourBtn` in How to play replays it. `__pd.tour()` opens it for tests.
 - **Sling tilt:** the drag angle target is `clamp(atan2 * 0.3, +-AUTO_TURN)` (0.12 rad), the same as the helpers.

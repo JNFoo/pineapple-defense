@@ -703,8 +703,9 @@ function continueGame() { titleEl.hidden = true; gameEl.hidden = false; loadAsse
 function retryWave() { var w = S.inBoss ? NWAVES : S.wave - 1, g = S.golden; startStage({ stage: S.stage, wave: w, golden: g, cheer: 60, replay: S.replay }); run(); }
 /* after a finished run: keep everything and go again, or wipe the save (trophies stay) */
 var runEndText = '';
+function runEndCard() { showCard('You did it!', runEndText, 'Save and restart', startAgain, 'Save and go to title', function () { kit.save(sv); toTitle(); }, 'Reset completely', confirmReset); }
 function confirmReset() {
-  showCard('Reset everything?', 'This clears your upgrades, Golden Pineapples and progress. Your trophies stay. It cannot be undone, so ask a grown-up if you are not sure.', 'Keep my stuff', function () { showCard('You did it!', runEndText, 'Save and restart', startAgain, 'Reset completely', confirmReset); }, 'Yes, reset', doReset);
+  showCard('Reset everything?', 'This clears your upgrades, Golden Pineapples and progress. Your trophies stay. It cannot be undone, so ask a grown-up if you are not sure.', 'Keep my stuff', runEndCard, 'Yes, reset', doReset);
 }
 function doReset() {
   sv.bank = 0; sv.au = 0; sv.ar = 0; sv.ap = 0; sv.gu = 0; sv.um = 0; sv.ra = 0; sv.run = 0; sv.cd = 0; sv.rl = 0; sv.lm = 0; sv.bs1 = sv.bs2 = sv.bs3 = sv.bs4 = sv.bs5 = 0; sv.stage = 1; sv.wave = 0; sv.golden = 0; sv.cheer = 100; sv.cleared = 0;
@@ -727,7 +728,7 @@ function endStage(win) {
     sv.golden = 0; sv.wave = 0; sv.cheer = 100; sv.cleared = Math.max(sv.cleared, st); sv.stage = last ? 1 : st + 1;
     kit.save(sv); updateContinue();
     if (last) runEndText = 'Hooray! ' + CH.n + ' is happy and you cleared every stage! You got ' + S.golden + ' Golden Pineapples.' + more + ' Keep your upgrades and credits and play again, or start fresh?';
-    if (last) showCard('You did it!', runEndText, 'Save and restart', startAgain, 'Reset completely', confirmReset);
+    if (last) runEndCard();
     else if (st === NSTAGES - 1 && rollsLeft() > 0) showCard('Stage ' + st + ' clear!', CH.n + ' is happy and heads home! You got ' + S.golden + ' Golden Pineapples.' + more + ' Bonus game time: Pineapple Roll!', 'Roll for bonus credits', function () { startSkee(true); }, 'Skip to stage ' + (st + 1), function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
     else showCard('Stage ' + st + ' clear!', CH.n + ' is happy and heads home! You got ' + S.golden + ' Golden Pineapples.' + more + ' Next up: ' + STAGES[st + 1].title.replace('\n', ' ') + '.', 'Next stage', function () { startStage({ stage: st + 1, wave: 0, golden: 0, cheer: 100 }); run(); });
   } else {
@@ -2045,10 +2046,11 @@ document.addEventListener('keydown', function (e) { if (gameEl.hidden) return; i
 
 /* ---------- cards, pause, screens ---------- */
 var gcw = $('gcw');
-function showCard(title, body, btn1, fn1, btn2, fn2) {
+function showCard(title, body, btn1, fn1, btn2, fn2, btn3, fn3) {
   $('gTitle').textContent = title; $('gBody').textContent = body;
   var b1 = $('gBtn1'); $('gBtn2').hidden = false; b1.textContent = btn1; b1.onclick = function () { hideCard(); fn1(); };
   $('gBtn2').textContent = btn2 || 'Title'; $('gBtn2').onclick = function () { hideCard(); if (fn2) fn2(); else toTitle(); };
+  var b3 = $('gBtn3'); b3.hidden = !btn3; if (btn3) { b3.textContent = btn3; b3.onclick = function () { hideCard(); fn3(); }; }
   $('gX').hidden = true; halt(); gcw.hidden = false; b1.focus();
 }
 function hideCard() { gcw.hidden = true; }

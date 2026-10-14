@@ -2,6 +2,9 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.13.2059
+- **The victory card ("You did it!") now has Save and go to title.** It offers Save and restart, Save and go to title (saves your game and returns to the title screen) and Reset completely, like the other games' "rest at the title screen" option. The cards can show a third button now.
+
 ## 2026.10.13.1645
 - **First-load tour for kids:** five short picture cards (Welcome, Flick to throw, Bonk a penguin, Keep the cheer up, Waves and Champions) with a big Next button, Back, dots and a big "Skip the tour". It shows once on a brand-new game (never for anyone who already played), and you can replay it from **How to play** with "Play the tour". Calm mode stops its animations.
 - **The main slingshot only tilts a few degrees** now (at most about 7), like the helper slingshots, instead of swinging far left and right. Throws still go exactly where you flick.

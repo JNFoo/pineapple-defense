@@ -11,7 +11,7 @@ if (!window.__qaHooked) {
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const $ = id => document.getElementById(id);
 const cardUp = () => !$('gcw').hidden;
-const card = () => ({ t: $('gTitle').textContent, b1: $('gBtn1').textContent, b2: $('gBtn2').textContent, body: $('gBody').textContent });
+const card = () => ({ t: $('gTitle').textContent, b1: $('gBtn1').textContent, b2: $('gBtn2').textContent, b3: $('gBtn3').hidden ? '' : $('gBtn3').textContent, body: $('gBody').textContent });
 async function wf(fn, ms) { const t0 = Date.now(); while (Date.now() - t0 < (ms || 3000)) { if (fn()) return true; await wait(25); } return false; }
 function inv(tag) {
   const S = P.S, bad = [], sv = P.sv();
@@ -386,12 +386,17 @@ await T('grand finale fireworks delay the card', async () => {
 
 await T('run end card: save, reset, confirm', async () => {
   await go(5, 0); const sv = P.sv(); sv.bank = 500; sv.gu = 2; sv.ra = 1; sv.ach = sv.ach | 5; const ach0 = sv.ach, run0 = sv.run;
-  P.win(); await wait(50); let c = card(); if (c.t !== 'You did it!' || c.b1 !== 'Save and restart' || c.b2 !== 'Reset completely') throw new Error(JSON.stringify(c));
+  P.win(); await wait(50); let c = card(); if (c.t !== 'You did it!' || c.b1 !== 'Save and restart' || c.b2 !== 'Save and go to title' || c.b3 !== 'Reset completely') throw new Error(JSON.stringify(c));
   if (sv.run !== run0 + 1) throw new Error('run did not count: ' + sv.run);
-  $('gBtn2').click(); await wait(30); c = card(); if (c.t !== 'Reset everything?' || c.b1 !== 'Keep my stuff') throw new Error('no confirm: ' + JSON.stringify(c));
+  $('gBtn3').click(); await wait(30); c = card(); if (c.t !== 'Reset everything?' || c.b1 !== 'Keep my stuff') throw new Error('no confirm: ' + JSON.stringify(c));
   $('gBtn1').click(); await wait(30); c = card(); if (c.t !== 'You did it!') throw new Error('keep did not return: ' + c.t); if (sv.bank < 500) throw new Error('keep lost credits');
   $('gBtn1').click(); if (!await wf(() => !cardUp() && P.S.stage === 1, 3000)) throw new Error('save and restart did not start stage 1'); if (sv.bank < 500 || sv.gu !== 2) throw new Error('save and restart lost upgrades');
-  await go(5, 0); P.win(); await wait(50); $('gBtn2').click(); await wait(30); $('gBtn2').click();
+  /* save and go to title: the card closes, the title shows, the progress is kept and Continue is ready */
+  await go(5, 0); sv.bank = 321; P.win(); await wait(50); $('gBtn2').click(); await wait(50);
+  if (cardUp() || document.getElementById('title').hidden || !document.getElementById('game').hidden) throw new Error('did not return to the title screen'); if (sv.bank !== 321) throw new Error('save lost credits');
+  if (JSON.parse(localStorage.getItem('pd-save')).bank !== 321) throw new Error('the credits were not written to the saved game');
+  document.getElementById('title').hidden = true; document.getElementById('game').hidden = false;
+  await go(5, 0); P.win(); await wait(50); $('gBtn3').click(); await wait(30); $('gBtn2').click();
   if (!await wf(() => !cardUp() && P.S.stage === 1, 3000)) throw new Error('reset did not start stage 1');
   if (sv.bank !== 0 || sv.gu || sv.ra || sv.um || sv.au || sv.ar || sv.ap || sv.run) throw new Error('reset left data: ' + JSON.stringify(sv)); if ((sv.ach & ach0 & 5) !== 5 && (ach0 & 5) === 5 && (sv.ach & 5) !== 5) throw new Error('trophies lost');
 });
