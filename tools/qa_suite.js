@@ -182,6 +182,23 @@ await T('first-load tour: five cards, skip, replay', async () => {
   document.getElementById('title').hidden = true; document.getElementById('game').hidden = false; return titles.join(' / ');
 });
 
+await T('settings: rows, game speed, large buttons, battery saver', async () => {
+  const sv = P.sv(); sv.sp = 0; sv.bb = 0; sv.bv = 0; $('bSet').click(); await wait(50);
+  const rows = [...document.querySelectorAll('#cardBody .so')].filter(r => !r.hidden); if (rows.length < 9) throw new Error('settings rows ' + rows.length);
+  if (rows.some(r => !r.querySelector('small') || !r.querySelector('.st').textContent)) throw new Error('a settings row has no help line or no state');
+  $('cmSp').click(); if (sv.sp !== 1 || $('cmSp').querySelector('.st').textContent !== '90%') throw new Error('speed did not step to 90%: ' + sv.sp);
+  for (let i = 0; i < 4; i++) $('cmSp').click(); if (sv.sp !== 0) throw new Error('speed did not wrap to 100%');
+  $('cmBig').click(); if (document.documentElement.dataset.big !== '1' || !sv.bb) throw new Error('large buttons did not switch on'); $('cmBig').click();
+  $('cmSave').click(); if (!sv.bv) throw new Error('battery saver did not switch on'); $('cmSave').click();
+  const warn = $('svWarn'); if (!warn || !warn.hidden) throw new Error('storage warning shown although saving works');
+  $('cardOk').click(); document.getElementById('title').hidden = true; document.getElementById('game').hidden = false;
+  /* the speed setting slows the game clock in real play */
+  const meas = async (sp) => { sv.sp = sp; await go(1, 3); P.bot = false; const S = P.S; await wait(150); const t0 = S.t; await wait(600); return S.t - t0; };
+  const full = await meas(0), slow = await meas(4); sv.sp = 0;
+  if (!(full > 0.3)) throw new Error('the clock did not run (' + full + ')'); if (slow > full * 0.8 || slow < full * 0.4) throw new Error('60% speed ran at ' + Math.round(slow / full * 100) + '% of normal');
+  return 'steps 100>90, 60% ran at ' + Math.round(slow / full * 100) + '% of normal';
+});
+
 await T('every trophy and shop upgrade has its own icon', async () => {
   $('bTro').click(); await new Promise(r => setTimeout(r, 50));
   const us = [...document.querySelectorAll('#trList use')].map(u => u.getAttribute('href')); if (us.length !== 21) throw new Error('trophy rows ' + us.length);
@@ -367,7 +384,7 @@ await T('bonus game: the ball rolls at real-feeling speed', async () => {
 await T('bonus game: balls roll off ring walls instead of hanging, and rims rattle', async () => {
   const sv = P.sv(); sv.rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('no minigame'); await wait(200); const K = P.K; K.balls = 99;
   let worst = 0, lip = 0, lipOut = 0, n = 0;
-  for (let k = 0; k < 14; k++) {
+  for (let k = 0; k < 32 && (k < 14 || lip < 2 || lipOut < 1); k++) {
     K.cool = 0; K.bl.length = 0; const a = (Math.random() * 30 - 15) * Math.PI / 180, s = 3 + Math.random() * 5; P.roll(Math.sin(a), -Math.cos(a), s); const b = K.bl[0]; let t = 0, slow = 0, w = 0, touched = false;
     while (K.bl.includes(b) && t < 6) { P.step(0.04, 0.04); t += 0.068; if (b.lh) touched = true; if (b.st === 'play' && Math.hypot(b.vu, b.vv) < 0.12 && b.z < 0.1) { slow += 0.068; w = Math.max(w, slow); } else slow = 0; }
     worst = Math.max(worst, w); n++; if (touched) { lip++; if (!b.hole) lipOut++; }

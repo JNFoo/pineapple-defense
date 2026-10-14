@@ -2,6 +2,10 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.13.2111
+- **Settings dialog redone in the style of Fancy, the Banana:** big rows, each with a title, a one-line help and an On/Off (or value) pill. New options: **Game speed** (100%, 90%, 80%, 70% or 60%, set on the title screen; the Faster Fun and Top Speed trophies need 100%), **Large buttons** (bigger pineapple, pause and Rain buttons), **Battery saver** (about 30 pictures a second) and **Full screen** (where the browser allows it). Left-handed, Aim help, Aim dots, High contrast, Larger text and Calm mode moved into the same rows.
+- **Save warning:** if the browser refuses to keep the saved game (a private window, perhaps), the Save code section now says so and points to the save code and save file.
+
 ## 2026.10.13.2059
 - **The victory card ("You did it!") now has Save and go to title.** It offers Save and restart, Save and go to title (saves your game and returns to the title screen) and Reset completely, like the other games' "rest at the title screen" option. The cards can show a third button now.
 

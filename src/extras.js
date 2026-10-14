@@ -43,7 +43,7 @@ function extrasWin(st, last) {
     sv.cd = 1; sv.bank = Math.min(999999, sv.bank + 100); award(19); out += ' Challenge done: ' + c.n + '! +100 Golden Pineapples.';
   }
   if (last) {
-    var k = runK(); award(16); if (k >= 1.3) award(17); if (k >= 1.9) award(18);
+    var k = runK(); award(16); if (!sv.sp && k >= 1.3) award(17); if (!sv.sp && k >= 1.9) award(18);
     sv.run = Math.min(99, (sv.run | 0) + 1); sv.cd = 0; sv.rl = 0;
     out += ' Run ' + sv.run + ' is done! Next time the penguins are ' + runPct() + '% faster' + (runK() >= RUN_MAX ? ' (the top speed).' : '.') + ' New challenge: ' + chal().d;
   }

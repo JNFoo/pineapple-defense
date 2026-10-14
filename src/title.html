@@ -220,6 +220,13 @@ html[data-lh="1"] .raid{right:auto;left:3px}html[data-lh="1"] .picks{left:auto;r
 html[data-hc="1"] .pill,html[data-hc="1"] .pause,html[data-hc="1"] .pick{box-shadow:0 0 0 2.5px #1c0f06,0 .3em .45em rgba(0,0,0,.3)}html[data-hc="1"] .pill{color:#000}html[data-hc="1"] .pill small{color:#2a1a08}
 html[data-hc="1"] .cheer,html[data-hc="1"] .bossbar,html[data-hc="1"] .raid{box-shadow:0 0 0 2.5px #1c0f06}html[data-hc="1"] .bar{outline:2px solid #1c0f06}html[data-hc="1"] .card p,html[data-hc="1"] .ti i{color:#000}
 html[data-lt="1"] .hrow{flex-wrap:wrap}html[data-lt="1"] .pill{font-size:1.1rem;min-height:2.6rem;padding:.2em .6em}html[data-lt="1"] .pill small{font-size:.8rem}html[data-lt="1"] .pill b{font-size:1.15rem}html[data-lt="1"] .banner{font-size:clamp(3rem,11cqmin,6rem)}html[data-lt="1"] .hint{font-size:1.15rem}html[data-lt="1"] .pick{font-size:.85rem}html[data-lt="1"] .card p,html[data-lt="1"] .ti i{font-size:1.2rem}
+.so{display:flex;align-items:center;gap:.6rem;width:100%;min-height:3.4rem;margin:.3rem 0;padding:.5rem .75rem;border:0;border-radius:1rem;background:#fff7e3;box-shadow:inset 0 0 0 2px #ead9ae,0 .14em 0 #d8c58f;font:inherit;text-align:left;color:#4a2b0f;cursor:pointer}
+.so>span{flex:1;min-width:0}.so b{display:block;font:800 1rem/1.15 var(--display)}.so small{display:block;margin-top:.12rem;font:600 .8rem/1.25 var(--body);color:#6b5a45}
+.so .st{flex:none;min-width:4.4rem;padding:.45rem .6rem;border-radius:999px;background:#e8dcc0;color:#6b5a45;font:800 .9rem/1 var(--display);font-style:normal;text-align:center}
+.so[aria-pressed="true"] .st{background:linear-gradient(180deg,#62c981,#2c8a49);color:#fff}.so:active{transform:translateY(.1em)}.so:focus-visible{outline:3px solid #1f6feb;outline-offset:2px}
+.card .warn{padding:.5rem .7rem;border-radius:.8rem;background:#ffe3d6;color:#6a1f10;font:700 .9rem/1.3 var(--body)}
+html[data-hc="1"] .so{box-shadow:0 0 0 2.5px #1c0f06}html[data-hc="1"] .so small{color:#000}
+html[data-big="1"] .pick{height:2.9rem;min-width:7.8rem;font-size:1rem}html[data-big="1"] .pick svg{width:2.4rem;height:2.4rem}html[data-big="1"] .pause{width:3.5rem;height:3.5rem}html[data-big="1"] .raid{width:3.1rem;height:3.8rem}
 .card .opts{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin:.3rem 0}.card .opts .btn{margin:0;padding:.55rem .4rem;font-size:.95rem}.card h3.cm{margin:.5rem 0 .1rem;font:800 1.05rem var(--display);color:#7a3a05}
 
 .btn[hidden]{display:none}.goal{margin:.5rem auto 0;max-width:92%;padding:.3em .9em;border-radius:999px;background:rgba(255,247,227,.92);font:800 .85rem/1.2 var(--body);color:#7a3a05;box-shadow:0 .12em 0 #b79a63}.goal[hidden]{display:none}
@@ -366,9 +373,19 @@ html[data-lt="1"] .hrow{flex-wrap:wrap}html[data-lt="1"] .pill{font-size:1.1rem;
 <div class="tl" id="shList"></div>
 </template>
 <template id="t-set">
-<h3 class="cm">Comfort</h3>
-<div class="opts"><button class="btn" id="cmLh" type="button" aria-pressed="false"></button><button class="btn" id="cmAim" type="button"></button><button class="btn" id="cmArc" type="button"></button><button class="btn" id="cmHc" type="button" aria-pressed="false"></button><button class="btn" id="cmLt" type="button" aria-pressed="false"></button><button class="btn" id="cmCalm" type="button" aria-pressed="false"></button></div>
+<h3 class="cm">Play your way</h3>
+<button class="so" id="cmSp" type="button"><span><b>Game speed</b><small>Slower is gentler: everything moves a little slower. Faster Fun and Top Speed trophies need 100%.</small></span><i class="st"></i></button>
+<button class="so" id="cmLh" type="button"><span><b>Left-handed layout</b><small>The pineapple and Rain buttons move to the other side.</small></span><i class="st"></i></button>
+<button class="so" id="cmAim" type="button"><span><b>Aim help</b><small>How forgiving a flick is: Generous, Normal or Off.</small></span><i class="st"></i></button>
+<button class="so" id="cmArc" type="button"><span><b>Aim dots</b><small>A dotted line shows where your flick will go.</small></span><i class="st"></i></button>
+<button class="so" id="cmHc" type="button"><span><b>High contrast</b><small>Thick outlines and plainer colors.</small></span><i class="st"></i></button>
+<button class="so" id="cmLt" type="button"><span><b>Larger text</b><small>Bigger words in the game and in menus.</small></span><i class="st"></i></button>
+<button class="so" id="cmBig" type="button"><span><b>Large buttons</b><small>Bigger pineapple, pause and Rain buttons.</small></span><i class="st"></i></button>
+<button class="so" id="cmCalm" type="button"><span><b>Calm mode</b><small>No bobbing, confetti or squishing. Starts on by itself if your device asks for less motion.</small></span><i class="st"></i></button>
+<button class="so" id="cmSave" type="button"><span><b>Battery saver</b><small>About 30 pictures a second. Same game, cooler and longer-lasting.</small></span><i class="st"></i></button>
+<button class="so" id="cmFull" type="button" hidden><span><b>Full screen</b><small>Fill the whole screen while you play.</small></span><i class="st"></i></button>
 <h3 class="cm">Save code</h3>
+<p id="svWarn" class="warn" hidden>This browser is not keeping your progress (a private window, perhaps). Copy your save code or make a save file to keep it.</p>
 <p>Move your game to another device with a save code or a file.</p>
 <div class="row"><button class="btn" id="svShow" type="button">Show save code</button><button class="btn" id="svFile" type="button">Save file</button></div>
 <textarea id="svCode" rows="3" readonly hidden aria-label="Your save code"></textarea>
@@ -379,7 +396,6 @@ html[data-lt="1"] .hrow{flex-wrap:wrap}html[data-lt="1"] .pill{font-size:1.1rem;
 <input type="file" id="svPick" accept=".txt,.md,.json" hidden>
 <p id="svMsg" role="status"></p>
 <span class="soon">Sound and music: coming later</span>
-<p>Calm mode (also on the main menu) stops bobbing, confetti and squishing, and starts on by itself if your device asks for reduced motion.</p>
 </template>
 <script>/*{{STICKER_JS}}*/</script>
 <script>/*{{EVEN_DT}}*/</script>

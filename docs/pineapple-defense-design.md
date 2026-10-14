@@ -376,6 +376,11 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Roll feel:** `SK_AIM` 0.3 (was 0.7), speed band `(spd - 1) / 7.5` (was `(spd - 1.2) / 5.3`), `SK_DIN` 1.25 (was 0.9). The lane and the board use fixed 1/240 s steps (`SK_H`, accumulator `b.acc`) so the roll is the same at any frame rate, and `skSim` replays a launch silently (used by the tests; `skSimOn` mutes the crowd). Measured by simulation with a human wobble (normal noise, 6 degrees and 12%): 58% of flicks sink, up from 33%, and a random flick sinks 38% of the time (19% before). All hole values (10 to 100) stay reachable. No aim assist on purpose (the player asked for none).
 - **Audit:** see docs/ideas-qol-and-performance.md.
 
+### Round 39: settings in Fancy's row style
+- Reviewed JNFoo/fancy-banana (a Settings panel of `.opt` rows: Calm, Game speed 100 to 60, Left-handed, Large buttons, Larger text, News ticker, Battery saver, Full screen; a separate Save panel with a storage warning; a win panel "What now, hero?") and JNFoo/apple-press (footer buttons: Effects, Hold to press, Theme, FPS counter, Save and load, a slow-moment note).
+- `t-set` rows use `.so` (title, small help, `.st` pill). New save fields `sp` (speed index into `SPEEDS` 100/90/80/70/60), `bb` (large buttons, `data-big` on the root) and `bv` (battery saver). `spdK()` scales the main game's dt in `frame` (not Pineapple Roll); battery saver skips a frame when under 28 ms have passed. The Faster Fun and Top Speed trophies are only awarded at `sp = 0`. `#svWarn` shows when `kit.save` returns false.
+- Not adopted for now: news ticker (no ticker here), FPS counter, theme, hold-to-press, the slow-moment note.
+
 ### Round 38: victory card
 - `showCard` takes optional `btn3, fn3` (`#gBtn3`, hidden unless used). `runEndCard()` shows Save and restart, Save and go to title (`kit.save(sv); toTitle()`) and Reset completely; "Keep my stuff" in the reset confirm returns to it.
 

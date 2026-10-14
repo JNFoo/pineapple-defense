@@ -87,13 +87,15 @@ function loadAssets() {
 
 /* ---------- save ---------- */
 var kit = SaveKit.create({ key: 'pd-save', prefix: 'PD1',
-  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1' },
-  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0 } });
+  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1' },
+  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0 } });
 var sv = kit.load() || kit.validate({});
 sv.ach = sv.ach | 0; sv.au = sv.au | 0; sv.ar = sv.ar | 0; sv.ap = sv.ap | 0; sv.ac2 = sv.ac2 | 0; sv.gu = sv.gu | 0; sv.um = sv.um | 0; sv.ra = sv.ra | 0; sv.run = sv.run | 0; sv.cd = sv.cd | 0; sv.lm = sv.lm | 0;
 ['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
 /* comfort settings travel with the save (and so with the save code) */
-function applyPrefs() { root.setAttribute('data-lh', sv.lh ? '1' : '0'); root.setAttribute('data-hc', sv.hc ? '1' : '0'); root.setAttribute('data-lt', sv.lt ? '1' : '0'); }
+function applyPrefs() { root.setAttribute('data-lh', sv.lh ? '1' : '0'); root.setAttribute('data-hc', sv.hc ? '1' : '0'); root.setAttribute('data-lt', sv.lt ? '1' : '0'); root.setAttribute('data-big', sv.bb ? '1' : '0'); }
+var SPEEDS = [100, 90, 80, 70, 60];
+function spdK() { return SPEEDS[sv.sp | 0] / 100; }   /* the game speed setting (title screen only), 1 to 0.6 */
 function mx(f) { return W * (sv.lh ? 1 - f : f); }
 var AIMW = [1.3, 0.9, 0.4], RESUME_S = 3;
 applyPrefs();
@@ -1952,11 +1954,12 @@ if (lpaEl) lpaEl.addEventListener('click', function () {
 function frame(now) {
   if (!running) return;
   raf = requestAnimationFrame(frame);
+  if (sv.bv && last && now - last < 28) return;   /* battery saver: about 30 pictures a second */
   if (!last) { last = now; return; }
   var gap = now - last; last = now;
   var dtMs = even.next(gap) || gap;
   gov.frame(gap, now);
-  var dt = Math.min(dtMs, 50) / 1000 * timeScale;
+  var dt = Math.min(dtMs, 50) / 1000 * timeScale * (K ? 1 : spdK());
   calm = root.getAttribute('data-calm') === '1';
   if (K) { updateSkee(dt); drawSkee(); hudSkee(); } else { update(dt); draw(); hud(); }
 }
@@ -2123,18 +2126,20 @@ btnCont.addEventListener('click', function () { if (!btnCont.disabled) continueG
 
 /* ---------- save code and file (Settings card) ---------- */
 function wireComfort($b) {
-  var AIM = ['Generous', 'Normal', 'Off'], ARC = ['First 5 throws', 'Always', 'Never'];
+  var AIM = ['Generous', 'Normal', 'Off'], ARC = ['First 5 throws', 'Always', 'Never'], fs = document.fullscreenEnabled && document.documentElement.requestFullscreen;
+  function row(id, text, on) { var b = $b(id); b.querySelector('.st').textContent = text; if (on !== undefined) b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
   function paint() {
-    $b('cmLh').textContent = 'Left-handed: ' + (sv.lh ? 'On' : 'Off'); $b('cmLh').setAttribute('aria-pressed', sv.lh ? 'true' : 'false');
-    $b('cmAim').textContent = 'Aim help: ' + AIM[sv.aim]; $b('cmArc').textContent = 'Aim dots: ' + ARC[sv.arc];
-    $b('cmHc').textContent = 'High contrast: ' + (sv.hc ? 'On' : 'Off'); $b('cmHc').setAttribute('aria-pressed', sv.hc ? 'true' : 'false');
-    $b('cmLt').textContent = 'Large text: ' + (sv.lt ? 'On' : 'Off'); $b('cmLt').setAttribute('aria-pressed', sv.lt ? 'true' : 'false');
-    var c = root.getAttribute('data-calm') === '1'; $b('cmCalm').textContent = 'Calm mode: ' + (c ? 'On' : 'Off'); $b('cmCalm').setAttribute('aria-pressed', c ? 'true' : 'false');
+    row('cmSp', SPEEDS[sv.sp | 0] + '%'); row('cmLh', sv.lh ? 'On' : 'Off', sv.lh); row('cmAim', AIM[sv.aim]); row('cmArc', ARC[sv.arc]);
+    row('cmHc', sv.hc ? 'On' : 'Off', sv.hc); row('cmLt', sv.lt ? 'On' : 'Off', sv.lt); row('cmBig', sv.bb ? 'On' : 'Off', sv.bb);
+    var c = root.getAttribute('data-calm') === '1'; row('cmCalm', c ? 'On' : 'Off', c); row('cmSave', sv.bv ? 'On' : 'Off', sv.bv);
+    $b('cmFull').hidden = !fs; row('cmFull', document.fullscreenElement ? 'On' : 'Off', !!document.fullscreenElement);
   }
   function bind(id, fn) { $b(id).addEventListener('click', function () { fn(); applyPrefs(); kit.save(sv); paint(); }); }
-  bind('cmLh', function () { sv.lh = sv.lh ? 0 : 1; }); bind('cmAim', function () { sv.aim = (sv.aim + 1) % 3; }); bind('cmArc', function () { sv.arc = (sv.arc + 1) % 3; if (sv.arc === 0) sv.thr = 0; });
-  bind('cmHc', function () { sv.hc = sv.hc ? 0 : 1; }); bind('cmLt', function () { sv.lt = sv.lt ? 0 : 1; });
+  bind('cmSp', function () { sv.sp = ((sv.sp | 0) + 1) % SPEEDS.length; }); bind('cmLh', function () { sv.lh = sv.lh ? 0 : 1; }); bind('cmAim', function () { sv.aim = (sv.aim + 1) % 3; }); bind('cmArc', function () { sv.arc = (sv.arc + 1) % 3; if (sv.arc === 0) sv.thr = 0; });
+  bind('cmHc', function () { sv.hc = sv.hc ? 0 : 1; }); bind('cmLt', function () { sv.lt = sv.lt ? 0 : 1; }); bind('cmBig', function () { sv.bb = sv.bb ? 0 : 1; }); bind('cmSave', function () { sv.bv = sv.bv ? 0 : 1; });
   $b('cmCalm').addEventListener('click', function () { $('bCalm').click(); paint(); });
+  $b('cmFull').addEventListener('click', function () { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (e) {} setTimeout(paint, 300); });
+  var warn = $b('svWarn'); if (warn) warn.hidden = kit.save(sv) !== false;   /* the browser is not keeping the save (private window?) */
   paint();
 }
 function wireSettings() {

@@ -35,6 +35,8 @@ Design iteration: do not run QA until the design is settled. Before a release: `
 
 Round 33 additions: the fuzz test also plays all five Champion fights with every upgrade on (random raids, pickups, pauses, wild flicks); new tests cover the helpers waiting for the first throw, the two-rolls-per-run limit (card, secret spot, stage 4 offer) and the odds of a wobbly Pineapple Roll flick sinking (at least 40% at 6 degrees and 12%, and every hole value reachable).
 
+Round 39 additions: the settings rows (each has a help line and a state), game speed steps and wraps and really slows the game clock (60% ran at about 60%), large buttons and battery saver switch, and no storage warning when saving works.
+
 Round 38 additions: the run end card has three buttons, and Save and go to title closes the card, shows the title screen and writes the credits to the saved game.
 
 Round 37 additions: sling tilt (at most about 7 degrees under a hard sideways drag), no throws or helper shots during Ready, Set, GO and free after GO, and the tour (five cards with pictures and Skip, flag saved, replay from How to play).
