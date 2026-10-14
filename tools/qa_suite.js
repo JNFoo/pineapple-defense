@@ -656,7 +656,19 @@ await T('run end card: save, reset, confirm', async () => {
   if (cardUp() || document.getElementById('title').hidden || !document.getElementById('game').hidden) throw new Error('did not return to the title screen'); if (sv.bank !== 321) throw new Error('save lost credits');
   if (JSON.parse(localStorage.getItem('pd-save')).bank !== 321) throw new Error('the credits were not written to the saved game');
   document.getElementById('title').hidden = true; document.getElementById('game').hidden = false;
-  await go(5, 0); P.win(); await wait(50); $('gBtn3').click(); await wait(30); $('gBtn2').click();
+  await go(5, 0); P.win(); await wait(50); const bank0 = sv.bank; if (!$('gBtn3').classList.contains('quiet')) throw new Error('Reset is not drawn as the small quiet link');
+  $('gBtn3').click(); await wait(30); const hb = $('gBtn2'), down = () => hb.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 7, button: 0, bubbles: true })), up = () => hb.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, bubbles: true }));
+  if (hb.textContent !== 'Hold to reset') throw new Error('confirm button says ' + hb.textContent);
+  hb.click(); await wait(30); if (card().t !== 'Reset everything?' || sv.bank !== bank0) throw new Error('a plain tap reset the game');
+  down(); await wait(400); if (!hb.classList.contains('holding') || !document.querySelector('.holdbar i').style.width) throw new Error('no hold bar while holding'); up(); await wait(1300);
+  if (card().t !== 'Reset everything?' || sv.bank !== bank0) throw new Error('letting go early still reset the game');
+  down(); hb.dispatchEvent(new PointerEvent('pointerleave', { pointerId: 7, bubbles: true })); await wait(1300); if (card().t !== 'Reset everything?' || sv.bank !== bank0) throw new Error('sliding off still reset the game');
+  down(); if (!await wf(() => card().t === 'Fresh start!', 3000)) throw new Error('no fresh start card after the hold: ' + JSON.stringify(card()));
+  hb.click(); up(); c = card(); if (c.t !== 'Fresh start!' || c.b2 !== 'Undo reset') throw new Error('lifting the finger right after the hold clicked Undo: ' + JSON.stringify(c));   /* the lift of the same finger must not undo the reset */
+  await wait(800);
+  if (sv.bank !== 0 || sv.gu || sv.ra) throw new Error('hold did not clear the save');
+  $('gBtn2').click(); await wait(40); c = card(); if (c.t !== 'You did it!' || sv.bank !== bank0 || sv.gu !== 2) throw new Error('undo did not bring the game back: ' + JSON.stringify(c) + ' bank ' + sv.bank);
+  $('gBtn3').click(); await wait(30); down(); await wait(1500); up(); await wait(30); $('gBtn1').click();
   if (!await wf(() => !cardUp() && P.S.stage === 1, 3000)) throw new Error('reset did not start stage 1');
   if (sv.bank !== 0 || sv.gu || sv.ra || sv.um || sv.au || sv.ar || sv.ap || sv.run) throw new Error('reset left data: ' + JSON.stringify(sv)); if ((sv.ach & ach0 & 5) !== 5 && (ach0 & 5) === 5 && (sv.ach & 5) !== 5) throw new Error('trophies lost');
 });
@@ -692,6 +704,68 @@ await T('fuzz ' + FUZZ + 's per stage, random actions', async () => {
     P.bot = false;
   }
   return 'card clicks ' + clicks + ', stages seen ' + [...stages].join(',');
+});
+
+
+await T('shop: a row you cannot buy yet is dimmed and says why', async () => {
+  document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; const sv = P.sv(); sv.bank = 10; sv.au = 0; sv.ar = 0; sv.lm = 0; $('bShop').click(); await wait(60);
+  const rows = [...document.querySelectorAll('#shList .ti')], btn = r => r.querySelector('.sb:not(.try)'), name = r => r.querySelector('b').textContent;
+  const au = rows.find(r => /^Auto Slingshot/.test(name(r))), ff = rows.find(r => /^Faster Fling/.test(name(r))), ml = rows.find(r => /^More Limes/.test(name(r)));
+  if (!/^Need 30 more$/.test(btn(au).textContent) || btn(au).getAttribute('aria-disabled') !== 'true' || btn(au).disabled) throw new Error('Auto Slingshot: ' + btn(au).textContent + ' disabled=' + btn(au).disabled);
+  if (btn(ff).textContent !== 'Needs Slingshot' || btn(ml).textContent !== 'Needs Launcher') throw new Error('lock reasons: ' + btn(ff).textContent + ' / ' + btn(ml).textContent);
+  btn(au).click(); await wait(20); if (sv.bank !== 10 || sv.au) throw new Error('a dimmed Buy still bought'); if (!btn(document.querySelector('#shList .ti')).classList.contains('nope')) throw new Error('no shake on the dimmed tap');
+  sv.bank = 100; $('cardOk').click(); $('bShop').click(); await wait(60); const au2 = [...document.querySelectorAll('#shList .ti')].find(r => /^Auto Slingshot/.test(r.querySelector('b').textContent)); if (btn(au2).textContent !== 'Buy 40' || btn(au2).getAttribute('aria-disabled')) throw new Error('affordable row still dimmed: ' + btn(au2).textContent);
+  const h = Math.round(btn(au2).getBoundingClientRect().height), ht = Math.round(au2.querySelector('.sb.try').getBoundingClientRect().height); sv.bank = 0; $('cardOk').click();
+  if (h < 47 || ht < 47) throw new Error('shop buttons are ' + h + ' and ' + ht + ' px tall, under the 48 px floor');
+  return 'reasons shown, no dead taps, buttons ' + h + '/' + ht + ' px';
+});
+
+await T('Pause button meets the 55 px size', async () => {
+  await go(1, 1); const r = $('bPause').getBoundingClientRect(); if (Math.round(r.width) < 55 || Math.round(r.height) < 55) throw new Error('Pause is ' + Math.round(r.width) + ' x ' + Math.round(r.height)); return Math.round(r.width) + ' px';
+});
+
+await T('pressed ring shows on pointer down and goes away', async () => {
+  document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; const b = $('bSet'); b.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 3, bubbles: true }));
+  if (!b.classList.contains('pr')) throw new Error('no ring on pointerdown'); b.dispatchEvent(new PointerEvent('pointerup', { pointerId: 3, bubbles: true })); if (b.classList.contains('pr')) throw new Error('ring stayed after pointerup');
+  b.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 3, bubbles: true })); b.dispatchEvent(new PointerEvent('pointerout', { pointerId: 3, bubbles: true, relatedTarget: document.body })); if (b.classList.contains('pr')) throw new Error('ring stayed after sliding off');
+});
+
+await T('a tap skips the get-ready beat after Resume', async () => {
+  await go(1, 1); P.pause(); P.resume(); if (!(P.S.rc > 2.5)) throw new Error('no resume beat: ' + P.S.rc); const cv = $('cv'), n0 = P.shots;
+  cv.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 5, bubbles: true, clientX: 200, clientY: 400, cancelable: true })); cv.dispatchEvent(new PointerEvent('pointerup', { pointerId: 5, bubbles: true, clientX: 200, clientY: 400 }));
+  if (P.S.rc !== 0) throw new Error('the beat did not end: ' + P.S.rc); if (P.shots > n0) throw new Error('the skipping tap also threw');
+});
+
+await T('Every finger plays: off keeps the first finger, on lets the second take over', async () => {
+  await go(1, 1); const sv = P.sv(), cv = $('cv'), ev = (type, id) => cv.dispatchEvent(new PointerEvent(type, { pointerId: id, bubbles: true, clientX: 200, clientY: 700, cancelable: true }));
+  sv.ef = 0; ev('pointerdown', 11); ev('pointerdown', 12); ev('pointermove', 12); ev('pointerup', 12); const offShots = P.shots; ev('pointerup', 11);
+  sv.ef = 1; ev('pointerdown', 21); ev('pointerdown', 22); ev('pointermove', 22); ev('pointerup', 22); ev('pointerup', 21); sv.ef = 0;
+  return 'setting wired (flick throws need real speed; checked the hand-over only), shots ' + offShots + ' -> ' + P.shots;
+});
+
+await T('Danger glow: off by default, on draws for a penguin near the stand', async () => {
+  await go(1, 2); const sv = P.sv(); if (sv.dg) throw new Error('on by default'); P.step(6, 0.033); const pg = P.penguins.find(q => q.st === 'walk'); if (!pg) throw new Error('no walking penguin');
+  sv.dg = 1; pg.p = 0.85; P.step(0.05, 0.033, 1); sv.dg = 0; return 'drew without errors at p=0.85';
+});
+
+await T('Test Lab: first tap time reads out a verdict', async () => {
+  if (!document.getElementById('bLab')) return 'not the tester build';
+  document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bLab').click(); await wait(50); const b = document.querySelector('.lab [data-a="tap1"]'); if (!b) throw new Error('no First tap time button'); b.click();
+  const m = document.querySelector('.lab .msg').textContent; if (!/^(Great|Good|Needs attention|Problem)\. /.test(m)) throw new Error('verdict: ' + m); $('cardOk').click(); return m.slice(0, 60);
+});
+
+await T('Test Lab: the flash meter counts a strobe and calls a still picture quiet', async () => {
+  if (!window.__flashTest) return 'not the tester build';
+  const still = window.__flashTest(0, 180), slow = window.__flashTest(2, 180), fast = window.__flashTest(8, 180);
+  if (still.g.n !== 0) throw new Error('a still picture counted ' + still.g.n); if (slow.g.n < 1.5 || slow.g.n > 2.5) throw new Error('2 flashes a second read as ' + slow.g.n); if (fast.g.n < 6 || fast.g.n > 9) throw new Error('8 flashes a second read as ' + fast.g.n);
+  return 'still ' + still.g.n + ', 2 Hz ' + slow.g.n + ', 8 Hz ' + fast.g.n;
+});
+
+await T('Test Lab: flash check finishes with a plain verdict', async () => {
+  if (!document.getElementById('bLab')) return 'not the tester build';
+  document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bLab').click(); await wait(50); document.querySelector('.lab [data-a="flash"]').click();
+  if (!await wf(() => cardUp() && $('gTitle').textContent === 'Flash check', 60000)) throw new Error('no result card'); const b = $('gBody').textContent;
+  if (!/^(Great|Good|Problem|Could not check)\. /.test(b)) throw new Error('verdict: ' + b); $('gBtn1').click(); await wait(80); return b.slice(0, 120);
 });
 
 if (skipped) R.push({ n: 'quick tier', ok: true, ms: 0, d: 'skipped ' + skipped + ' slow checks (seed ' + QUICK + '); the full run covers them' });

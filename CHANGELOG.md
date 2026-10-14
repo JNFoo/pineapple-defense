@@ -2,6 +2,18 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.14.1334
+- **Shop says why (X35):** a row you cannot buy yet stays visible, dimmed with a dashed edge, and tells you what is missing: "Need 30 more", "Needs Slingshot", "Needs Launcher", "Needs More Limes". Tapping it gives a small shake (Calm keeps it still) and never buys. It used to be a dead, faded button with no reason.
+- **Bigger buttons (X01, X02):** shop Buy and Try it buttons are now at least 48 px tall (they were 37 to 42), Pause is at least 55 px (was 51) and the Pineapple Rain button at least 48 by 56 (was 40 by 50 on a small phone).
+- **Reset needs a hold, and can be undone (X10, X97):** "Reset completely" is now a small quiet link under the run-end buttons. The confirm card has a Hold to reset button with a filling bar (1.2 seconds; letting go, sliding off or a plain tap cancels; holding Enter or Space works too). After the reset a "Fresh start!" card offers Play or Undo reset, which brings back everything exactly as it was.
+- **Themed letterbox (X75):** the plain navy bars around the game are now a soft wash that matches the stage (shore sky and sand, ice, lighthouse sunset, storm night, party pink). In landscape the wash is a wide glow instead of a navy strip. No new art, just colors.
+- **A tap skips the get-ready beat** after Resume (X21). The tap does not throw.
+- **Pressed ring (X08):** any button gets a soft ring the instant a finger lands, so you can see it even where the fingertip covers the button.
+- **Every finger plays (Settings, off by default, X12):** a second finger can throw even while another finger rests on the screen.
+- **Danger glow (Settings, off by default, X34):** a penguin close to your stand gets a red ring and a warning sign, and the ground in front of the stand glows. Calm keeps it still.
+- **Tester only:** Test Lab has a Flash check (two busy scenes played by a helper, counts big brightness flashes per second, plain verdict) and a First tap time line.
+- **Developer:** the layout check now sweeps every button for a 44 px minimum on each screen; new checks cover the reset hold, undo and the lift-of-the-finger guard, shop reasons, sizes, ring, resume skip and both new settings.
+
 ## 2026.10.14.1256
 - **Keep screen on (Settings, on by default):** the screen does not dim while you play. It is let go when you pause, open a menu or card, leave the game alone for a minute, hide the tab, or turn on Battery saver. If the phone refuses (low power), nothing happens.
 - **Hints remember:** a Champion's tip now shows only until you have beaten that Champion once (before, it showed every fight), and the "helpers join in" hint shows twice in total, not twice per visit.

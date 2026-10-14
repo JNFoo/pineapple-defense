@@ -43,6 +43,8 @@ Round 42 additions: `--quick` (about 25 s), `--calm`, `--only REGEX`; back swipe
 
 Round 41 additions: the layout check runs a Large-buttons combination; edge touches at the screen edge reach the pills and pause; the first-run card sets Flick or Tap and closes; the early flick helper keeps a flick 0.1 s early, drops one 0.3 s early, and does nothing when off; the FPS badge text accepts the tap line and the verdict; fonts are embedded as WOFF2.
 
+Round 44 additions: the layout check sweeps every visible button, link and field on the title, each title card and the game screen for a 44 CSS px minimum (weapon picks skipped because of their invisible pad); the run end test now holds the Reset button (a tap, an early release and a slide-off must not reset; the lift of the same finger must not click Undo; Undo must bring the save back); new checks for shop reasons and sizes, the Pause size, the pressed ring, the Resume skip, Every finger plays, the Danger glow draw and, in the tester build only, the Flash check (plus a synthetic strobe that proves the meter counts) and First tap time (a plain verdict each).
+
 Round 40 additions: tap or hold on a penguin throws at it and the hold repeats at the cooldown on the Champion, a flick still works, off means taps do nothing, and the FPS badge shows only when on, has three lines of numbers and covers no button. Count throws by the cooldown jump, since the live shots array shrinks as shots land.
 
 Round 38 additions: the run end card has three buttons, and Save and go to title closes the card, shows the title screen and writes the credits to the saved game.

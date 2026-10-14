@@ -4,9 +4,13 @@ const R = e => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.t
 const hit = (a, b) => a.l < b.r - 1 && b.l < a.r - 1 && a.t < b.b - 1 && b.t < a.b - 1;
 const vw = window.innerWidth, vh = window.innerHeight;
 if (document.documentElement.scrollWidth > vw + 1) bad.push('page scrolls sideways: ' + document.documentElement.scrollWidth + ' > ' + vw);
+/* target-size sweep (idea X134): every visible button, link or field must be at least 44 CSS px on its short side; the weapon picks carry an invisible pad, so they are skipped */
+const sweep = where => document.querySelectorAll('button,[role=button],a,input,select').forEach(e => { if (!e.offsetParent || e.hidden || e.closest('.pick')) return; const r = R(e); if (r.w && r.h && Math.min(r.w, r.h) < 44) bad.push('target under 44 px in ' + where + ': ' + (e.id || e.className || e.tagName) + ' ' + Math.round(r.w) + 'x' + Math.round(r.h)); });
+sweep('title');
 /* title cards: shop, trophies, how to play must fit the screen */
 for (const id of ['bShop', 'bTro', 'bHow', 'bSet']) {
   $(id).click(); await wait(60);
+  sweep(id);
   const c = document.querySelector('#cw .card'); if (!c) { bad.push(id + ': no card'); continue; }
   const r = R(c); if (r.l < -1 || r.r > vw + 1 || r.t < -1 || r.b > vh + 1) bad.push(id + ' card outside screen ' + JSON.stringify(r));
   const sc = c.scrollHeight > c.clientHeight + 2 || $('cardBody').scrollHeight > $('cardBody').clientHeight + 2; const ok = $('cardOk'); if (ok) { const o = R(ok); if (o.t < -1 || o.r > vw + 1) bad.push(id + ' close button off screen'); }
@@ -15,6 +19,7 @@ for (const id of ['bShop', 'bTro', 'bHow', 'bSet']) {
 /* game HUD: maxed shop so the raid button shows */
 const sv = P.sv(); sv.ra = 2; sv.um = 3; sv.gu = 3; sv.au = 1;
 P.go(2, 2); for (let i = 0; i < 80 && !(P.S && P.S.stage === 2 && !$('bRaid').hidden); i++) await wait(25); await wait(60);
+sweep('game');
 const ids = ['waveBox', 'leftPill', 'comboPill', 'bPause', 'bankTxt', 'cupsTxt'];
 const els = ids.map(i => $(i)).filter(Boolean).map(e => e.closest('.pill') || e);
 for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) if (els[i] !== els[j] && hit(R(els[i]), R(els[j]))) bad.push('HUD overlap ' + els[i].id + '/' + els[j].id);

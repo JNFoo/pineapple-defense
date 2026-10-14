@@ -30,6 +30,75 @@ var LAB0 = { aim: SK_AIM, g: SK_G, kz: SK_KZ, inc: SK_INC, rb: SK_RB, balls: SK_
   }());
   function cbSet(i) { cbI = i; document.body.style.filter = i ? 'url(#cb' + i + ')' : ''; root.setAttribute('data-cb', String(i));   /* on <body>: Firefox ignores a filter on <html> */ return CB[i][0]; }
   window.__cb = cbSet;
+  /* Flash check (tester only; the idea of WCAG 2.3.1): two busy scenes are played at 60 steps a second by a helper that always throws, a tiny copy of the picture is
+     sampled every step, and big opposite brightness changes are counted per second. A change counts when 10% or more of the cells get brighter (or darker) by 0.1 of relative
+     luminance with the darker side under 0.8, and at least a quarter of the cells do it together. Red is counted separately. A rough check, not a legal or medical test. */
+  function relLum(r, g, b) { function c(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); } return 0.2126 * c(r) + 0.7152 * c(g) + 0.0722 * c(b); }
+  function worstPer(list) {   /* the most transitions inside any one second, as flashes (a flash is a pair of opposite changes) */
+    var i, j = 0, mx = 0, at = 0; for (i = 0; i < list.length; i++) { while (list[i] - list[j] > 1) j++; if (i - j + 1 > mx) { mx = i - j + 1; at = list[j]; } }
+    return { n: mx / 2, at: at };
+  }
+  /* the counting core: feed it one frame of RGBA pixels (GW x GH) and the time; it keeps the brightness-change times and a "moved" count */
+  function flashMeter() {
+    var prev = null, dir = 0, rdir = 0, ev = [], rv = [], moved = 0, frames = 0;
+    return {
+      push: function (d, simT) {
+        var n = d.length / 4, L = new Float32Array(n), R = new Uint8Array(n), i, up = 0, dn = 0, ru = 0, rd = 0, mv = 0;
+        for (i = 0; i < n; i++) { L[i] = relLum(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); R[i] = d[i * 4] > 200 && d[i * 4 + 1] < 90 && d[i * 4 + 2] < 90 ? 1 : 0; }
+        frames++;
+        if (prev) {
+          for (i = 0; i < n; i++) { var a = prev.L[i], c = L[i]; if (c - a >= 0.1 && a < 0.8) up++; else if (a - c >= 0.1 && c < 0.8) dn++; if (R[i] > prev.R[i]) ru++; else if (R[i] < prev.R[i]) rd++; if (Math.abs(c - a) > 0.01) mv++; }
+          if (mv) moved++;
+          if (up >= n * 0.25 && dir !== 1) { dir = 1; ev.push(simT); } else if (dn >= n * 0.25 && dir !== -1) { dir = -1; ev.push(simT); }
+          if (ru >= n * 0.25 && rdir !== 1) { rdir = 1; rv.push(simT); } else if (rd >= n * 0.25 && rdir !== -1) { rdir = -1; rv.push(simT); }
+        }
+        prev = { L: L, R: R };
+      },
+      result: function () { return { g: worstPer(ev), r: worstPer(rv), moved: moved, frames: frames }; }
+    };
+  }
+  window.__flashTest = function (hz, steps) {   /* QA: a synthetic picture that flips between black and white hz times a second, to prove the meter counts */
+    var c = document.createElement('canvas'), x, m = flashMeter(), i; c.width = 16; c.height = 28; x = c.getContext('2d', { willReadFrequently: true });
+    for (i = 0; i < steps; i++) { x.fillStyle = hz > 0 && Math.floor(i / 60 * hz * 2) % 2 ? '#fff' : '#000'; x.fillRect(0, 0, 16, 28); m.push(x.getImageData(0, 0, 16, 28).data, i / 60); }
+    return m.result();
+  };
+  function flashCheck(say) {
+    var scenes = [{ nm: 'Stage 2, wave 3', from: { stage: 2, wave: 2, golden: 0, cheer: 100 } }, { nm: 'Champion fight', from: { stage: 2, wave: NWAVES, golden: 0, cheer: 100 } }], si = 0, res = [];
+    var GW = 16, GH = 28, tc = document.createElement('canvas'), tx; tc.width = GW; tc.height = GH; tx = tc.getContext('2d', { willReadFrequently: true });
+    function runScene() {
+      if (si >= scenes.length) { labBot = false; finish(); return; }
+      var sc = scenes[si], tries = 0, simT = 0, steps = 0, m = flashMeter();
+      startFrom(sc.from);
+      (function wait() {
+        if (!(S && !S.over && !gameEl.hidden && running && S.stage === 2)) { if (++tries > 100) { res.push({ nm: sc.nm, bad: 1 }); si++; runScene(); return; } setTimeout(wait, 50); return; }
+        halt(); labBot = true;
+        (function chunk() {
+          var k;
+          for (k = 0; k < 40 && steps < 720 && !S.over; k++, steps++) { update(1 / 60); draw(); simT += 1 / 60; tx.drawImage(cv, 0, 0, GW, GH); m.push(tx.getImageData(0, 0, GW, GH).data, simT); }
+          say('Checking ' + sc.nm + ' (' + Math.round(steps / 7.2) + '%)');
+          if (steps < 720 && !S.over) { setTimeout(chunk, 0); return; }
+          var r = m.result(); r.nm = sc.nm; if (r.moved < r.frames * 0.1) r.bad = 1;   /* a picture that never changed proves nothing */
+          res.push(r); si++; runScene();
+        }());
+      }());
+    }
+    function finish() {
+      var worst = 0, wn = '', wt = 0, wr = 0, i, bad = 0;
+      for (i = 0; i < res.length; i++) { if (res[i].bad) { bad++; continue; } if (res[i].g.n > worst) { worst = res[i].g.n; wn = res[i].nm; wt = res[i].g.at; } if (res[i].r.n > wr) wr = res[i].r.n; }
+      var top = Math.max(worst, wr), word = bad === res.length ? 'Could not check' : top > 3 ? 'Problem' : top > 1.5 ? 'Good' : 'Great';
+      var txt = word + '. Most big flashes in any one second: ' + (Math.round(worst * 10) / 10) + ' (the limit is 3). Red flashes: ' + (Math.round(wr * 10) / 10) + '.';
+      if (word === 'Problem') txt += ' Cause: ' + wn + ' at about ' + Math.round(wt * 10) / 10 + ' s. Next step: soften or shorten the flash effects there.';
+      else if (word === 'Could not check') txt += ' The picture did not change or a scene did not start. Next step: try again from the title screen.';
+      else txt += ' Checked ' + (res.length - bad) + ' busy scenes with a helper that always throws. A rough check, not a legal or medical test.';
+      labBot = false; showCard('Flash check', txt, 'Close', function () { toTitle(); }); $('gBtn2').hidden = true;
+    }
+    labClose(); if (!gameEl.hidden) toTitle(); runScene();
+  }
+  function tapTime() {
+    var f = performance.getEntriesByName && performance.getEntriesByName('first-contentful-paint')[0], fp = f ? Math.round(f.startTime) : -1, tp = BOOT_MS;
+    var word = tp <= 1000 ? 'Great' : tp <= 2000 ? 'Good' : tp <= 4000 ? 'Needs attention' : 'Problem';
+    return word + '. The game finished starting after ' + tp + ' ms' + (fp >= 0 ? ' (first paint at ' + fp + ' ms)' : '') + '. The menu answers taps from then on. Measured on this load only; a slow phone will differ. The goal is under 1000 ms.' + (word === 'Needs attention' || word === 'Problem' ? ' Next step: look at what runs before the title appears.' : '');
+  }
   function panel() {
     var d = document.createElement('div'), h, i, w = '';
     d.className = 'lab';
@@ -38,6 +107,7 @@ var LAB0 = { aim: SK_AIM, g: SK_G, kz: SK_KZ, inc: SK_INC, rb: SK_RB, balls: SK_
       '<h3>Stages</h3><div class="row"><select id="labS" aria-label="Stage"><option value="1">Stage 1</option><option value="2">Stage 2</option><option value="3">Stage 3</option><option value="4">Stage 4</option><option value="5">Stage 5</option></select><select id="labW" aria-label="Wave">' + w + '<option value="9">Champion</option></select><button class="btn" data-a="stage" type="button">Start there</button></div>' +
       '<h3>Give</h3><div class="row"><button class="btn" data-a="b10" type="button">+10 bank</button><button class="btn" data-a="b100" type="button">+100 bank</button><button class="btn" data-a="tro" type="button">All trophies</button><button class="btn" data-a="upg" type="button">All upgrades</button><button class="btn" data-a="rst" type="button">Reset save</button></div>' +
       '<div class="row"><button class="btn" data-a="pz" type="button">Zippy</button><button class="btn" data-a="pm" type="button">Mega</button><button class="btn" data-a="ph" type="button">Cheer up</button><button class="btn" data-a="pf" type="button">Toasty</button><button class="btn" data-a="nt" type="button">Next trophy</button></div>' +
+      '<h3>Checks</h3><div class="row"><button class="btn" data-a="flash" type="button">Flash check</button><button class="btn" data-a="tap1" type="button">First tap time</button></div>' +
       '<h3>Color view</h3><div class="row"><button class="btn" data-a="cb" type="button">Color view: ' + CB[cbI][0] + '</button></div>' +
       '<div class="note">Power-ups and trophies appear on the table while a stage is running (open this from the pause card).</div><h3>Tuning</h3>';
     SL.forEach(function (s) { h += '<label class="sl" title="' + s[5] + '"><span>' + s[1] + '</span><input type="range" data-k="' + s[0] + '" min="' + s[2] + '" max="' + s[3] + '" step="' + s[4] + '"><output></output></label>'; });
@@ -56,6 +126,8 @@ var LAB0 = { aim: SK_AIM, g: SK_G, kz: SK_KZ, inc: SK_INC, rb: SK_RB, balls: SK_
       else if (a === 'tro') { sv.ach = 1023; kit.save(sv); say('All 10 trophies unlocked.'); }
       else if (a === 'upg') { sv.au = 1; sv.ar = 3; sv.ap = 2; sv.lm = 3; kit.save(sv); say('Auto Slingshot, Faster Fling, Better Pineapples and the Lime Launcher maxed.'); }
       else if (a === 'rst') { o = kit.validate({}); for (k in o) sv[k] = o[k]; kit.save(sv); updateContinue(); say('Save reset.'); }
+      else if (a === 'flash') { say('Checking Stage 2, wave 3 (0%)'); flashCheck(say); }
+      else if (a === 'tap1') say(tapTime());
       else if (a === 'cb') { var nm = cbSet((cbI + 1) % CB.length); e.target.textContent = 'Color view: ' + nm; say('Showing: ' + nm + (cbI ? '. Tap again for the next view.' : '.')); }
       else if (a === 'def') { for (k in LAB0) apply(k, LAB0[k]); sync(); say('Tuning back to normal.'); }
       else if (a === 'nt') { if (!live) { say('Start a stage first.'); return; } for (i = 0; i < ACH.length; i++) if (!((sv.ach | S.earned) & (1 << i))) { award(i); break; } labClose(); if (S.paused) resume(); }

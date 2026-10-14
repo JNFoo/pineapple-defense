@@ -87,8 +87,8 @@ function loadAssets() {
 
 /* ---------- save ---------- */
 var kit = SaveKit.create({ key: 'pd-save', prefix: 'PD1',
-  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1', hp: 'int:1', fp: 'int:1', ib: 'int:1', tc: 'int:1', sl: 'int:99', sg: 'int:9999', sc: 'int:100', hs: 'int:1', sk: 'int:3', sa: 'int:1', cp: 'int:1', hh: 'int:2', wl: 'int:1', ao: 'int:1' },
-  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0, hp: 0, fp: 0, ib: 0, tc: 0, sl: 0, sg: 0, sc: 0, hs: 0, sk: 2, sa: 0, cp: 0, hh: 0, wl: 1, ao: 0 } });
+  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1', hp: 'int:1', fp: 'int:1', ib: 'int:1', tc: 'int:1', sl: 'int:99', sg: 'int:9999', sc: 'int:100', hs: 'int:1', sk: 'int:3', sa: 'int:1', cp: 'int:1', hh: 'int:2', wl: 'int:1', ao: 'int:1', ef: 'int:1', dg: 'int:1' },
+  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0, hp: 0, fp: 0, ib: 0, tc: 0, sl: 0, sg: 0, sc: 0, hs: 0, sk: 2, sa: 0, cp: 0, hh: 0, wl: 1, ao: 0, ef: 0, dg: 0 } });
 var sv = kit.load() || kit.validate({});
 sv.ach = sv.ach | 0; sv.au = sv.au | 0; sv.ar = sv.ar | 0; sv.ap = sv.ap | 0; sv.ac2 = sv.ac2 | 0; sv.gu = sv.gu | 0; sv.um = sv.um | 0; sv.ra = sv.ra | 0; sv.run = sv.run | 0; sv.cd = sv.cd | 0; sv.lm = sv.lm | 0;
 ['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'hp', 'fp', 'ib', 'tc', 'sl', 'sg', 'sc', 'hs', 'sk', 'sa', 'cp', 'hh', 'wl', 'ao', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
@@ -707,7 +707,7 @@ function updateShot(s, dt) {
 /* ---------- stage flow ---------- */
 function startStage(from) {
   var st = from && from.stage >= 1 && from.stage <= NSTAGES ? from.stage : 1;
-  newState(); S.stage = st; buildBg(); S.replay = !!(from && from.replay); if (!demo) lastBuy = null;
+  newState(); S.stage = st; document.documentElement.setAttribute('data-st', String(st)); buildBg(); S.replay = !!(from && from.replay); if (!demo) lastBuy = null;
   S.t = 0;
   elBanner.hidden = true;
   elHint.hidden = !!(from && (from.wave > 0 || from.stage > 1));
@@ -720,13 +720,44 @@ function continueGame() { titleEl.hidden = true; gameEl.hidden = false; loadAsse
 function retryWave() { var w = S.inBoss ? NWAVES : S.wave - 1, g = S.golden; startStage({ stage: S.stage, wave: w, golden: g, cheer: 60, replay: S.replay }); run(); }
 /* after a finished run: keep everything and go again, or wipe the save (trophies stay) */
 var runEndText = '';
-function runEndCard() { showCard('You did it!', runEndText, 'Save and restart', startAgain, 'Save and go to title', function () { kit.save(sv); toTitle(); }, 'Reset completely', confirmReset); }
+function runEndCard() { showCard('You did it!', runEndText, 'Save and restart', startAgain, 'Save and go to title', function () { kit.save(sv); toTitle(); }, 'Reset completely', confirmReset); $('gBtn3').classList.add('quiet'); }
+/* press-and-hold button: a bar fills while the button is held; letting go or sliding off cancels, and so does a plain tap. Holding Enter or Space works too. */
+var HOLD_MS = 1200, holdDoneAt = -9999;   /* holdDoneAt: when a hold finished, so the lift of the same finger cannot click the button that replaces it */
+function holdBtn(btn, ms, done) {
+  var t0 = 0, raf = 0, wrap = document.createElement('div'), fill = document.createElement('i');
+  wrap.className = 'holdbar'; wrap.setAttribute('aria-hidden', 'true'); wrap.appendChild(fill);
+  var note = document.createElement('p'); note.className = 'holdnote'; note.textContent = 'Press and hold the button until the bar is full.';
+  var card = gcw.querySelector('.card'); card.appendChild(wrap); card.appendChild(note);
+  function cancel() { if (raf) cancelAnimationFrame(raf); raf = 0; t0 = 0; btn.classList.remove('holding'); fill.style.width = '0'; }
+  function tick() {
+    var p = Math.min(1, (performance.now() - t0) / ms); fill.style.width = (p * 100) + '%';
+    if (p >= 1) { cancel(); holdDoneAt = performance.now(); done(); } else raf = requestAnimationFrame(tick);
+  }
+  function start(e) { if (t0 || (e && e.button > 0)) return; t0 = performance.now(); btn.classList.add('holding'); raf = requestAnimationFrame(tick); }
+  btn.classList.add('holdbtn');
+  btn.onclick = null;
+  btn.onpointerdown = start; btn.onpointerup = btn.onpointercancel = btn.onpointerleave = btn.onblur = cancel;
+  btn.oncontextmenu = function (e) { e.preventDefault(); };
+  btn.onkeydown = function (e) { if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); start(); } };
+  btn.onkeyup = cancel;
+  return { cancel: cancel, start: start };
+}
+var resetBackup = null;
 function confirmReset() {
-  showCard('Reset everything?', 'This clears your upgrades, Golden Pineapples and progress. Your trophies stay. It cannot be undone, so ask a grown-up if you are not sure.', 'Keep my stuff', runEndCard, 'Yes, reset', doReset);
+  showCard('Reset everything?', 'This clears your upgrades, Golden Pineapples and progress. Your trophies stay. Ask a grown-up if you are not sure. You can undo it right after.', 'Keep my stuff', runEndCard, 'Hold to reset', null);
+  var b2 = $('gBtn2'); b2.onclick = null; holdBtn(b2, HOLD_MS, function () { hideCard(); doReset(); });
 }
 function doReset() {
+  resetBackup = JSON.parse(JSON.stringify(sv));
   sv.bank = 0; sv.au = 0; sv.ar = 0; sv.ap = 0; sv.gu = 0; sv.um = 0; sv.ra = 0; sv.run = 0; sv.cd = 0; sv.rl = 0; sv.lm = 0; sv.bs1 = sv.bs2 = sv.bs3 = sv.bs4 = sv.bs5 = 0; sv.sl = 0; sv.stage = 1; sv.wave = 0; sv.golden = 0; sv.cheer = 100; sv.cleared = 0;
-  kit.save(sv); updateContinue(); startAgain();
+  kit.save(sv); updateContinue();
+  showCard('Fresh start!', 'Everything is cleared and your trophies stayed. Ready to play from the beginning?', 'Play', function () { resetBackup = null; startAgain(); }, 'Undo reset', undoReset);
+}
+function undoReset() {
+  var b = resetBackup, k; resetBackup = null;
+  if (!b) { toTitle(); return; }
+  for (k in b) sv[k] = b[k];
+  kit.save(sv); updateContinue(); runEndCard();
 }
 var lossKey = '', lossN = 0;   /* how many times in a row the same wave was lost (this visit only) */
 function endStage(win) {
@@ -848,6 +879,7 @@ function fxUpdate(dt) {
   for (i = flys.length - 1; i >= 0; i--) { b = flys[i]; b.t += dt; if (b.t > b.ttl) { if (!b.back) pulseBank('#fff2a8'); flys.splice(i, 1); } }
   if (S.gl > 0) S.gl = Math.max(0, S.gl - dt * 1.6);
 }
+var labBot = false;   /* Test Lab only: a helper that always throws, used by the flash check */
 function update(dt) {
   if (S.rc > 0) { S.rc -= dt; if (S.rc < 0) S.rc = 0; return; }
   if (demo) demoTick(dt);
@@ -879,7 +911,7 @@ function update(dt) {
     if (S.boss) { updateBoss(S.boss, dt); if (S.boss.st === 'gone') { S.boss = null; bossDefeated(); } }
   }
   if (S.mode === 'bossWin' && S.modeT > 2.2) endStage(true);
-  if (qa && qa.bot && S.cd <= 0) {
+  if ((labBot || (qa && qa.bot)) && S.cd <= 0) {
     var tgt = bossOpen(S.boss) ? S.boss : null;
     for (i = 0; !tgt && i < penguins.length; i++) if (penguins[i].st === 'walk' && (!tgt || penguins[i].p > tgt.p)) tgt = penguins[i];
     if (tgt) { var c = penCenter(tgt), o = pouchPos(); throwAt(o.x, o.y, c.x - o.x, c.y - o.y, 1.5, { x: c.x, y: c.y }); }
@@ -921,8 +953,31 @@ function drawShadow(x, y, w, a) {
   ctx.drawImage(SHAD, x - w * 1.3, y - w * 0.34, w * 2.6, w * 0.68);
   ctx.globalAlpha = pa;
 }
+/* Danger glow (a setting, off by default): a penguin close to your stand gets a ring and a warning badge, and the ground in front of the stand glows red.
+   Shape and color together; it holds still in Calm. */
+var DANGER_P = 0.72;
+function dangerAmt(p) { return Math.min(1, (p - DANGER_P) / (0.95 - DANGER_P)); }
+function drawDanger(x, y, s, p) {
+  var a = 0.35 + 0.45 * dangerAmt(p), pulse = calm ? 1 : 0.8 + 0.2 * Math.sin(S.t * 9), bx = x, by = y - s * 0.62, r = s * 0.17;
+  ctx.save(); ctx.globalAlpha = a * pulse; ctx.strokeStyle = '#ff5a3c'; ctx.lineWidth = Math.max(2, s * 0.05);
+  ctx.beginPath(); ctx.ellipse(x, y, s * 0.5, s * 0.62, 0, 0, 6.2832); ctx.stroke();
+  ctx.globalAlpha = Math.min(1, a + 0.25); ctx.fillStyle = '#ffd43b'; ctx.strokeStyle = '#b3261e'; ctx.lineWidth = Math.max(1.5, s * 0.03);
+  ctx.beginPath(); ctx.moveTo(bx, by - r); ctx.lineTo(bx + r * 1.1, by + r * 0.8); ctx.lineTo(bx - r * 1.1, by + r * 0.8); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#b3261e'; ctx.fillRect(bx - r * 0.09, by - r * 0.35, r * 0.18, r * 0.55); ctx.fillRect(bx - r * 0.09, by + r * 0.3, r * 0.18, r * 0.18);
+  ctx.restore();
+}
+function drawDangerEdge() {
+  if (!sv.dg || S.over) return;
+  var i, mx = 0, pg;
+  for (i = 0; i < penguins.length; i++) { pg = penguins[i]; if (pg.st === 'walk' && pg.p > mx) mx = pg.p; }
+  if (mx < DANGER_P) return;
+  var a = 0.12 + 0.2 * dangerAmt(mx) * (calm ? 1 : 0.85 + 0.15 * Math.sin(S.t * 9)), g = ctx.createLinearGradient(0, H * 0.70, 0, H * 0.88);
+  g.addColorStop(0, 'rgba(255,70,50,0)'); g.addColorStop(1, 'rgba(255,70,50,' + a.toFixed(3) + ')');
+  ctx.fillStyle = g; ctx.fillRect(0, H * 0.70, W, H * 0.18);
+}
 function drawPenguin(pg) {
   var s = psz(pg.p) * (pg.big || 1), x = px(pg.xn, pg.p), y = py(pg.p);
+  if (sv.dg && pg.st === 'walk' && pg.p >= DANGER_P && pg !== S.boss) drawDanger(x, y - s * 0.3, s, pg.p);
   if (pg.fz > 0) x += Math.sin(S.t * 140) * s * 0.03 * (pg.fz / (pg.fz0 || pg.fz));   /* a frozen hit trembles, less and less */
   ctx.save(); ctx.globalAlpha = pg.a;
   var rot = 0, hop = 0, sx = 1, sy = 1, tt = calm ? 0 : S.t;
@@ -1321,7 +1376,7 @@ function draw() {
   list.length = n;
   for (i = 1; i < n; i++) { v = list[i]; for (j = i - 1; j >= 0 && list[j].p > v.p; j--) list[j + 1] = list[j]; list[j + 1] = v; }
   for (i = 0; i < list.length; i++) { if (list[i].isFish) { drawFish(list[i]); continue; } if (list[i] === S.boss) { if (!champHidden(list[i])) drawPenguin(list[i]); drawShield(list[i]); drawChampArt(list[i]); } else drawPenguin(list[i]); }
-  drawAutoMark();
+  drawAutoMark(); drawDangerEdge();
   drawStand(); drawTable(); drawUmbrellas();
   for (i = 0; i < shots.length; i++) drawShot(shots[i]);
   drawMissiles(); drawAtmosTop(S.t); drawAimArc();
@@ -2008,6 +2063,8 @@ function rel(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.
 cv.addEventListener('pointerdown', function (e) {
   if (wk) wk.poke();
   if (sv.fp) fm.input(e.timeStamp);
+  if (S.rc > 0 && !S.paused && !S.over) { S.rc = 0; e.preventDefault(); return; }   /* a tap skips the get-ready beat after Resume (the tap itself does not throw) */
+  if (sv.ef && (drag || hold)) { drag = null; hold = null; }   /* Every finger plays (off by default): a new finger takes over, so a resting finger never blocks a throw */
   if (S.paused || S.over || drag || S.rc > 0) return;
   try { cv.setPointerCapture(e.pointerId); } catch (x) {}
   var p = rel(e);
@@ -2124,7 +2181,11 @@ var gcw = $('gcw');
 function showCard(title, body, btn1, fn1, btn2, fn2, btn3, fn3) {
   $('gTitle').textContent = title; $('gBody').textContent = body;
   var b1 = $('gBtn1'); $('gBtn2').hidden = false; b1.textContent = btn1; b1.onclick = function () { hideCard(); fn1(); };
-  $('gBtn2').textContent = btn2 || 'Title'; $('gBtn2').onclick = function () { hideCard(); if (fn2) fn2(); else toTitle(); };
+  $('gBtn2').textContent = btn2 || 'Title'; $('gBtn2').onclick = function () { if (performance.now() - holdDoneAt < 700) return; hideCard(); if (fn2) fn2(); else toTitle(); };
+  var hb = gcw.querySelectorAll('.holdbar,.holdnote'), hi, b2 = $('gBtn2');
+  for (hi = 0; hi < hb.length; hi++) hb[hi].parentNode.removeChild(hb[hi]);
+  b2.classList.remove('holdbtn', 'holding'); b2.onpointerdown = b2.onpointerup = b2.onpointercancel = b2.onpointerleave = b2.onblur = b2.onkeydown = b2.onkeyup = b2.oncontextmenu = null;
+  $('gBtn3').classList.remove('quiet');
   var b3 = $('gBtn3'); b3.hidden = !btn3; if (btn3) { b3.textContent = btn3; b3.onclick = function () { hideCard(); fn3(); }; }
   $('gX').hidden = true; halt(); gcw.hidden = false; b1.focus();
 }
@@ -2149,6 +2210,17 @@ function resume() { S.paused = false; if (!K) S.rc = RESUME_S; run(); }
 var backW = typeof BackClose === 'object' ? BackClose.watch($('bcGuard'), function () { pause(); }) : null;
 window.addEventListener('pagehide', function () { if (gameEl.hidden === false && running && !S.over) snapSave(); });
 window.addEventListener('orientationchange', function () { if (gameEl.hidden === false && running && !S.over) pause(); });
+/* pressed ring: a soft ring around any button the moment a finger lands (from pointerdown, not only :active), so it shows even where the fingertip covers the button */
+(function () {
+  var cur = null;
+  function off() { if (cur) { cur.classList.remove('pr'); cur = null; } }
+  document.addEventListener('pointerdown', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('button,.so,.pick') : null;
+    off(); if (!b || b.disabled) return; cur = b; b.classList.add('pr');
+  }, true);
+  document.addEventListener('pointerup', off, true); document.addEventListener('pointercancel', off, true); window.addEventListener('blur', off);
+  document.addEventListener('pointerout', function (e) { if (cur && e.target === cur && !cur.contains(e.relatedTarget)) off(); }, true);
+}());
 $('bPause').addEventListener('click', pause);
 document.addEventListener('keydown', function (e) {
   if (wk && gameEl.hidden === false) wk.poke();
@@ -2158,7 +2230,7 @@ document.addEventListener('keydown', function (e) {
   else if ((e.key === 'p' || e.key === 'P') && !e.repeat && !/INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '')) { if (S.paused) { hideCard(); resume(); } else pause(); }
 });
 document.addEventListener('visibilitychange', function () { if (document.hidden && gameEl.hidden === false) pause(); });
-function toTitle() { restoreDemo(); if (K) { K = null; skLabels(false); gameEl.removeAttribute('data-bonus'); if (elHint.lastChild) elHint.lastChild.textContent = HINT_TXT; } updateContinue(); halt(); S.paused = false; gameEl.hidden = true; titleEl.hidden = false; $('bPlay').focus(); }
+function toTitle() { document.documentElement.removeAttribute('data-st'); restoreDemo(); if (K) { K = null; skLabels(false); gameEl.removeAttribute('data-bonus'); if (elHint.lastChild) elHint.lastChild.textContent = HINT_TXT; } updateContinue(); halt(); S.paused = false; gameEl.hidden = true; titleEl.hidden = false; $('bPlay').focus(); }
 $('gBtn2').textContent = 'Title';
 window.addEventListener('resize', function () { if (gameEl.hidden === false) { resize(); if (!running) { draw(); } } });
 
@@ -2245,7 +2317,7 @@ function wireComfort($b) {
   function paint() {
     row('cmSp', SPEEDS[sv.sp | 0] + '%'); row('cmLh', sv.lh ? 'On' : 'Off', sv.lh); row('cmAim', AIM[sv.aim]); row('cmArc', ARC[sv.arc]);
     row('cmHc', sv.hc ? 'On' : 'Off', sv.hc); row('cmLt', sv.lt ? 'On' : 'Off', sv.lt); row('cmBig', sv.bb ? 'On' : 'Off', sv.bb);
-    var c = root.getAttribute('data-calm') === '1'; row('cmCalm', c ? 'On' : 'Off', c); row('cmSave', sv.bv ? 'On' : 'Off', sv.bv); row('cmHold', sv.hp ? 'On' : 'Off', sv.hp); row('cmBuf', sv.ib ? 'On' : 'Off', sv.ib); row('cmWake', sv.wl && !sv.bv ? 'On' : 'Off', sv.wl); row('cmLittle', littleOn() ? 'On' : 'Off', littleOn()); row('cmHs', sv.hs ? 'On' : 'Off', sv.hs); row('cmSk', SHAKE[sv.sk]); row('cmSa', sv.sa ? 'On' : 'Off', sv.sa); row('cmCp', sv.cp ? 'On' : 'Off', sv.cp); row('cmFps', sv.fp ? 'On' : 'Off', sv.fp);
+    var c = root.getAttribute('data-calm') === '1'; row('cmCalm', c ? 'On' : 'Off', c); row('cmSave', sv.bv ? 'On' : 'Off', sv.bv); row('cmHold', sv.hp ? 'On' : 'Off', sv.hp); row('cmBuf', sv.ib ? 'On' : 'Off', sv.ib); row('cmWake', sv.wl && !sv.bv ? 'On' : 'Off', sv.wl); row('cmLittle', littleOn() ? 'On' : 'Off', littleOn()); row('cmHs', sv.hs ? 'On' : 'Off', sv.hs); row('cmSk', SHAKE[sv.sk]); row('cmSa', sv.sa ? 'On' : 'Off', sv.sa); row('cmCp', sv.cp ? 'On' : 'Off', sv.cp); row('cmFps', sv.fp ? 'On' : 'Off', sv.fp); row('cmEf', sv.ef ? 'On' : 'Off', sv.ef); row('cmDg', sv.dg ? 'On' : 'Off', sv.dg);
     $b('cmFull').hidden = !fs; row('cmFull', document.fullscreenElement ? 'On' : 'Off', !!document.fullscreenElement);
   }
   function bind(id, fn) { $b(id).addEventListener('click', function () { fn(); applyPrefs(); kit.save(sv); paint(); }); }
@@ -2253,7 +2325,7 @@ function wireComfort($b) {
   bind('cmHc', function () { sv.hc = sv.hc ? 0 : 1; }); bind('cmLt', function () { sv.lt = sv.lt ? 0 : 1; }); bind('cmBig', function () { sv.bb = sv.bb ? 0 : 1; }); bind('cmSave', function () { sv.bv = sv.bv ? 0 : 1; }); bind('cmHold', function () { sv.hp = sv.hp ? 0 : 1; sv.tc = 1; }); bind('cmBuf', function () { sv.ib = sv.ib ? 0 : 1; });
   bind('cmLittle', function () { var k; if (littleOn()) { var p = littlePrev || { hp: 0, bb: 0, lt: 0, ib: 0, aim: 1 }; for (k in LITTLE) sv[k] = p[k]; littlePrev = null; } else { littlePrev = {}; for (k in LITTLE) { littlePrev[k] = sv[k]; sv[k] = LITTLE[k]; } sv.tc = 1; } });   /* same values as applyLittle(), without the toast */
   bind('cmWake', function () { sv.wl = sv.wl ? 0 : 1; });
-  bind('cmHs', function () { sv.hs = sv.hs ? 0 : 1; }); bind('cmSk', function () { sv.sk = (sv.sk + 1) % 4; }); bind('cmSa', function () { sv.sa = sv.sa ? 0 : 1; }); bind('cmCp', function () { sv.cp = sv.cp ? 0 : 1; });
+  bind('cmHs', function () { sv.hs = sv.hs ? 0 : 1; }); bind('cmSk', function () { sv.sk = (sv.sk + 1) % 4; }); bind('cmSa', function () { sv.sa = sv.sa ? 0 : 1; }); bind('cmCp', function () { sv.cp = sv.cp ? 0 : 1; }); bind('cmEf', function () { sv.ef = sv.ef ? 0 : 1; }); bind('cmDg', function () { sv.dg = sv.dg ? 0 : 1; });
   $b('cmGrown').addEventListener('click', function () { $('cardBody').replaceChildren($('t-grown').content.cloneNode(true)); $('cardTitle').textContent = 'For grown-ups'; }); bind('cmFps', function () { sv.fp = sv.fp ? 0 : 1; });
   $b('cmCalm').addEventListener('click', function () { $('bCalm').click(); paint(); });
   $b('cmFull').addEventListener('click', function () { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (e) {} setTimeout(paint, 300); });
@@ -2321,6 +2393,12 @@ var SHOP = {
   pine: ['Classic pineapples (free)', 'Lobber pineapples: splashy, slower, 2 each', 'Mega pineapples: super splash, slowest, 3 each']
 };
 var SHOP_IC = { 'Auto Slingshot': 'au', 'Faster Fling': 'ar', 'Better Pineapples': 'ap', 'Lime Launcher': 'lm', 'More Limes': 'lm2', 'Lots of Limes': 'lm3', 'Gull Pals': 'gu', 'Paper Umbrellas': 'um', 'Pineapple Rain': 'ra' };
+function shopNeeds(title) {
+  if (/^(Faster Fling|Better Pineapples)/.test(title)) return 'Needs Slingshot';
+  if (/^More Limes/.test(title)) return 'Needs Launcher';
+  if (/^Lots of Limes/.test(title)) return 'Needs More Limes';
+  return 'Locked';
+}
 function fillShop() {
   var box = $('cardBody').querySelector('#shList'); if (!box) return;
   var note = $('cardBody').querySelector('#shNote');
@@ -2344,8 +2422,14 @@ function fillShop() {
     b.textContent = r.title; i.textContent = r.desc; sp.appendChild(b); sp.appendChild(i); d.appendChild(sp); bx.className = 'sbs';
     var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn sb';
     if (r.st) { btn.textContent = r.st; btn.disabled = true; }
-    else { btn.textContent = r.lock ? 'Locked' : 'Buy ' + r.cost; btn.disabled = !!r.lock || sv.bank < r.cost;
-      btn.addEventListener('click', function () { if (sv.bank < r.cost) return; lastBuy = { k: r.k, cost: r.cost, prev: sv[r.k] }; sv.bank -= r.cost; sv[r.k]++; kit.save(sv); fillShop(); }); }
+    else {
+      /* a row you cannot buy yet stays visible, dimmed, and says why (not a dead native-disabled button) */
+      var why = r.lock ? shopNeeds(r.title) : (sv.bank < r.cost ? 'Need ' + (r.cost - sv.bank) + ' more' : '');
+      btn.textContent = why || 'Buy ' + r.cost;
+      if (why) { btn.className += ' dim'; btn.setAttribute('aria-disabled', 'true'); btn.setAttribute('aria-label', r.title.replace(/ \d\/\d$/, '') + ': ' + why); }
+      btn.addEventListener('click', function () {
+        if (r.lock || sv.bank < r.cost) { btn.classList.remove('nope'); void btn.offsetWidth; btn.classList.add('nope'); return; }
+        lastBuy = { k: r.k, cost: r.cost, prev: sv[r.k] }; sv.bank -= r.cost; sv[r.k]++; kit.save(sv); fillShop(); }); }
     bx.appendChild(btn);
     if (r.demo) { var tb = document.createElement('button'); tb.type = 'button'; tb.className = 'btn sb try'; tb.textContent = 'Try it'; tb.addEventListener('click', function () { startDemo(r.demo); }); bx.appendChild(tb); }
     d.appendChild(bx); box.appendChild(d);
@@ -2422,5 +2506,6 @@ if (location.hash === '#qa') {
     step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (hold) holdTick(); if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
     win: function () { endStage(true); }, flick: function (dx, dy, spd) { var o = pouchPos(); throwAt(o.x, o.y, dx, dy, spd); }, get sh() { return shots; }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, sim: function (dx, dy, spd, dA, dF) { var h = skSim(skLaunch({ dx: dx, dy: dy, spd: spd }, dA, dF)); return h ? h.v : 0; }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
 }
+var BOOT_MS = Math.round(performance.now());   /* time from page start until the game's code finished starting (the Test Lab shows it) */
 /*{{LAB_JS}}*/
 }());
