@@ -743,9 +743,21 @@ await T('Every finger plays: off keeps the first finger, on lets the second take
   return 'setting wired (flick throws need real speed; checked the hand-over only), shots ' + offShots + ' -> ' + P.shots;
 });
 
-await T('Danger glow: off by default, on draws for a penguin near the stand', async () => {
-  await go(1, 2); const sv = P.sv(); if (sv.dg) throw new Error('on by default'); P.step(6, 0.033); const pg = P.penguins.find(q => q.st === 'walk'); if (!pg) throw new Error('no walking penguin');
-  sv.dg = 1; pg.p = 0.85; P.step(0.05, 0.033, 1); sv.dg = 0; return 'drew without errors at p=0.85';
+await T('Danger glow: on by default, off skips, on draws for a penguin near the stand', async () => {
+  await go(1, 2); const sv = P.sv(); if (sv.dg !== 1) throw new Error('not on by default: ' + sv.dg); P.step(6, 0.033); const pg = P.penguins.find(q => q.st === 'walk'); if (!pg) throw new Error('no walking penguin');
+  pg.p = 0.85; P.step(0.05, 0.033, 1); sv.dg = 0; P.step(0.05, 0.033, 1); sv.dg = 1; return 'default on; drew with and without it at p=0.85';
+});
+
+await T('Repeat budget: a cleared stage gets shorter waits between waves, a first play keeps them', async () => {
+  const sv = P.sv(), keep = sv.cleared; sv.cleared = 0; await go(2, 1); P.step(0.75, 0.033); const first = P.S.mode;
+  sv.cleared = 2; await go(2, 1); P.step(0.75, 0.033); const again = P.S.mode; sv.cleared = keep;
+  if (first !== 'intro') throw new Error('first play left the wave intro too early: ' + first); if (again !== 'run') throw new Error('a cleared stage still waits: ' + again);
+  return 'first play still in intro at 0.75 s, cleared stage already running';
+});
+
+await T('Sideways tip: not shown upright, and it never changes the saved flag there', async () => {
+  const sv = P.sv(); sv.lp = 0; await go(1, 1); const t = document.getElementById('landTip'); if (!t) throw new Error('no tip element');
+  if (!t.hidden || sv.lp) throw new Error('tip showed in portrait'); return 'portrait: no tip, flag still 0';
 });
 
 await T('Test Lab: first tap time reads out a verdict', async () => {

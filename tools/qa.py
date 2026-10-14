@@ -67,7 +67,7 @@ store = json.load(open(cache)) if os.path.exists(cache) else {}
 if store.get(mode) == key and not flag('--force') and not QUICK and not ONLY:
     print('[%s] unchanged since the last passing run: skipped (use --force to rerun)' % stamp()); sys.exit(0)
 
-VIEWPORTS = [(360, 640), (412, 915), (1280, 720), (820, 1180)]
+VIEWPORTS = [(360, 640), (412, 915), (1280, 720), (820, 1180), (892, 412), (640, 360)]   # the last two are a phone held sideways
 fails = []
 
 def report(label, res, lay):

@@ -2,6 +2,12 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.14.1352
+- **Sideways play is roomier:** held sideways on a phone, the counters, Pause, the weapon picks and Pineapple Rain move into the empty margins beside the picture and get bigger (the weapon picks were about 75 by 23 px, now 124 by 46). The picture itself is unchanged. While a card is open the side buttons go quiet so a stray tap cannot throw. Left-handed mode mirrors the sides. A small tip, once, on a touch phone: "Turn your phone upright for the biggest view." It never blocks and never comes back.
+- **Shorter waits on stages you have already cleared (X66):** the wave intro is 0.6 s instead of 1.2 s, the wave clear 1.0 s instead of 1.7 s, and the wave banners are shorter and pop in faster. A first play and every Champion beat keep their full length.
+- **Danger glow is on for everyone (X34):** the red ring and warning sign for a penguin close to your stand now start on; Settings still turns it off, and Calm keeps it still.
+- **Developer:** `tools/motion_audit.py` lists every animation and transition length against a small duration scale (no one-shot is over 0.5 s, so nothing was retuned); the layout check also runs sideways at 892 x 412 and 640 x 360; new checks for the repeat waits and the tip.
+
 ## 2026.10.14.1334
 - **Shop says why (X35):** a row you cannot buy yet stays visible, dimmed with a dashed edge, and tells you what is missing: "Need 30 more", "Needs Slingshot", "Needs Launcher", "Needs More Limes". Tapping it gives a small shake (Calm keeps it still) and never buys. It used to be a dead, faded button with no reason.
 - **Bigger buttons (X01, X02):** shop Buy and Try it buttons are now at least 48 px tall (they were 37 to 42), Pause is at least 55 px (was 51) and the Pineapple Rain button at least 48 by 56 (was 40 by 50 on a small phone).

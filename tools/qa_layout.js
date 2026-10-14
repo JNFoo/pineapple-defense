@@ -5,7 +5,8 @@ const hit = (a, b) => a.l < b.r - 1 && b.l < a.r - 1 && a.t < b.b - 1 && b.t < a
 const vw = window.innerWidth, vh = window.innerHeight;
 if (document.documentElement.scrollWidth > vw + 1) bad.push('page scrolls sideways: ' + document.documentElement.scrollWidth + ' > ' + vw);
 /* target-size sweep (idea X134): every visible button, link or field must be at least 44 CSS px on its short side; the weapon picks carry an invisible pad, so they are skipped */
-const sweep = where => document.querySelectorAll('button,[role=button],a,input,select').forEach(e => { if (!e.offsetParent || e.hidden || e.closest('.pick')) return; const r = R(e); if (r.w && r.h && Math.min(r.w, r.h) < 44) bad.push('target under 44 px in ' + where + ': ' + (e.id || e.className || e.tagName) + ' ' + Math.round(r.w) + 'x' + Math.round(r.h)); });
+const land = document.documentElement.getAttribute('data-land') === '1';   /* a phone held sideways: HUD buttons live in the side margins; menus and cards stay at stage scale, so only the game screen is swept there (known gap, see docs/qa-process.md) */
+const sweep = where => (land && where !== 'game') ? 0 : document.querySelectorAll('button,[role=button],a,input,select').forEach(e => { if (!e.offsetParent || e.hidden || e.closest('.pick')) return; const r = R(e); if (r.w && r.h && Math.min(r.w, r.h) < 44) bad.push('target under 44 px in ' + where + ': ' + (e.id || e.className || e.tagName) + ' ' + Math.round(r.w) + 'x' + Math.round(r.h)); });
 sweep('title');
 /* title cards: shop, trophies, how to play must fit the screen */
 for (const id of ['bShop', 'bTro', 'bHow', 'bSet']) {
@@ -26,9 +27,10 @@ for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) if
 els.forEach(e => { const r = R(e); if (r.r > vw + 1 || r.l < -1) bad.push('HUD item off screen ' + (e.id || e.textContent.slice(0, 12))); });
 const rb = $('bRaid'), ch = document.querySelector('.cheer'), g = R($('game'));
 if (rb.hidden) bad.push('raid button hidden although bought'); else {
-  const a = R(rb), b = R(ch); if (hit(a, b)) bad.push('raid button overlaps cheer bar'); if (a.r > g.r + 1 || a.b > g.b - 0.1 * g.h) bad.push('raid button too low or off the right edge ' + JSON.stringify(a));
-  if (a.t < b.b - 2) bad.push('raid button above the cheer bar bottom');
+  const a = R(rb), b = R(ch); if (hit(a, b)) bad.push('raid button overlaps cheer bar'); if (land ? (a.r > vw + 1 || a.l < -1 || a.b > vh + 1) : (a.r > g.r + 1 || a.b > g.b - 0.1 * g.h)) bad.push('raid button too low or off the edge ' + JSON.stringify(a));
+  if (!land && a.t < b.b - 2) bad.push('raid button above the cheer bar bottom');
   document.querySelectorAll('.pick').forEach(p => { if (hit(a, R(p))) bad.push('raid button overlaps a pick button'); });
+  if (land) { const pk = [...document.querySelectorAll('.pick')].map(R); pk.forEach((q, i) => { if (q.l < -1 || q.r > vw + 1 || q.b > vh + 1 || q.h < 44) bad.push('pick button off screen or under 44 px tall in sideways play ' + JSON.stringify(q)); els.forEach(e => { if (e.offsetParent && hit(q, R(e))) bad.push('pick overlaps ' + (e.id || 'a counter') + ' in sideways play'); }); }); if (R($('bPause')).t < 0) bad.push('Pause off the top'); }
   const cr = R(ch); if (cr.h < g.h * 0.3) bad.push('cheer bar too short: ' + Math.round(cr.h) + 'px');
 }
 /* comfort options: left-handed, large text and high contrast must not overlap or leave the screen */

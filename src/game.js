@@ -87,8 +87,8 @@ function loadAssets() {
 
 /* ---------- save ---------- */
 var kit = SaveKit.create({ key: 'pd-save', prefix: 'PD1',
-  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1', hp: 'int:1', fp: 'int:1', ib: 'int:1', tc: 'int:1', sl: 'int:99', sg: 'int:9999', sc: 'int:100', hs: 'int:1', sk: 'int:3', sa: 'int:1', cp: 'int:1', hh: 'int:2', wl: 'int:1', ao: 'int:1', ef: 'int:1', dg: 'int:1' },
-  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0, hp: 0, fp: 0, ib: 0, tc: 0, sl: 0, sg: 0, sc: 0, hs: 0, sk: 2, sa: 0, cp: 0, hh: 0, wl: 1, ao: 0, ef: 0, dg: 0 } });
+  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1', hp: 'int:1', fp: 'int:1', ib: 'int:1', tc: 'int:1', sl: 'int:99', sg: 'int:9999', sc: 'int:100', hs: 'int:1', sk: 'int:3', sa: 'int:1', cp: 'int:1', hh: 'int:2', wl: 'int:1', ao: 'int:1', ef: 'int:1', dg: 'int:1', lp: 'int:1' },
+  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0, hp: 0, fp: 0, ib: 0, tc: 0, sl: 0, sg: 0, sc: 0, hs: 0, sk: 2, sa: 0, cp: 0, hh: 0, wl: 1, ao: 0, ef: 0, dg: 1, lp: 0 } });
 var sv = kit.load() || kit.validate({});
 sv.ach = sv.ach | 0; sv.au = sv.au | 0; sv.ar = sv.ar | 0; sv.ap = sv.ap | 0; sv.ac2 = sv.ac2 | 0; sv.gu = sv.gu | 0; sv.um = sv.um | 0; sv.ra = sv.ra | 0; sv.run = sv.run | 0; sv.cd = sv.cd | 0; sv.lm = sv.lm | 0;
 ['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'hp', 'fp', 'ib', 'tc', 'sl', 'sg', 'sc', 'hs', 'sk', 'sa', 'cp', 'hh', 'wl', 'ao', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
@@ -168,7 +168,7 @@ function banner(text, ms) {
   elBanner.hidden = false;
   clearTimeout(bannerT);
   if (!calm && elBanner.animate) {
-    elBanner.animate([{ transform: 'translate(-50%,-50%) scale(.4)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1.12)', opacity: 1, offset: .5 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }], { duration: 420, easing: 'ease-out' });
+    elBanner.animate([{ transform: 'translate(-50%,-50%) scale(.4)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1.12)', opacity: 1, offset: .5 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }], { duration: ms <= 1000 ? 260 : 420, easing: 'ease-out' });   /* the short repeat banners pop in faster (X65: the more often, the shorter) */
   }
   bannerT = setTimeout(function () { elBanner.hidden = true; }, ms);
 }
@@ -517,8 +517,8 @@ function beginWave(n) {
   S.wave = n; S.spawned = 0; S.toSpawn = WAVE_N[n - 1]; S.spawnT = 0.6; S.bumps = 0; S.pt = false;
   if (n >= NWAVES - 1) S.fishT = Math.min(S.fishT, 2.2);   /* the last two waves of a stage start the fish early */
   S.mode = 'intro'; S.modeT = 0;
-  if (n === 1 && !demo) banner('Stage ' + S.stage + '\n' + STAGES[S.stage].title, 2300);
-  else banner(n === NWAVES ? 'Final wave!' : 'Wave ' + n, 1500);
+  if (n === 1 && !demo) banner('Stage ' + S.stage + '\n' + STAGES[S.stage].title, seen() ? 1500 : 2300);
+  else banner(n === NWAVES ? 'Final wave!' : 'Wave ' + n, seen() ? 900 : 1500);
   if (n === 1 && (sv.au || sv.lm) && !demo && sv.hh < 2) { sv.hh++; saveSoon(); toast('Your helpers join in after your first throw each round!', 3.4); }
 }
 function spawn() {
@@ -712,9 +712,15 @@ function startStage(from) {
   elBanner.hidden = true;
   elHint.hidden = !!(from && (from.wave > 0 || from.stage > 1));
   if (from) { S.golden = from.golden; S.cheer = Math.max(60, from.cheer); }
-  hud(); runToast(); setTimeout(warmUmb, 60);
+  hud(); runToast(); setTimeout(warmUmb, 60); if (!demo) landTip();
   if (from && from.wave >= NWAVES) startBoss(); else beginWave(from ? from.wave + 1 : 1);
   if (from === sv && sv.sl > 0 && from.wave < NWAVES && !S.replay && !demo) { S.toSpawn = Math.min(S.toSpawn, sv.sl); S.cheer = Math.max(60, sv.sc || 0); S.golden = Math.max(S.golden, sv.sg || 0); toast('Welcome back! Picking up this wave.', 3); }
+}
+/* held sideways on a phone the picture is a narrow strip; the counters and buttons move into the empty side margins (CSS, html[data-land]), and a first-time tip says an upright phone gives the biggest view. It never blocks and shows once. */
+var elLandTip = $('landTip');
+function landTip() {
+  if (sv.lp || !elLandTip || root.getAttribute('data-land') !== '1' || !(window.matchMedia && matchMedia('(pointer:coarse)').matches)) return;
+  sv.lp = 1; kit.save(sv); elLandTip.hidden = false; setTimeout(function () { elLandTip.hidden = true; }, 7000);
 }
 function continueGame() { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage(sv); run(); }); }
 function retryWave() { var w = S.inBoss ? NWAVES : S.wave - 1, g = S.golden; startStage({ stage: S.stage, wave: w, golden: g, cheer: 60, replay: S.replay }); run(); }
@@ -788,6 +794,8 @@ function endStage(win) {
     } else showCard('Oh no!', 'The penguins got too close to your fruit stand. Let us try this wave again!', 'Try again', retryWave);
   }
 }
+/* repeat budget (X66): a stage you have already cleared gets shorter waits between waves; first plays and every Champion beat keep their full length */
+function seen() { return !demo && sv.cleared >= S.stage; }
 function waveClear() {
   lossN = 0;
   S.mode = 'clear'; S.modeT = 0; S.fish = [];
@@ -795,7 +803,7 @@ function waveClear() {
   if (S.cheer < 30) award(8);
   S.cheer = Math.min(100, S.cheer + 15);
   earn(S.bumps === 0 ? 10 : 5);
-  banner(S.bumps === 0 ? 'Perfect wave!' : 'Wave clear!', 1300);
+  banner(S.bumps === 0 ? 'Perfect wave!' : 'Wave clear!', seen() ? 900 : 1300);
   if (!S.replay) { sv.stage = S.stage; sv.wave = S.wave; sv.golden = S.golden; sv.cheer = Math.round(S.cheer); sv.sl = 0; kit.save(sv); updateContinue(); }
 }
 
@@ -893,7 +901,7 @@ function update(dt) {
   updateTable(dt); updateAuto(dt); updateLime(dt); updateFish(dt); updateGulls(dt); updateUmb(dt); updateRaid(dt);
   for (i = shots.length - 1; i >= 0; i--) { updateShot(shots[i], dt); if (shots[i].dead) shots.splice(i, 1); }
   S.modeT += dt;
-  if (S.mode === 'intro' && S.modeT > 1.2) { S.mode = 'run'; S.modeT = 0; }
+  if (S.mode === 'intro' && S.modeT > (seen() ? 0.6 : 1.2)) { S.mode = 'run'; S.modeT = 0; }
   if (S.mode === 'run') {
     S.spawnT -= dt;
     if (S.spawned < S.toSpawn && S.spawnT <= 0) { spawn(); S.spawnT = Math.max(0.7, 1.9 - 0.12 * effW()); }
@@ -901,7 +909,7 @@ function update(dt) {
   for (i = penguins.length - 1; i >= 0; i--) { updatePenguin(penguins[i], dt); if (penguins[i].st === 'gone') penguins.splice(i, 1); }
   if (S.over) return;
   if (S.mode === 'run' && S.spawned >= S.toSpawn && penguins.length === 0) waveClear();
-  if (S.mode === 'clear' && S.modeT > 1.7) {
+  if (S.mode === 'clear' && S.modeT > (seen() ? 1.0 : 1.7)) {
     if (S.wave >= NWAVES) startBoss(); else beginWave(S.wave + 1);
   }
   if (S.mode === 'bossIntro' && S.modeT > 1.9) { spawnBoss(); S.mode = 'boss'; S.modeT = 0; }

@@ -168,6 +168,17 @@ html[data-lh="1"] .fps{right:auto;left:max(6px,env(safe-area-inset-left))}
 .pick{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:.3rem;min-width:6.6rem;height:2.2rem;border-radius:999px;border:3px solid transparent;padding:0 .8rem 0 .35rem;font:800 .82rem/1 var(--display);color:#4a2b0f;cursor:pointer;background:linear-gradient(180deg,#fffaf0,#f3e6c8);box-shadow:0 .2em 0 #b79a63,0 .4em .6em rgba(0,0,0,.25),inset 0 .12em 0 rgba(255,255,255,.7)}
 .pick{position:relative}.pick::after{content:"";position:absolute;left:0;right:0;top:-6px;bottom:-10px}.pick:first-child::after{left:-12px}html[data-lh="1"] .pick:first-child::after{left:0}html[data-lh="1"] .pick:last-child::after{right:-12px}.pause{position:relative}.pause::after{content:"";position:absolute;inset:-10px -10px -3px -3px}html[data-lh="1"] .pause::after{inset:-10px -3px -3px -10px}.raid::after{content:"";position:absolute;right:-3px;left:0;top:0;bottom:0}html[data-lh="1"] .raid::after{right:0;left:-3px}html[data-big="1"] .raid{bottom:calc(25cqh - .7rem)}.pick .cost{position:absolute;top:-.45rem;right:-.2rem;min-width:1.3rem;height:1.3rem;padding:0 .2rem;border-radius:1rem;background:linear-gradient(180deg,#ffe58a,#f0b72a);border:2px solid #a8700f;color:#5a3a05;font:800 .72rem/1.05rem var(--display);font-style:normal;text-align:center;box-shadow:0 .1em 0 #a8700f}.pick[data-poor="1"][data-t="lobber"]{opacity:.55;filter:grayscale(.5)}.pick[data-poor="1"][data-t="lobber"] .cost{background:#e6b3a8;border-color:#a84a38;color:#6a1f10;box-shadow:0 .1em 0 #a84a38}
 .pick svg{width:1.9rem;height:1.9rem;display:block;overflow:visible;flex:none;margin:-.2rem 0}
+/* sideways phone (html[data-land], set by fit): the picture stays 360x640-shaped and the counters, Pause, weapon picks and Rain sit in the empty side margins at a bigger size */
+html[data-land="1"][data-st] #stage,html[data-land="1"][data-st] .game{overflow:visible}
+html[data-land="1"] .hud{left:calc(-1*var(--side));right:calc(-1*var(--side));padding-left:12px;padding-right:12px}
+html[data-land="1"] .hud .prog{margin-left:var(--side);margin-right:var(--side)}
+html[data-land="1"] .hud .pill{zoom:1.6}
+html[data-land="1"] .picks{left:calc(12px - var(--side));bottom:12px;flex-direction:column;align-items:flex-start;gap:.9rem}html[data-land="1"][data-lh="1"] .picks{align-items:flex-end}html[data-land="1"][data-lh="1"] .picks{left:auto;right:calc(12px - var(--side))}
+html[data-land="1"][data-st] .pick{height:46px;min-width:124px;font-size:15px;gap:.4rem}html[data-land="1"][data-st] .pick svg{width:36px;height:36px}
+html[data-land="1"][data-st] .raid{right:calc(12px - var(--side));bottom:12px}html[data-land="1"][data-st][data-lh="1"] .raid{right:auto;left:calc(12px - var(--side))}
+html[data-land="1"] .game:has(#gcw:not([hidden])) :is(.pause,.pick,.raid){pointer-events:none;opacity:.35}
+.landtip{position:absolute;z-index:5;pointer-events:none;left:calc(12px - var(--side));top:44%;width:calc(var(--side) - 28px);padding:.6em .8em;border-radius:14px;background:rgba(255,247,227,.96);color:#4a2b0f;font:800 14px/1.25 var(--display);box-shadow:0 3px 0 #b79a63,0 6px 12px rgba(0,0,0,.2)}
+.landtip[hidden]{display:none}html[data-lh="1"] .landtip{left:auto;right:calc(12px - var(--side))}
 .pick[data-t="lobber"]{padding-right:1.35rem}.pick[aria-pressed="true"]{border-color:#3fbf68;box-shadow:0 .2em 0 #1b5c32,0 0 0 4px rgba(63,191,104,.35),0 .4em .6em rgba(0,0,0,.25),inset 0 .12em 0 rgba(255,255,255,.7)}
 .pick:focus-visible{outline:3px solid #1f6feb;outline-offset:3px}
 .ready{display:none;position:absolute;left:max(14px,env(safe-area-inset-left));bottom:calc(12cqh + 12px);width:54px;height:54px;border-radius:50%;z-index:3;pointer-events:none;background:conic-gradient(#3fbf68 var(--pct,100%),rgba(255,255,255,.55) 0);padding:5px;box-shadow:0 .2em .4em rgba(0,0,0,.2)}
@@ -340,6 +351,7 @@ html[data-big="1"] .pick{height:2.9rem;min-width:7.8rem;font-size:1rem}html[data
 <button class="pick" type="button" data-t="classic" aria-pressed="true" aria-label="Classic pineapple" title="Classic (key 1): quick throw at one penguin"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg><span>Classic</span></button>
 <button class="pick" type="button" data-t="lobber" aria-pressed="false" aria-label="Lobber pineapple" title="Lobber (key 2): slower, costs 2 Golden Pineapples a throw, splashes nearby penguins"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lo-art"/></svg><span>Lobber</span><em class="cost" aria-hidden="true">2</em></button>
 </div>
+<div class="landtip" id="landTip" hidden role="status">Turn your phone upright for the biggest view.</div>
 <div class="ready" id="ready" data-ready="1" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#lp-art"/></svg></div>
 <div class="card-wrap" id="gcw" hidden>
 <div class="cbox">
@@ -448,7 +460,7 @@ html[data-big="1"] .pick{height:2.9rem;min-width:7.8rem;font-size:1rem}html[data
 (function(){
 'use strict';
 var root=document.documentElement,title=document.getElementById('title');
-function fit(){var cs=getComputedStyle(document.body),pl=parseFloat(cs.paddingLeft)||0,pr=parseFloat(cs.paddingRight)||0,pt=parseFloat(cs.paddingTop)||0,pb=parseFloat(cs.paddingBottom)||0,aw=Math.max(120,innerWidth-pl-pr),ah=Math.max(120,innerHeight-pt-pb),u=Math.min(aw/360,ah/640),st=document.getElementById('stage');st.style.width=Math.floor(360*u)+'px';st.style.height=Math.floor(640*u)+'px';root.style.fontSize=(16*u).toFixed(2)+'px';root.style.setProperty('--u',u.toFixed(4)+'px')}
+function fit(){var cs=getComputedStyle(document.body),pl=parseFloat(cs.paddingLeft)||0,pr=parseFloat(cs.paddingRight)||0,pt=parseFloat(cs.paddingTop)||0,pb=parseFloat(cs.paddingBottom)||0,aw=Math.max(120,innerWidth-pl-pr),ah=Math.max(120,innerHeight-pt-pb),u=Math.min(aw/360,ah/640),st=document.getElementById('stage');st.style.width=Math.floor(360*u)+'px';st.style.height=Math.floor(640*u)+'px';root.style.fontSize=(16*u).toFixed(2)+'px';var sw=Math.floor(360*u),side=Math.floor((aw-sw)/2),land=aw>=ah*1.4&&ah<=540&&side>=130;root.setAttribute('data-land',land?'1':'0');root.style.setProperty('--side',(land?side:0)+'px');root.style.setProperty('--u',u.toFixed(4)+'px')}
 fit();addEventListener('resize',fit);addEventListener('orientationchange',fit);
 function $(i){return document.getElementById(i)}
 function mk(c){var e=document.createElement('span');e.className=c;return e}
