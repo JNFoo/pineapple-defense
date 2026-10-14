@@ -141,3 +141,11 @@ Each item says what it is and where to find it. If you are starting a new game, 
 - Add a slow-moment note (Apple Press has one) that tells a player in plain words when the game slowed down.
 - Pool short-lived objects and pack sprites into an atlas (judged not worth it so far; see the audits).
 - Haptics were excluded on request.
+
+## Added in 2026.10.14.0743
+- **A badge is only useful with a verdict.** Numbers (fps, slowest frame) need a plain sentence next to them. `FrameMeter` (now in JS-modules `frame-kit`) counts a hitch as a gap more than twice the last three and over 50 ms, then blames the game when our own update+draw took at least 60% of the gap, otherwise the device. Tap delay is measured from the event's `timeStamp` to the next frame callback, so it says "the next frame started", not "the picture reached the glass".
+- **Test the combination, not the setting.** The Large-buttons overlap with the cheer bar only appeared with that setting on; the layout check now loops the setting with left-handed, Larger text and High contrast.
+- **Touch targets can be bigger than they look.** `::after` pseudo-elements extend a button's hit area toward the screen edge without changing its look; check with `elementFromPoint` just outside the drawn edge.
+- **Ask a young player's preference once.** Flick or Tap is a card after the tour that sets one setting and remembers it was asked (`tc`).
+- **A tiny input buffer (0.15 s, one flick) forgives early taps** without changing speed or costs; keep it off by default and independent of Calm.
+- **Earlier tests can leave a card open.** A test that checks hits on the play screen should close cards first and assert they are closed.

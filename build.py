@@ -9,15 +9,21 @@ R = Path(__file__).parent
 S = R / "src"
 CHARS = "".join(chr(c) for c in range(32, 127)) + "‘’“”©·…–—"
 
+try:
+    import brotli  # noqa: F401  (WOFF2 needs it; without it the fonts fall back to WOFF, about 5 KB larger)
+    FONT_FLAVOR = "woff2"
+except ImportError:
+    FONT_FLAVOR = "woff"
+
 def font_face(fam, fname, weight):
     f = TTFont(S / "fonts" / fname)
-    opts = subset.Options(); opts.flavor = "woff"; opts.layout_features = ["kern", "liga"]
+    opts = subset.Options(); opts.flavor = FONT_FLAVOR; opts.layout_features = ["kern", "liga"]
     sub = subset.Subsetter(opts); sub.populate(text=CHARS); sub.subset(f)
-    f.flavor = "woff"
+    f.flavor = FONT_FLAVOR
     buf = io.BytesIO(); f.save(buf)
     b64 = base64.b64encode(buf.getvalue()).decode()
     return ("@font-face{font-family:'%s';font-weight:%d;font-style:normal;font-display:swap;"
-            "src:url(data:font/woff;base64,%s) format('woff')}" % (fam, weight, b64))
+            "src:url(data:font/%s;base64,%s) format('%s')}" % (fam, weight, FONT_FLAVOR, b64, FONT_FLAVOR))
 
 LAB = "--lab" in sys.argv
 MIN = "--min" in sys.argv
@@ -64,6 +70,7 @@ def main():
         "/*{{STICKER_JS}}*/": (S / "vendor/sticker-text/sticker-text.js").read_text(),
         "/*{{EVEN_DT}}*/": (S / "vendor/frame-kit/even-dt.js").read_text(),
         "/*{{QGOV}}*/": (S / "vendor/frame-kit/quality-governor.js").read_text(),
+        "/*{{FRAMEMETER}}*/": (S / "vendor/frame-kit/frame-meter.js").read_text(),
         "/*{{SAVEKIT}}*/": (S / "vendor/save-kit/save-kit.js").read_text(),
         "/*{{GAME_JS}}*/": game_js(),
         "<!--{{adelie}}-->": (sp / "adelie.svg").read_text(),

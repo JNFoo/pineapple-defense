@@ -7,7 +7,7 @@ var titleEl = $('title'), gameEl = $('game'), cv = $('cv'), ctx = cv.getContext(
 
 /* ---------- settings ---------- */
 var NWAVES = 5, WAVE_N = [4, 5, 6, 7, 8], NSTAGES = 5;
-var TAP_MIN = 0.03, FLICK_MIN = 0.025, COOLDOWN = 0.42;
+var TAP_MIN = 0.03, FLICK_MIN = 0.025, COOLDOWN = 0.42, BUF_S = 0.15;   /* Early flick helper: a flick this close to ready (seconds) is kept and thrown the moment the sling is ready */
 var TYPES = {
   classic: { cd: 0.42, arc: 1, T: 1, rad: 0.55, splash: 0, size: 1, img: 'pa' },
   lobber: { cd: 0.9, arc: 2.2, T: 1.6, rad: 0.55, splash: 1.0, size: 1.3, img: 'pl' }
@@ -87,11 +87,11 @@ function loadAssets() {
 
 /* ---------- save ---------- */
 var kit = SaveKit.create({ key: 'pd-save', prefix: 'PD1',
-  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1', hp: 'int:1', fp: 'int:1' },
-  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0, hp: 0, fp: 0 } });
+  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1', hp: 'int:1', fp: 'int:1', ib: 'int:1', tc: 'int:1' },
+  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0, hp: 0, fp: 0, ib: 0, tc: 0 } });
 var sv = kit.load() || kit.validate({});
 sv.ach = sv.ach | 0; sv.au = sv.au | 0; sv.ar = sv.ar | 0; sv.ap = sv.ap | 0; sv.ac2 = sv.ac2 | 0; sv.gu = sv.gu | 0; sv.um = sv.um | 0; sv.ra = sv.ra | 0; sv.run = sv.run | 0; sv.cd = sv.cd | 0; sv.lm = sv.lm | 0;
-['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'hp', 'fp', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
+['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'hp', 'fp', 'ib', 'tc', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
 var HINT_FLICK = 'Flick up from the bottom toward a penguin!', HINT_TAP = 'Tap a penguin to throw! Hold to keep throwing.';
 function hintSet() { if (typeof elHint === 'undefined' || !elHint || !elHint.lastChild || (typeof K !== 'undefined' && K)) return; HINT_TXT = sv.hp ? HINT_TAP : HINT_FLICK; elHint.lastChild.textContent = HINT_TXT; }
 /* comfort settings travel with the save (and so with the save code) */
@@ -599,7 +599,8 @@ function targets() {
   return out;
 }
 function throwAt(ox, oy, dx, dy, spd, tapPoint, want) {
-  if (S.cd > 0 || S.over || S.paused || S.rc > 0) return;
+  if (S.cd > 0) { if (sv.ib && S.cd <= BUF_S && !S.over && !S.paused && S.rc <= 0 && !rsg()) S.buf = { a: [ox, oy, dx, dy, spd, tapPoint, want], t: S.t }; return; }
+  if (S.over || S.paused || S.rc > 0) return;
   if (rsg()) { if (S.t - (S.wgT || -9) > 1.2) { S.wgT = S.t; var wp = pouchPos(); popText(wp.x, wp.y - H * 0.1, 'Wait for GO!', '#e8a21c', 0); } return; }
   var tc = typeCost(curType);
   if (tc > 0) {
@@ -832,7 +833,8 @@ function fxUpdate(dt) {
 function update(dt) {
   if (S.rc > 0) { S.rc -= dt; if (S.rc < 0) S.rc = 0; return; }
   if (demo) demoTick(dt);
-  S.t += dt; S.cd = Math.max(0, S.cd - dt); S.wob = Math.max(0, S.wob - dt * 1.6);
+  S.t += dt; S.cd = Math.max(0, S.cd - dt);
+  if (S.buf) { var bf = S.buf; S.buf = null; if (S.cd <= 0 && S.t - bf.t < 0.4) throwAt.apply(null, bf.a); else if (S.cd > 0 && S.t - bf.t < 0.4) S.buf = bf; } S.wob = Math.max(0, S.wob - dt * 1.6);
   var i, ta = 0;
   if (drag) { var cu = drag.pts[drag.pts.length - 1], ddx = cu.x - drag.sx, ddy = cu.y - drag.sy; if (Math.hypot(ddx, ddy) > 0.02 * Math.min(W, H)) ta = Math.max(-AUTO_TURN, Math.min(AUTO_TURN, Math.atan2(ddx, -ddy) * 0.3)); }   /* the main sling only tilts a few degrees, like the helpers */
   S.sa += (ta - S.sa) * Math.min(1, dt * 14);
@@ -1961,32 +1963,28 @@ function frame(now) {
   if (!last) { last = now; return; }
   var gap = now - last; last = now;
   if (sv.fp) fpsTick(gap, now);
+  var w0 = sv.fp ? performance.now() : 0;
   if (hold) holdTick();
   var dtMs = even.next(gap) || gap;
   gov.frame(gap, now);
   var dt = Math.min(dtMs, 50) / 1000 * timeScale * (K ? 1 : spdK());
   calm = root.getAttribute('data-calm') === '1';
   if (K) { updateSkee(dt); drawSkee(); hudSkee(); } else { update(dt); draw(); hud(); }
+  if (w0) fmWork = performance.now() - w0;
 }
 function run() { if (running) return; running = true; last = 0; even.reset(); fpsShow(); raf = requestAnimationFrame(frame); }
 function halt() { running = false; cancelAnimationFrame(raf); hold = null; if (elFps) elFps.hidden = true; }
 
 /* ---------- FPS badge (Settings: FPS counter) ---------- */
-var elFps = $('fps'), fpsN = 0, fpsMax = 0, fpsT0 = 0;
-function fpsShow() { if (elFps) { elFps.hidden = !(sv.fp && running); fpsN = 0; fpsMax = 0; fpsT0 = 0; } }
-function fpsTick(gap, now) {
-  if (!fpsT0) fpsT0 = now;
-  fpsN++; if (gap > fpsMax) fpsMax = gap;
-  if (now - fpsT0 >= 500) {
-    elFps.textContent = Math.round(fpsN * 1000 / (now - fpsT0)) + ' fps\nworst ' + Math.round(fpsMax) + ' ms\nquality ' + qLevel;
-    fpsN = 0; fpsMax = 0; fpsT0 = now;
-  }
-}
+var elFps = $('fps'), fm = new FrameMeter(), fmWork = 0;
+function fpsShow() { if (elFps) { elFps.hidden = !(sv.fp && running); fm.reset(); } }
+function fpsTick(gap, now) { if (fm.frame(now, fmWork, gap)) elFps.textContent = fm.lines(['quality ' + qLevel]).join('\n'); }
 
 /* ---------- input ---------- */
 var drag = null;
 function rel(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, t: e.timeStamp }; }
 cv.addEventListener('pointerdown', function (e) {
+  if (sv.fp) fm.input(e.timeStamp);
   if (S.paused || S.over || drag || S.rc > 0) return;
   try { cv.setPointerCapture(e.pointerId); } catch (x) {}
   var p = rel(e);
@@ -2144,13 +2142,22 @@ function tourShow() {
   body.querySelector('.tskip').onclick = function () { tourEnd(false); };
   body.querySelector('.tnext').focus();
 }
-function tourStart() {
+var tourFirst = false;
+function throwChoice() {
+  var body = $('cardBody'); $('cardTitle').textContent = 'How do you want to throw?';
+  body.innerHTML = '<div class="tch"><button class="tchoice" id="tcFlick" type="button"><svg viewBox="0 0 80 80" aria-hidden="true"><path d="M26 70C22 50 30 30 52 14" fill="none" stroke="#2c8a49" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 13"/><path d="M40 12l16 0-2 16" fill="none" stroke="#2c8a49" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="68" r="9" fill="#ffd23f" stroke="#a8700f" stroke-width="3"/></svg><b>Flick</b><small>Swipe up toward a penguin</small></button>' +
+    '<button class="tchoice" id="tcTap" type="button"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="30" fill="none" stroke="#ffb23e" stroke-width="5" stroke-dasharray="3 9" stroke-linecap="round"/><circle cx="40" cy="40" r="15" fill="#ffd23f" stroke="#a8700f" stroke-width="3"/><circle cx="40" cy="40" r="5" fill="#a8700f"/></svg><b>Tap</b><small>Tap or hold on a penguin</small></button></div><p class="tchn">You can change this later in Settings.</p>';
+  function pick(hp) { sv.hp = hp; sv.tc = 1; kit.save(sv); applyPrefs(); $('cardOk').click(); }
+  $('tcFlick').onclick = function () { pick(0); }; $('tcTap').onclick = function () { pick(1); };
+  $('cw').hidden = false; document.documentElement.setAttribute('data-dlg', '1'); $('tcTap').focus();
+}
+function tourStart(first) {
   if ((tourOpen && !$('cw').hidden) || !titleEl || titleEl.hidden) return;
-  tourOpen = true; tourI = 0; if (!sv.tr) { sv.tr = 1; kit.save(sv); }
+  tourFirst = first === true; tourOpen = true; tourI = 0; if (!sv.tr) { sv.tr = 1; kit.save(sv); }
   $('cw').hidden = false; document.documentElement.setAttribute('data-dlg', '1'); tourShow();
 }
 function tourEnd(play) {
-  tourOpen = false; $('cardOk').click();
+  var again = tourFirst && !sv.tc; tourFirst = false; tourOpen = false; $('cardOk').click(); if (again) { throwChoice(); return; }
   if (play && !$('bPlay').disabled) $('bPlay').focus();
 }
 $('cardOk').addEventListener('click', function () { tourOpen = false; });
@@ -2158,7 +2165,7 @@ $('bHow').addEventListener('click', function () {
   var b = $('cardBody'), r = b.querySelector('.tl'); if (!r || b.querySelector('#tourBtn')) return;
   var p = document.createElement('button'); p.type = 'button'; p.className = 'btn'; p.id = 'tourBtn'; p.textContent = 'Play the tour'; p.addEventListener('click', function () { $('cardOk').click(); tourStart(); }); b.appendChild(p);
 });
-if (location.hash !== '#qa' && !sv.tr && !sv.thr && !sv.cleared && !(sv.stage > 1)) setTimeout(tourStart, 900);
+if (location.hash !== '#qa' && !sv.tr && !sv.thr && !sv.cleared && !(sv.stage > 1)) setTimeout(function () { tourStart(true); }, 900);
 btnCont.addEventListener('click', function () { if (!btnCont.disabled) continueGame(); });
 
 /* ---------- save code and file (Settings card) ---------- */
@@ -2168,12 +2175,12 @@ function wireComfort($b) {
   function paint() {
     row('cmSp', SPEEDS[sv.sp | 0] + '%'); row('cmLh', sv.lh ? 'On' : 'Off', sv.lh); row('cmAim', AIM[sv.aim]); row('cmArc', ARC[sv.arc]);
     row('cmHc', sv.hc ? 'On' : 'Off', sv.hc); row('cmLt', sv.lt ? 'On' : 'Off', sv.lt); row('cmBig', sv.bb ? 'On' : 'Off', sv.bb);
-    var c = root.getAttribute('data-calm') === '1'; row('cmCalm', c ? 'On' : 'Off', c); row('cmSave', sv.bv ? 'On' : 'Off', sv.bv); row('cmHold', sv.hp ? 'On' : 'Off', sv.hp); row('cmFps', sv.fp ? 'On' : 'Off', sv.fp);
+    var c = root.getAttribute('data-calm') === '1'; row('cmCalm', c ? 'On' : 'Off', c); row('cmSave', sv.bv ? 'On' : 'Off', sv.bv); row('cmHold', sv.hp ? 'On' : 'Off', sv.hp); row('cmBuf', sv.ib ? 'On' : 'Off', sv.ib); row('cmFps', sv.fp ? 'On' : 'Off', sv.fp);
     $b('cmFull').hidden = !fs; row('cmFull', document.fullscreenElement ? 'On' : 'Off', !!document.fullscreenElement);
   }
   function bind(id, fn) { $b(id).addEventListener('click', function () { fn(); applyPrefs(); kit.save(sv); paint(); }); }
   bind('cmSp', function () { sv.sp = ((sv.sp | 0) + 1) % SPEEDS.length; }); bind('cmLh', function () { sv.lh = sv.lh ? 0 : 1; }); bind('cmAim', function () { sv.aim = (sv.aim + 1) % 3; }); bind('cmArc', function () { sv.arc = (sv.arc + 1) % 3; if (sv.arc === 0) sv.thr = 0; });
-  bind('cmHc', function () { sv.hc = sv.hc ? 0 : 1; }); bind('cmLt', function () { sv.lt = sv.lt ? 0 : 1; }); bind('cmBig', function () { sv.bb = sv.bb ? 0 : 1; }); bind('cmSave', function () { sv.bv = sv.bv ? 0 : 1; }); bind('cmHold', function () { sv.hp = sv.hp ? 0 : 1; }); bind('cmFps', function () { sv.fp = sv.fp ? 0 : 1; });
+  bind('cmHc', function () { sv.hc = sv.hc ? 0 : 1; }); bind('cmLt', function () { sv.lt = sv.lt ? 0 : 1; }); bind('cmBig', function () { sv.bb = sv.bb ? 0 : 1; }); bind('cmSave', function () { sv.bv = sv.bv ? 0 : 1; }); bind('cmHold', function () { sv.hp = sv.hp ? 0 : 1; sv.tc = 1; }); bind('cmBuf', function () { sv.ib = sv.ib ? 0 : 1; }); bind('cmFps', function () { sv.fp = sv.fp ? 0 : 1; });
   $b('cmCalm').addEventListener('click', function () { $('bCalm').click(); paint(); });
   $b('cmFull').addEventListener('click', function () { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (e) {} setTimeout(paint, 300); });
   var warn = $b('svWarn'); if (warn) warn.hidden = kit.save(sv) !== false;   /* the browser is not keeping the save (private window?) */
@@ -2336,7 +2343,7 @@ $('bShop').addEventListener('click', fillShop);
 /* test hook, only with #qa in the address */
 var qa = null;
 if (location.hash === '#qa') {
-  qa = window.__pd = { tour: tourStart, rsg: function () { return rsg(); }, rollGear: function () { return rollGear(); }, stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, center: function (pg) { return penCenter(pg); }, hp: function (x, y, id) { return penAt({ x: x, y: y }); }, holdOn: function () { return !!hold; }, fpsTxt: function () { return elFps ? elFps.textContent : ''; }, get S() { return S; }, get penguins() { return penguins; },
+  qa = window.__pd = { tour: tourStart, choice: throwChoice, rsg: function () { return rsg(); }, rollGear: function () { return rollGear(); }, stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, center: function (pg) { return penCenter(pg); }, hp: function (x, y, id) { return penAt({ x: x, y: y }); }, holdOn: function () { return !!hold; }, fpsTxt: function () { return elFps ? elFps.textContent : ''; }, get S() { return S; }, get penguins() { return penguins; },
     /* fast-forward without waiting for frames: sec game seconds in steps of dt, drawing every `every` steps (0 = never, one final draw) */
     step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (hold) holdTick(); if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
     win: function () { endStage(true); }, flick: function (dx, dy, spd) { var o = pouchPos(); throwAt(o.x, o.y, dx, dy, spd); }, get sh() { return shots; }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, sim: function (dx, dy, spd, dA, dF) { var h = skSim(skLaunch({ dx: dx, dy: dy, spd: spd }, dA, dF)); return h ? h.v : 0; }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };

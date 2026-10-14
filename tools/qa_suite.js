@@ -231,11 +231,55 @@ await T('FPS counter: row, badge, numbers', async () => {
   if (!$('cmFps') || !$('cmHold')) throw new Error('rows missing'); $('cmFps').click(); if (!sv.fp) throw new Error('FPS row did not switch on'); $('cmHold').click(); if (!sv.hp) throw new Error('Hold row did not switch on'); $('cmHold').click(); $('cardOk').click();
   await go(1, 2); P.bot = false; await wait(1300);
   if (fps.hidden) throw new Error('badge hidden while playing with the setting on');
-  const tx = fps.textContent; if (!/^\d+ fps\nworst \d+ ms\nquality [0-2]$/.test(tx)) throw new Error('badge text: ' + tx);
+  const tx = fps.textContent; if (!/^\d+ fps\nworst \d+ ms\nquality [0-2]\n(tap \d+ ms\n)?(smooth|\d+ hitch(es)?: [a-z ]+)$/.test(tx)) throw new Error('badge text: ' + tx);
   const r = fps.getBoundingClientRect(), bad = ['pause', 'raid', 'bRaid'].map(i => document.getElementById(i) || document.querySelector('.' + i)).filter(e => e && !e.hidden && (() => { const q = e.getBoundingClientRect(); return q.width && !(r.right < q.left || r.left > q.right || r.bottom < q.top || r.top > q.bottom); })());
   const pk = [...document.querySelectorAll('.pick')].filter(e => { const q = e.getBoundingClientRect(); return !(r.right < q.left || r.left > q.right || r.bottom < q.top || r.top > q.bottom); });
   if (bad.length || pk.length) throw new Error('badge covers a button: ' + bad.map(e => e.id || e.className).concat(pk.map(e => e.dataset.t)).join() + ' badge ' + [r.left, r.top, r.right, r.bottom].map(Math.round) + ' view ' + innerWidth + 'x' + innerHeight);
   sv.fp = 0; return tx;
+});
+
+await T('Early flick helper: a flick just before ready is kept; off, it is dropped; the row exists', async () => {
+  const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 0; sv.thr = 99; await go(1, 3); P.bot = false; const S = P.S;
+  for (let i = 0; i < 40 && P.rsg(); i++) P.step(0.1, 0.05);
+  const n = () => P.sh.length;
+  sv.ib = 0; S.cd = 0.1; S.buf = null; let b0 = n(); P.flick(0, -1, 4); P.step(0.2, 0.05); if (n() !== b0) throw new Error('flick was kept although the helper is off');
+  sv.ib = 1; S.cd = 0.1; S.buf = null; b0 = n(); P.flick(0, -1, 4); if (n() !== b0) throw new Error('the early flick threw at once');
+  P.step(0.2, 0.05); if (n() !== b0 + 1) throw new Error('the kept flick did not throw when the sling got ready (' + (n() - b0) + ')');
+  S.cd = 0.3; S.buf = null; b0 = n(); P.flick(0, -1, 4); P.step(0.5, 0.05); if (n() !== b0) throw new Error('a flick 0.3 s early was kept; the window must stay small');
+  sv.ib = 1; S.cd = 0.1; S.buf = null; b0 = n(); P.flick(0, -1, 4); S.cd = 0.1; P.step(0.01, 0.01); P.flick(0, -1, 4); S.cd = 0; P.step(0.2, 0.05); if (n() > b0 + 2) throw new Error('buffered flicks piled up (' + (n() - b0) + ')');
+  document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bSet').click(); await wait(50);
+  if (!$('cmBuf')) throw new Error('Early flick row missing'); sv.ib = 0; $('cmBuf').click(); if (!sv.ib) throw new Error('row did not switch on'); $('cmBuf').click(); if (sv.ib) throw new Error('row did not switch off'); $('cardOk').click();
+  sv.ib = 0; return 'kept 0.1 s early, dropped 0.3 s early, off is off, row works';
+});
+
+await T('first-run choice: Flick or Tap card sets the throw style once', async () => {
+  const sv = P.sv(); sv.hp = 0; sv.tc = 0; P.choice(); await wait(30);
+  const f = $('tcFlick'), t = $('tcTap'); if (!f || !t) throw new Error('choice buttons missing');
+  const rf = f.getBoundingClientRect(), rt = t.getBoundingClientRect(); if (Math.min(rf.width, rf.height, rt.width, rt.height) < 56) throw new Error('choice buttons too small ' + [rf.width, rf.height].map(Math.round));
+  t.click(); await wait(30); if (!$('cw').hidden) throw new Error('the choice card stayed open after Tap'); if (sv.hp !== 1 || sv.tc !== 1) throw new Error('Tap choice did not stick (hp ' + sv.hp + ', tc ' + sv.tc + ')');
+  P.choice(); await wait(30); $('tcFlick').click(); await wait(30); if (sv.hp !== 0 || sv.tc !== 1) throw new Error('Flick choice did not stick');
+  return 'Tap sets hold on, Flick sets it off, both remember the choice';
+});
+
+await T('screen-edge buttons can be hit at the very edge of the screen', async () => {
+  await go(1, 2); P.bot = false; const w = innerWidth, h = innerHeight; const bad = []; for (const id of ['cw', 'gcw']) { const e = $(id); if (e && !e.hidden) { if (id === 'cw') $('cardOk').click(); else e.hidden = true; } }  /* earlier tests may leave a card open; close it so the edge test sees the play screen */
+  if (!$('cw').hidden || !$('gcw').hidden) throw new Error('a card is still open');
+  for (const lh of [0, 1]) {
+    document.documentElement.setAttribute('data-lh', lh); P.sv().lh = lh; await wait(30);
+    const pk = [...document.querySelectorAll('.pick')].filter(e => e.getBoundingClientRect().width); const ps = $('bPause');
+    const edge = lh ? pk[pk.length - 1] : pk[0]; if (!edge) continue; const r = edge.getBoundingClientRect();
+    const x = lh ? Math.min(w - 1, r.right + 6) : Math.max(1, r.left - 6), y = r.top + r.height / 2; const hit = document.elementFromPoint(x, y);
+    if (hit !== edge && !edge.contains(hit)) bad.push('pick lh' + lh + ' at ' + Math.round(x) + ',' + Math.round(y) + ' hit ' + (hit && (hit.className || hit.id || hit.tagName)));
+    if (ps) { const q = ps.getBoundingClientRect(), px = lh ? Math.max(1, q.left - 6) : Math.min(w - 1, q.right + 6), py = q.top - 6, e2 = document.elementFromPoint(px, py); if (e2 !== ps && !ps.contains(e2)) bad.push('pause lh' + lh + ' hit ' + (e2 && (e2.className || e2.id || e2.tagName))); }
+  }
+  document.documentElement.setAttribute('data-lh', 0); P.sv().lh = 0;
+  if (bad.length) throw new Error(bad.join('; ')); return 'pill and pause answer touches just outside their drawn edge';
+});
+
+await T('fonts are WOFF2 when the build machine can compress them', async () => {
+  const css = [...document.querySelectorAll('style')].map(x => x.textContent).join(''); const m = css.match(/data:font\/(woff2?);base64/); if (!m) throw new Error('no embedded font found');
+  const loaded = document.fonts ? [...document.fonts].filter(f => f.status === 'loaded').length : 0; if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  return m[1] + ', ' + loaded + ' faces loaded';
 });
 
 await T('every trophy and shop upgrade has its own icon', async () => {

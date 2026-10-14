@@ -2,6 +2,14 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
 
+## 2026.10.14.0743
+- **First-run choice, Flick or Tap:** after the tour (or when you skip it) a new game asks "How do you want to throw?" with two big picture buttons. Tap turns on tap or hold to throw; Flick leaves it off. It asks once and says you can change it later in Settings.
+- **Edge touches count:** the Classic and Lobber pills and the pause button now answer a touch a little outside their drawn edge, so a thumb at the very edge of the screen still hits them. They look the same.
+- **Large buttons fix:** with Large buttons on, the Pineapple Rain button no longer overlaps the cheer bar. The layout check now runs this combination too.
+- **Early flick helper (Settings, off by default):** a flick that comes up to 0.15 seconds before the sling is ready is kept and thrown the moment it is ready, so quick fingers are not ignored. One flick is kept at a time. Same speed, costs and trophies. It is independent of Calm mode.
+- **FPS badge upgrades:** the badge now shows the tap delay (from your touch to the next picture, median of the last 20) and a plain-words verdict: "smooth", or "2 hitches: the game / the device / both". It uses the new `FrameMeter` from JS-modules.
+- **Fonts are WOFF2** (about 30% smaller than WOFF) when the build machine can compress them, otherwise WOFF as before.
+
 ## 2026.10.13.2220
 - **Tap or hold to throw (for the youngest players):** a new Settings row, off by default. Tap a penguin (or the Champion) and a pineapple flies straight at it; keep your finger down and it keeps throwing, each time the sling is ready, until that penguin is bonked. Then tap the next one. Flicking still works, and a tap on empty ground still does nothing. The speed limits, Lobber and Mega costs, sling cooldown and all trophies are exactly the same.
 - **FPS counter:** a new Settings row, off by default. A small badge in the bottom corner (opposite the pineapple buttons, so it never covers one) shows frames a second, the slowest frame in the last half second and the quality level (0 is the prettiest). It updates twice a second and costs almost nothing.

@@ -27,15 +27,15 @@ if (rb.hidden) bad.push('raid button hidden although bought'); else {
   const cr = R(ch); if (cr.h < g.h * 0.3) bad.push('cheer bar too short: ' + Math.round(cr.h) + 'px');
 }
 /* comfort options: left-handed, large text and high contrast must not overlap or leave the screen */
-for (const v of [{ lh: 1, lt: 0, hc: 0 }, { lh: 1, lt: 1, hc: 1 }, { lh: 0, lt: 1, hc: 0 }]) {
-  Object.assign(sv, v); const d = document.documentElement; d.setAttribute('data-lh', v.lh); d.setAttribute('data-lt', v.lt); d.setAttribute('data-hc', v.hc); await wait(60);
-  const tag = ' (lh' + v.lh + ' lt' + v.lt + ' hc' + v.hc + ')', vis = ids.map(i => $(i)).filter(Boolean).map(e => e.closest('.pill') || e).filter(e => e.offsetParent);
+for (const v of [{ lh: 1, lt: 0, hc: 0, bb: 0 }, { lh: 1, lt: 1, hc: 1, bb: 0 }, { lh: 0, lt: 1, hc: 0, bb: 0 }, { lh: 0, lt: 0, hc: 0, bb: 1 }, { lh: 1, lt: 1, hc: 0, bb: 1 }]) {
+  Object.assign(sv, v); const d = document.documentElement; d.setAttribute('data-big', v.bb); d.setAttribute('data-lh', v.lh); d.setAttribute('data-lt', v.lt); d.setAttribute('data-hc', v.hc); await wait(60);
+  const tag = ' (lh' + v.lh + ' lt' + v.lt + ' hc' + v.hc + ' bb' + v.bb + ')', vis = ids.map(i => $(i)).filter(Boolean).map(e => e.closest('.pill') || e).filter(e => e.offsetParent);
   for (let i = 0; i < vis.length; i++) for (let j = i + 1; j < vis.length; j++) if (vis[i] !== vis[j] && hit(R(vis[i]), R(vis[j]))) bad.push('HUD overlap ' + vis[i].id + '/' + vis[j].id + tag);
   vis.forEach(e => { const r = R(e); if (r.r > vw + 1 || r.l < -1) bad.push('HUD item off screen ' + (e.id || e.textContent.slice(0, 12)) + tag); });
   const a = R($('bRaid')); document.querySelectorAll('.pick').forEach(p => { if (hit(a, R(p))) bad.push('raid button overlaps a pick button' + tag); });
   if (hit(a, R(document.querySelector('.cheer')))) bad.push('raid button overlaps cheer bar' + tag);
 }
-Object.assign(sv, { lh: 0, lt: 0, hc: 0 }); ['lh', 'lt', 'hc'].forEach(k => document.documentElement.setAttribute('data-' + k, '0'));
+Object.assign(sv, { lh: 0, lt: 0, hc: 0, bb: 0 }); ['lh', 'lt', 'hc', 'big'].forEach(k => document.documentElement.setAttribute('data-' + k, '0'));
 /* run end card with the longest text */
 P.go(5, 0); for (let i = 0; i < 80 && !(P.S && P.S.stage === 5); i++) await wait(25); await wait(40); P.sv().run = 6; P.win(); await wait(80);
 const gc = document.querySelector('#gcw .card'), gr = R(gc); if (gr.l < -1 || gr.r > vw + 1 || gr.t < -1 || gr.b > vh + 1) bad.push('run end card outside screen ' + JSON.stringify(gr));
