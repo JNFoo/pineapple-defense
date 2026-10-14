@@ -87,13 +87,15 @@ function loadAssets() {
 
 /* ---------- save ---------- */
 var kit = SaveKit.create({ key: 'pd-save', prefix: 'PD1',
-  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1' },
-  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0 } });
+  schema: { stage: 'int:5', wave: 'int:8', golden: 'int:9999', cheer: 'int:100', cleared: 'int:5', bank: 'int:999999', ach: 'int:1023', au: 'int:1', ar: 'int:3', ap: 'int:2', ac2: 'int:65535', gu: 'int:3', um: 'int:3', ra: 'int:2', run: 'int:99', cd: 'int:1', lm: 'int:3', lh: 'int:1', aim: 'int:2', arc: 'int:2', hc: 'int:1', lt: 'int:1', thr: 'int:99', bs1: 'int:9999', bs2: 'int:9999', bs3: 'int:9999', bs4: 'int:9999', bs5: 'int:9999', rl: 'int:9', tr: 'int:1', sp: 'int:4', bb: 'int:1', bv: 'int:1', hp: 'int:1', fp: 'int:1' },
+  defaults: { stage: 1, wave: 0, golden: 0, cheer: 100, cleared: 0, bank: 0, ach: 0, au: 0, ar: 0, ap: 0, ac2: 0, gu: 0, um: 0, ra: 0, run: 0, cd: 0, lm: 0, lh: 0, aim: 1, arc: 0, hc: 0, lt: 0, thr: 0, bs1: 0, bs2: 0, bs3: 0, bs4: 0, bs5: 0, rl: 0, tr: 0, sp: 0, bb: 0, bv: 0, hp: 0, fp: 0 } });
 var sv = kit.load() || kit.validate({});
 sv.ach = sv.ach | 0; sv.au = sv.au | 0; sv.ar = sv.ar | 0; sv.ap = sv.ap | 0; sv.ac2 = sv.ac2 | 0; sv.gu = sv.gu | 0; sv.um = sv.um | 0; sv.ra = sv.ra | 0; sv.run = sv.run | 0; sv.cd = sv.cd | 0; sv.lm = sv.lm | 0;
-['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
+['rl', 'lh', 'aim', 'arc', 'hc', 'lt', 'hp', 'fp', 'thr', 'bs1', 'bs2', 'bs3', 'bs4', 'bs5'].forEach(function (k) { sv[k] = sv[k] | 0; });
+var HINT_FLICK = 'Flick up from the bottom toward a penguin!', HINT_TAP = 'Tap a penguin to throw! Hold to keep throwing.';
+function hintSet() { if (typeof elHint === 'undefined' || !elHint || !elHint.lastChild || (typeof K !== 'undefined' && K)) return; HINT_TXT = sv.hp ? HINT_TAP : HINT_FLICK; elHint.lastChild.textContent = HINT_TXT; }
 /* comfort settings travel with the save (and so with the save code) */
-function applyPrefs() { root.setAttribute('data-lh', sv.lh ? '1' : '0'); root.setAttribute('data-hc', sv.hc ? '1' : '0'); root.setAttribute('data-lt', sv.lt ? '1' : '0'); root.setAttribute('data-big', sv.bb ? '1' : '0'); }
+function applyPrefs() { root.setAttribute('data-lh', sv.lh ? '1' : '0'); root.setAttribute('data-hc', sv.hc ? '1' : '0'); root.setAttribute('data-lt', sv.lt ? '1' : '0'); root.setAttribute('data-big', sv.bb ? '1' : '0'); hintSet(); fpsShow(); }
 var SPEEDS = [100, 90, 80, 70, 60];
 function spdK() { return SPEEDS[sv.sp | 0] / 100; }   /* the game speed setting (title screen only), 1 to 0.6 */
 function mx(f) { return W * (sv.lh ? 1 - f : f); }
@@ -596,7 +598,7 @@ function targets() {
   if (S.clones) for (i = 0; i < S.clones.length; i++) out.push(S.clones[i]);
   return out;
 }
-function throwAt(ox, oy, dx, dy, spd, tapPoint) {
+function throwAt(ox, oy, dx, dy, spd, tapPoint, want) {
   if (S.cd > 0 || S.over || S.paused || S.rc > 0) return;
   if (rsg()) { if (S.t - (S.wgT || -9) > 1.2) { S.wgT = S.t; var wp = pouchPos(); popText(wp.x, wp.y - H * 0.1, 'Wait for GO!', '#e8a21c', 0); } return; }
   var tc = typeCost(curType);
@@ -616,6 +618,7 @@ function throwAt(ox, oy, dx, dy, spd, tapPoint) {
     var score = perp / c.s - 0.25 * pg.p + ((pg.aut || pg === S.au.tgt) ? 0.5 : 0);
     if (score < bs) { bs = score; best = pg; }
   }
+  if (want && list.indexOf(want) >= 0) best = want;   /* tap or hold on a penguin: that penguin is the target */
   var xE, yE, pEnd, cheerShot = null;
   if (!best && stageNo() === 5 && S.t - S.chT > 6.4) { var cp = cheerPos(), cwx = cp.x - ox, cwy = cp.y - oy; if (cwx * dx + cwy * dy > 0 && Math.abs(cwx * dy - cwy * dx) < cp.s * 0.9) cheerShot = cp; }
   if (best) {
@@ -1304,7 +1307,7 @@ function draw() {
 }
 
 /* ---------- bonus game: a long lane, a hop, and a small 35 degree board of raised rings ---------- */
-var K = null, skBg = null, HINT_TXT = elHint.lastChild ? elHint.lastChild.textContent : '';
+var K = null, skBg = null, HINT_TXT = sv.hp ? HINT_TAP : HINT_FLICK;
 /* world units: the board is 2 wide (u in -1..1); v runs up the incline from its front edge (v=0); the lane is below zero and the hop sits at SK_HUMP */
 var SK_BALLS = 9, SK_RIM = 0.7, SK_WALL = 1.65, SK_G = 10, SK_KZ = 0.7, SK_INC = 35, SK_RB = 0.09, SK_DIN = 1.25, SK_ZC = 0.12;
 var SK_V0 = -2.2, SK_HUMP = -0.2, SK_VMAX = 2.0, SK_K = 0.12, SK_RAT = 0.75, SK_LIFT = 0.55, SK_LFR = 0.5, SK_AIM = 0.3, SK_FL0 = 2.0, SK_FL1 = 2.9, SK_GV = -0.1, SK_DRN = 0.9, SK_TS = 1.7, SK_LIP = 1.3, SK_RC = 0.085, SK_RIME = 0.62;   /* the inner lip of a ring is 1.3x the drawn hole; SK_RC is the contact radius the ball rolls on the rim with; SK_RIME is the rim bounciness */
@@ -1957,14 +1960,28 @@ function frame(now) {
   if (sv.bv && last && now - last < 28) return;   /* battery saver: about 30 pictures a second */
   if (!last) { last = now; return; }
   var gap = now - last; last = now;
+  if (sv.fp) fpsTick(gap, now);
+  if (hold) holdTick();
   var dtMs = even.next(gap) || gap;
   gov.frame(gap, now);
   var dt = Math.min(dtMs, 50) / 1000 * timeScale * (K ? 1 : spdK());
   calm = root.getAttribute('data-calm') === '1';
   if (K) { updateSkee(dt); drawSkee(); hudSkee(); } else { update(dt); draw(); hud(); }
 }
-function run() { if (running) return; running = true; last = 0; even.reset(); raf = requestAnimationFrame(frame); }
-function halt() { running = false; cancelAnimationFrame(raf); }
+function run() { if (running) return; running = true; last = 0; even.reset(); fpsShow(); raf = requestAnimationFrame(frame); }
+function halt() { running = false; cancelAnimationFrame(raf); hold = null; if (elFps) elFps.hidden = true; }
+
+/* ---------- FPS badge (Settings: FPS counter) ---------- */
+var elFps = $('fps'), fpsN = 0, fpsMax = 0, fpsT0 = 0;
+function fpsShow() { if (elFps) { elFps.hidden = !(sv.fp && running); fpsN = 0; fpsMax = 0; fpsT0 = 0; } }
+function fpsTick(gap, now) {
+  if (!fpsT0) fpsT0 = now;
+  fpsN++; if (gap > fpsMax) fpsMax = gap;
+  if (now - fpsT0 >= 500) {
+    elFps.textContent = Math.round(fpsN * 1000 / (now - fpsT0)) + ' fps\nworst ' + Math.round(fpsMax) + ' ms\nquality ' + qLevel;
+    fpsN = 0; fpsMax = 0; fpsT0 = now;
+  }
+}
 
 /* ---------- input ---------- */
 var drag = null;
@@ -1974,9 +1991,28 @@ cv.addEventListener('pointerdown', function (e) {
   try { cv.setPointerCapture(e.pointerId); } catch (x) {}
   var p = rel(e);
   if (tableHit(p) || zoneHit(p) || sceneTap(p)) { e.preventDefault(); return; }
+  if (sv.hp && !K) { var hpg = penAt(p); if (hpg) { hold = { id: e.pointerId, pg: hpg }; e.preventDefault(); holdTick(); return; } }
   drag = { id: e.pointerId, sx: p.x, sy: p.y, t0: p.t, pts: [p] };
   e.preventDefault();
 });
+/* hold to press, for the youngest players: a tap on a penguin throws at it, and holding keeps throwing (same cooldown and costs) until it is bonked */
+var hold = null;
+function penAt(p) {
+  var list = targets(), i, best = null, bd = 1e9;
+  for (i = 0; i < list.length; i++) {
+    var c = penCenter(list[i]), r = Math.max(c.s * 0.62, 30), d = Math.hypot(p.x - c.x, p.y - c.y) / r;
+    if (d <= 1 && d < bd) { bd = d; best = list[i]; }
+  }
+  return best;
+}
+function holdTick() {
+  if (!hold) return;
+  var pg = hold.pg, live = pg === S.boss ? (pg.hp > 0 && pg.st !== 'slide' && pg.st !== 'gone') : targets().indexOf(pg) >= 0;   /* a dodging Champion is still the target */
+  if (S.paused || S.over || K || !live) { hold = null; return; }
+  if (S.cd > 0 || S.rc > 0 || targets().indexOf(pg) < 0) return;
+  var o = pouchPos(), c = penCenter(hold.pg);
+  throwAt(o.x, o.y, c.x - o.x, c.y - o.y, 1.2, { x: c.x, y: c.y }, hold.pg);
+}
 function tableHit(p) {
   var o;
   if (S.pu) { o = slot(0); if (Math.hypot(p.x - o.x, p.y - o.cy) <= o.r) { collectPU(); return true; } }
@@ -2023,8 +2059,9 @@ cv.addEventListener('pointermove', function (e) {
   if (e.pointerId !== drag.id) return;
   drag.pts.push(rel(e)); if (drag.pts.length > (K ? 48 : 10)) drag.pts.shift();
 });
-cv.addEventListener('pointercancel', function () { drag = null; });
+cv.addEventListener('pointercancel', function () { drag = null; hold = null; });
 cv.addEventListener('pointerup', function (e) {
+  if (hold && e.pointerId === hold.id) { hold = null; return; }
   if (!drag || e.pointerId !== drag.id) return;
   var d = drag; drag = null;
   var end = rel(e), vx = end.x - d.sx, vy = end.y - d.sy, len = Math.hypot(vx, vy), m = Math.min(W, H);
@@ -2131,12 +2168,12 @@ function wireComfort($b) {
   function paint() {
     row('cmSp', SPEEDS[sv.sp | 0] + '%'); row('cmLh', sv.lh ? 'On' : 'Off', sv.lh); row('cmAim', AIM[sv.aim]); row('cmArc', ARC[sv.arc]);
     row('cmHc', sv.hc ? 'On' : 'Off', sv.hc); row('cmLt', sv.lt ? 'On' : 'Off', sv.lt); row('cmBig', sv.bb ? 'On' : 'Off', sv.bb);
-    var c = root.getAttribute('data-calm') === '1'; row('cmCalm', c ? 'On' : 'Off', c); row('cmSave', sv.bv ? 'On' : 'Off', sv.bv);
+    var c = root.getAttribute('data-calm') === '1'; row('cmCalm', c ? 'On' : 'Off', c); row('cmSave', sv.bv ? 'On' : 'Off', sv.bv); row('cmHold', sv.hp ? 'On' : 'Off', sv.hp); row('cmFps', sv.fp ? 'On' : 'Off', sv.fp);
     $b('cmFull').hidden = !fs; row('cmFull', document.fullscreenElement ? 'On' : 'Off', !!document.fullscreenElement);
   }
   function bind(id, fn) { $b(id).addEventListener('click', function () { fn(); applyPrefs(); kit.save(sv); paint(); }); }
   bind('cmSp', function () { sv.sp = ((sv.sp | 0) + 1) % SPEEDS.length; }); bind('cmLh', function () { sv.lh = sv.lh ? 0 : 1; }); bind('cmAim', function () { sv.aim = (sv.aim + 1) % 3; }); bind('cmArc', function () { sv.arc = (sv.arc + 1) % 3; if (sv.arc === 0) sv.thr = 0; });
-  bind('cmHc', function () { sv.hc = sv.hc ? 0 : 1; }); bind('cmLt', function () { sv.lt = sv.lt ? 0 : 1; }); bind('cmBig', function () { sv.bb = sv.bb ? 0 : 1; }); bind('cmSave', function () { sv.bv = sv.bv ? 0 : 1; });
+  bind('cmHc', function () { sv.hc = sv.hc ? 0 : 1; }); bind('cmLt', function () { sv.lt = sv.lt ? 0 : 1; }); bind('cmBig', function () { sv.bb = sv.bb ? 0 : 1; }); bind('cmSave', function () { sv.bv = sv.bv ? 0 : 1; }); bind('cmHold', function () { sv.hp = sv.hp ? 0 : 1; }); bind('cmFps', function () { sv.fp = sv.fp ? 0 : 1; });
   $b('cmCalm').addEventListener('click', function () { $('bCalm').click(); paint(); });
   $b('cmFull').addEventListener('click', function () { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (e) {} setTimeout(paint, 300); });
   var warn = $b('svWarn'); if (warn) warn.hidden = kit.save(sv) !== false;   /* the browser is not keeping the save (private window?) */
@@ -2299,9 +2336,9 @@ $('bShop').addEventListener('click', fillShop);
 /* test hook, only with #qa in the address */
 var qa = null;
 if (location.hash === '#qa') {
-  qa = window.__pd = { tour: tourStart, rsg: function () { return rsg(); }, rollGear: function () { return rollGear(); }, stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, get S() { return S; }, get penguins() { return penguins; },
+  qa = window.__pd = { tour: tourStart, rsg: function () { return rsg(); }, rollGear: function () { return rollGear(); }, stap: function (x, y) { return sceneTap({ x: x, y: y }); }, get sc() { return S.sc; }, zone: function (i) { var z = ZONES[stageNo()][i]; return zoneHit({ x: z.x * W, y: z.y * H }); }, fish: function () { return tryDrop(); }, go: function (st, w) { titleEl.hidden = true; gameEl.hidden = false; loadAssets().then(function () { resize(); startStage({ stage: st, wave: w, golden: 0, cheer: 100 }); run(); }); }, bot: false, sv: function () { return sv; }, scale: function (v) { timeScale = v; }, center: function (pg) { return penCenter(pg); }, hp: function (x, y, id) { return penAt({ x: x, y: y }); }, holdOn: function () { return !!hold; }, fpsTxt: function () { return elFps ? elFps.textContent : ''; }, get S() { return S; }, get penguins() { return penguins; },
     /* fast-forward without waiting for frames: sec game seconds in steps of dt, drawing every `every` steps (0 = never, one final draw) */
-    step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
+    step: function (sec, dt, every) { var n = Math.round(sec / (dt || 0.033)), i, d = dt || 0.033; for (i = 0; i < n; i++) { if (hold) holdTick(); if (K) updateSkee(d); else update(d); if (every && i % every === 0) { if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } } } if (K) { drawSkee(); hudSkee(); } else { draw(); hud(); } }, get timeScale() { return timeScale; }, get bits() { return bits.length; }, get shots() { return shots.length; }, get rings() { return rings.length; }, pause: pause, resume: function () { hideCard(); resume(); }, runK: runK, key: function (k) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k })); },
     win: function () { endStage(true); }, flick: function (dx, dy, spd) { var o = pouchPos(); throwAt(o.x, o.y, dx, dy, spd); }, get sh() { return shots; }, demo: startDemo, replay: startReplay, get dm() { return demo; }, tick: function () { return demo; }, goal: updateGoal, undoShop: function () { var u = document.querySelector('#shUndo'); if (u) u.click(); }, fillShop: fillShop, raid: callRaid, st: function (k, v) { sv[k] = v; S.umL = sv.um; S.raL = RAID_N[sv.ra] || 0; }, gull: function () { S.fish = []; var ok = tryDrop(); return ok; }, endSk: function (v) { K.lastV = v; K.balls = 0; endSkee(); }, cmb: function (n, src) { var i; curSrc = src === 3 ? 2 : (src || 2); for (i = 0; i < n; i++) cmbHit(W * 0.5, H * 0.5); curSrc = 1; if (src === 3) cmbHit(W * .5, H * .5); }, give: function (k) { spawnPU(k); }, award: award, collect: function () { collectPU(); collectTro(false); }, skee: startSkee, get K() { return K; }, roll: skeeRoll, plan: function (dx, dy, spd) { return skLaunch({ dx: dx, dy: dy, spd: spd }); }, sim: function (dx, dy, spd, dA, dF) { var h = skSim(skLaunch({ dx: dx, dy: dy, spd: spd }, dA, dF)); return h ? h.v : 0; }, get H() { return SK_HOLES; }, tap: function (x, y) { var o = pouchPos(); throwAt(o.x, o.y, x - o.x, y - o.y, 1.5, { x: x, y: y }); } };
 }
 /*{{LAB_JS}}*/

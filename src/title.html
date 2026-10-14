@@ -157,6 +157,8 @@ html[data-hc="1"] .prog{box-shadow:0 0 0 2.5px #1c0f06}html[data-hc="1"] .prog .
 .banner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);z-index:4;font:800 clamp(2.4rem,9cqmin,5rem)/1 var(--display);pointer-events:none;--st-fill:linear-gradient(180deg,#fff2a8 0%,#f8bd1c 46%,#b3600a 100%);--st-edge:#7a3a05}
 .banner.ml{font-size:clamp(1.7rem,6.6cqmin,3.6rem);text-align:center;white-space:pre}.banner.ml::before,.banner.ml::after{white-space:pre;text-align:center}
 .banner[hidden],.hint[hidden]{display:none}
+.fps{position:absolute;right:max(6px,env(safe-area-inset-right));bottom:max(4px,env(safe-area-inset-bottom));z-index:3;pointer-events:none;padding:.25em .6em;background:rgba(40,24,8,.72);color:#fff;font:700 11px/1.25 ui-monospace,Consolas,monospace;white-space:pre;text-align:right;border-radius:10px;font-variant-numeric:tabular-nums}
+html[data-lh="1"] .fps{right:auto;left:max(6px,env(safe-area-inset-left))}
 .hint{position:absolute;left:50%;bottom:36cqh;transform:translateX(-50%);z-index:3;pointer-events:none;width:max-content;display:flex;align-items:center;gap:.6rem;padding:.55em 1.1em;border-radius:999px;background:rgba(255,247,227,.94);font:800 clamp(1rem,3.4cqmin,1.4rem)/1.1 var(--display);color:#4a2b0f;box-shadow:0 .16em 0 #b79a63,0 .35em .5em rgba(0,0,0,.18);animation:nudge 1.6s ease-in-out infinite;text-align:center;max-width:92cqw}
 .hint svg{width:2em;height:2em;flex:none}
 @keyframes nudge{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
@@ -322,6 +324,7 @@ html[data-big="1"] .pick{height:2.9rem;min-width:7.8rem;font-size:1rem}html[data
 <div class="bossbar" id="bossBar" hidden role="img" aria-label="Champion health"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#ic-medal"/></svg><div class="bar"><i id="bossFill"></i></div></div>
 <div class="banner" id="banner" hidden></div>
 <div class="demo" id="demoBar" hidden><span id="demoTxt"></span><button class="btn" id="demoX" type="button">Back to shop</button></div>
+<div class="fps" id="fps" hidden aria-hidden="true"></div>
 <div class="hint" id="hint"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 56C16 40 24 24 44 12" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round"/><path d="M34 10l14 0-2 14" fill="none" stroke="#2c8a49" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Flick up from the bottom toward a penguin!</span></div>
 <div class="picks" role="group" aria-label="Pineapple type">
 <button class="pick" type="button" data-t="classic" aria-pressed="true" aria-label="Classic pineapple" title="Classic (key 1): quick throw at one penguin"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#lp-art"/></svg><span>Classic</span></button>
@@ -383,6 +386,8 @@ html[data-big="1"] .pick{height:2.9rem;min-width:7.8rem;font-size:1rem}html[data
 <button class="so" id="cmBig" type="button"><span><b>Large buttons</b><small>Bigger pineapple, pause and Rain buttons.</small></span><i class="st"></i></button>
 <button class="so" id="cmCalm" type="button"><span><b>Calm mode</b><small>No bobbing, confetti or squishing. Starts on by itself if your device asks for less motion.</small></span><i class="st"></i></button>
 <button class="so" id="cmSave" type="button"><span><b>Battery saver</b><small>About 30 pictures a second. Same game, cooler and longer-lasting.</small></span><i class="st"></i></button>
+<button class="so" id="cmHold" type="button"><span><b>Tap or hold to throw</b><small>Tap a penguin to throw at it. Keep holding and it keeps throwing until the penguin is bonked. Flicking still works.</small></span><i class="st"></i></button>
+<button class="so" id="cmFps" type="button"><span><b>FPS counter</b><small>A tiny badge in the corner: frames a second, the slowest frame, and the quality level (0 is the prettiest).</small></span><i class="st"></i></button>
 <button class="so" id="cmFull" type="button" hidden><span><b>Full screen</b><small>Fill the whole screen while you play.</small></span><i class="st"></i></button>
 <h3 class="cm">Save code</h3>
 <p id="svWarn" class="warn" hidden>This browser is not keeping your progress (a private window, perhaps). Copy your save code or make a save file to keep it.</p>

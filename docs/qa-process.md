@@ -37,6 +37,8 @@ Round 33 additions: the fuzz test also plays all five Champion fights with every
 
 Round 39 additions: the settings rows (each has a help line and a state), game speed steps and wraps and really slows the game clock (60% ran at about 60%), large buttons and battery saver switch, and no storage warning when saving works.
 
+Round 40 additions: tap or hold on a penguin throws at it and the hold repeats at the cooldown on the Champion, a flick still works, off means taps do nothing, and the FPS badge shows only when on, has three lines of numbers and covers no button. Count throws by the cooldown jump, since the live shots array shrinks as shots land.
+
 Round 38 additions: the run end card has three buttons, and Save and go to title closes the card, shows the title screen and writes the credits to the saved game.
 
 Round 37 additions: sling tilt (at most about 7 degrees under a hard sideways drag), no throws or helper shots during Ready, Set, GO and free after GO, and the tour (five cards with pictures and Skip, flag saved, replay from How to play).

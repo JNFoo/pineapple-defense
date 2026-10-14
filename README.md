@@ -35,7 +35,7 @@ A short picture tour shows the first time you open the game (you can skip it, an
 - Tap the **pickups** that appear on your table, and the little **surprises** hiding in the scenery (a talking cloud, a duck, a whale, balloons you can pop). Each stage also hides one secret tap spot on each side.
 - After stage 4 you can play **Pineapple Roll**, a carnival bonus game: flick a ball up the lane into the holes. The harder holes score more, and a ball that rattles around a rim can still drop in. You get two plays per run, and what you win becomes Golden Pineapples.
 - **Runs:** clearing all five stages is a run. Each finished run makes penguins and Champions 10% faster (up to double speed) and brings a new challenge and more trophies.
-- **Settings** (title screen): game speed (100% down to 60%), left-handed layout, aim help, the dotted aim arc, high contrast, larger text, large buttons, a calm mode that turns off bobbing, confetti and other motion, a battery saver and full screen.
+- **Settings** (title screen): game speed (100% down to 60%), left-handed layout, aim help, the dotted aim arc, high contrast, larger text, large buttons, a calm mode that turns off bobbing, confetti and other motion, a battery saver, an FPS counter, tap or hold to throw (for very young players) and full screen.
 - Keys on a keyboard: **P** or **Esc** pauses, **R** calls the Pineapple Rain, **1** and **2** pick the pineapple.
 
 ## The five stages

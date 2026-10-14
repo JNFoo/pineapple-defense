@@ -199,6 +199,45 @@ await T('settings: rows, game speed, large buttons, battery saver', async () => 
   return 'steps 100>90, 60% ran at ' + Math.round(slow / full * 100) + '% of normal';
 });
 
+await T('tap or hold on a penguin throws at it; flicks still work', async () => {
+  const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 1; sv.thr = 99; await go(1, 3); P.bot = false; const S = P.S, cv = $('cv');
+  const fire = (type, x, y, id) => { const r = cv.getBoundingClientRect(); cv.dispatchEvent(new PointerEvent(type, { pointerId: id, clientX: r.left + x, clientY: r.top + y, bubbles: true, cancelable: true, pointerType: 'touch' })); };
+  const walkers = () => P.penguins.filter(p => p.st === 'walk');
+  for (let i = 0; i < 300 && !walkers().length; i++) P.step(0.1, 0.05);
+  const pg = walkers()[0]; if (!pg) throw new Error('no walking penguin to tap');
+  const c = P.center(pg), n0 = P.sh.length; S.cd = 0;
+  fire('pointerdown', c.x, c.y, 41);
+  if (P.sh.length !== n0 + 1) throw new Error('tap on a penguin did not throw (' + (P.sh.length - n0) + ')');
+  const shot = P.sh[P.sh.length - 1]; if (!shot.soft) throw new Error('the tap throw did not lock on to the penguin');
+  if (!P.holdOn()) throw new Error('hold did not start'); fire('pointerup', c.x, c.y, 41); if (P.holdOn()) throw new Error('hold did not end on release');
+  /* the hold keeps throwing at a tough target: the Champion */
+  await go(1, 8); P.bot = false; const S2 = P.S; let b = null;
+  for (let i = 0; i < 600; i++) { P.step(0.1, 0.05); b = S2.boss; if (b && b.st === 'hold' && !P.rsg()) break; }
+  if (!b || P.rsg()) throw new Error('Champion never opened'); b.hp = 6; const bc = P.center(b), m0 = P.sh.length; S2.cd = 0;
+  b.hp = 30; fire('pointerdown', bc.x, bc.y, 42); let held = 0, made = 0, pc = S2.cd; for (let i = 0; i < 240 && made < 3; i++) { P.step(0.05, 0.05); held += 0.05; if (S2.cd > pc + 0.1) made++; pc = S2.cd; } made++;   /* the first throw happened on the press; shots in the air do not count, they land */ fire('pointerup', bc.x, bc.y, 42);
+  if (made < 3) throw new Error('holding made only ' + made + ' throws in ' + held.toFixed(1) + ' seconds (hold ' + P.holdOn() + ', boss ' + b.st + ' hp ' + b.hp + ', cd ' + S2.cd + ', over ' + S2.over + ', paused ' + S2.paused + ', rsg ' + P.rsg() + ')');
+  if (held < 0.8) throw new Error('holding threw too fast: ' + made + ' in ' + held.toFixed(2) + ' s');
+  /* nothing under the finger: a normal flick still throws */
+  S2.cd = 0; P.holdOn(); const f0 = P.sh.length; P.flick(0, -1, 4); if (P.sh.length !== f0 + 1) throw new Error('flick stopped working with hold to press on');
+  /* off: a tap does nothing */
+  sv.hp = 0; S2.cd = 0; const q0 = P.sh.length; fire('pointerdown', bc.x, bc.y, 43); fire('pointerup', bc.x, bc.y, 43); if (P.sh.length !== q0) throw new Error('tap threw although hold to press is off');
+  sv.hp = 0; return 'tap throws, hold made ' + made + ' throws in ' + held.toFixed(1) + ' s, flick fine, off is off';
+});
+
+await T('FPS counter: row, badge, numbers', async () => {
+  const sv = P.sv(); sv.fp = 0; sv.hp = 0; await go(1, 2); P.bot = false;
+  const fps = $('fps'); if (!fps || !fps.hidden) throw new Error('badge shown while the setting is off');
+  document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bSet').click(); await wait(50);
+  if (!$('cmFps') || !$('cmHold')) throw new Error('rows missing'); $('cmFps').click(); if (!sv.fp) throw new Error('FPS row did not switch on'); $('cmHold').click(); if (!sv.hp) throw new Error('Hold row did not switch on'); $('cmHold').click(); $('cardOk').click();
+  await go(1, 2); P.bot = false; await wait(1300);
+  if (fps.hidden) throw new Error('badge hidden while playing with the setting on');
+  const tx = fps.textContent; if (!/^\d+ fps\nworst \d+ ms\nquality [0-2]$/.test(tx)) throw new Error('badge text: ' + tx);
+  const r = fps.getBoundingClientRect(), bad = ['pause', 'raid', 'bRaid'].map(i => document.getElementById(i) || document.querySelector('.' + i)).filter(e => e && !e.hidden && (() => { const q = e.getBoundingClientRect(); return q.width && !(r.right < q.left || r.left > q.right || r.bottom < q.top || r.top > q.bottom); })());
+  const pk = [...document.querySelectorAll('.pick')].filter(e => { const q = e.getBoundingClientRect(); return !(r.right < q.left || r.left > q.right || r.bottom < q.top || r.top > q.bottom); });
+  if (bad.length || pk.length) throw new Error('badge covers a button: ' + bad.map(e => e.id || e.className).concat(pk.map(e => e.dataset.t)).join() + ' badge ' + [r.left, r.top, r.right, r.bottom].map(Math.round) + ' view ' + innerWidth + 'x' + innerHeight);
+  sv.fp = 0; return tx;
+});
+
 await T('every trophy and shop upgrade has its own icon', async () => {
   $('bTro').click(); await new Promise(r => setTimeout(r, 50));
   const us = [...document.querySelectorAll('#trList use')].map(u => u.getAttribute('href')); if (us.length !== 21) throw new Error('trophy rows ' + us.length);
