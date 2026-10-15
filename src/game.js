@@ -1,4 +1,4 @@
-/* Pineapple Defense: stage 1 (Sandy Snack Shore). Copyright (c) 2026 JNFoo. All rights reserved. */
+/* Pineapple Defense: stage 1 (Sandy Snack Shore). Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE). */
 (function () {
 'use strict';
 var $ = function (i) { return document.getElementById(i); };

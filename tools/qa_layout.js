@@ -1,4 +1,4 @@
-/* In-page layout checks, run by tools/qa.py once per viewport. Copyright (c) 2026 JNFoo. All rights reserved. */
+/* In-page layout checks, run by tools/qa.py once per viewport. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE). */
 const P = window.__pd, bad = [], wait = ms => new Promise(r => setTimeout(r, ms)), $ = id => document.getElementById(id);
 const R = e => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height }; };
 const hit = (a, b) => a.l < b.r - 1 && b.l < a.r - 1 && a.t < b.b - 1 && b.t < a.b - 1;

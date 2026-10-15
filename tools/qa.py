@@ -1,5 +1,5 @@
 #!/usr/bin/env python3 -I
-"""One-command QA for Pineapple Defense. Copyright (c) 2026 JNFoo. All rights reserved.
+"""One-command QA for Pineapple Defense. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 
   python3 -I tools/qa.py            build, syntax check, then the in-page suite in Chromium (about 10 s)
   python3 -I tools/qa.py --ff       also run it in Firefox (the stress test)

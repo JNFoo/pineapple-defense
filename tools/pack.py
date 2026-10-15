@@ -1,7 +1,7 @@
 #!/usr/bin/env python3 -I
 """Pack index.html into one self-extracting, LZMA-compressed .html file.
 Usage: python3 -I tools/pack.py [out.html]   (run build.py first)
-The decoder is lzma-js (MIT), vendored in src/vendor/lzma/. Copyright (c) 2026 JNFoo. All rights reserved."""
+The decoder is lzma-js (MIT), vendored in src/vendor/lzma/. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE)."""
 import base64, lzma, re, sys, pathlib
 root = pathlib.Path(__file__).resolve().parent.parent
 lab = '--lab' in sys.argv
@@ -22,12 +22,15 @@ for lc in range(0, 5):
 dec = (root / 'src/vendor/lzma/lzma-d-min.js').read_text(encoding='utf-8')
 b64 = base64.b64encode(best).decode()
 csp = "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"
+hdr = (pathlib.Path(__file__).resolve().parent.parent / 'src' / 'header.txt').read_text(encoding='utf-8').rstrip('\n')
 html = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta http-equiv="Content-Security-Policy" content="{csp}"><title>Pineapple Defense{' Test Lab' if lab else ''}</title>
 </head>
 <body><p id="m" style="font:700 18px system-ui,sans-serif;text-align:center;margin:30vh 1em 0;color:#23203f">Unpacking Pineapple Defense...</p><noscript>Pineapple Defense needs JavaScript to run. Sorry!</noscript>
-<!-- Pineapple Defense {ver}, LZMA self-extracting. Copyright (c) 2026 JNFoo. All rights reserved. Decoder: lzma-js (MIT). -->
+<!-- Pineapple Defense {ver}, LZMA self-extracting. Decoder: lzma-js (MIT).
+{hdr}
+-->
 <script>{dec}</script>
 <script>
 (function(){{try{{var s=atob("{b64}"),a=new Array(s.length),i;for(i=0;i<s.length;i++)a[i]=s.charCodeAt(i);

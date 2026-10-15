@@ -1,6 +1,10 @@
 # Changelog
 
-Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 JNFoo. All rights reserved.
+Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
+
+## 2026.10.15.1102
+- **Forged by LFC Foundry, MIT licensed:** a `LICENSE` file (MIT, with the branding notice and the notices of the vendored pieces), the same header block at the top of every built page (the packed file carries it outside the compressed part too), and "Forged by LFC Foundry, MIT License" on the title screen. First-party source, tool and doc headers now say Copyright (c) 2026 LFC Foundry. The vendored JS-modules files keep their own JNFoo MIT notices. Commits are still authored as JNFoo.
+- **Developer:** the header text lives in `src/header.txt` (used by `build.py` and `tools/pack.py`); a new check confirms the header comment, branding notice and title credit are present.
 
 ## 2026.10.14.1352
 - **Sideways play is roomier:** held sideways on a phone, the counters, Pause, the weapon picks and Pineapple Rain move into the empty margins beside the picture and get bigger (the weapon picks were about 75 by 23 px, now 124 by 46). The picture itself is unchanged. While a card is open the side buttons go quiet so a stray tap cannot throw. Left-handed mode mirrors the sides. A small tip, once, on a touch phone: "Turn your phone upright for the biggest view." It never blocks and never comes back.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3 -I
-"""Release in one command. Copyright (c) 2026 JNFoo. All rights reserved.
+"""Release in one command. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
    python3 -I tools/release.py [--ff] [--force]   QA (skipped when nothing changed), then both packed files, old dist files pruned."""
 import glob, os, re, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); py = [sys.executable, '-I']

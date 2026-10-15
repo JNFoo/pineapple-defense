@@ -1,4 +1,4 @@
-/* Penguin outfits. Copyright (c) 2026 JNFoo. All rights reserved.
+/* Penguin outfits. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
    Hats, scarves, mittens and a treat to hold, drawn as small glossy overlays in the penguin's own 200 x 200 sprite space and rasterized once each
    (in the background, like the sprites). A penguin picks its outfit when it spawns: pg.gear = [hat, scarf, mittens, item], 0 meaning none. */
 var GEAR_K = 1.5;   /* pixels per sprite unit for the overlay bitmaps */

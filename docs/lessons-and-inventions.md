@@ -1,6 +1,6 @@
 # Pineapple Defense: lessons learned and things invented here
 
-Copyright (c) 2026 JNFoo. All rights reserved. Written 2026-10-13 for version 2026.10.13.2220.
+Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE). Written 2026-10-13 for version 2026.10.13.2220.
 
 **Purpose.** A foundation for a new session or a new game. Read this first, then `docs/pineapple-defense-design.md` (every decision, round by round), `docs/qa-process.md` (how to test cheaply) and `CHANGELOG.md` (what shipped when). Everything here is about *how to work* and *what was figured out*; nothing secret is recorded (the secret content lives in `private/`, which is not public and is not described here).
 

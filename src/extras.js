@@ -1,4 +1,4 @@
-/* ---------- shop extras (gulls, paper umbrellas, air raid), run streak and challenges, fanfare. Copyright (c) 2026 JNFoo. All rights reserved. ---------- */
+/* ---------- shop extras (gulls, paper umbrellas, air raid), run streak and challenges, fanfare. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE). ---------- */
 var GULL_P = [0, 0.5, 0.8, 1], RAID_N = [0, 1, 2], RUN_MAX = 2, RUN_STEP = 1.1;
 function runK() { return Math.min(RUN_MAX, Math.pow(RUN_STEP, sv.run | 0)); }
 function runPct() { return Math.round((runK() - 1) * 100); }

@@ -1,4 +1,4 @@
-/* In-page QA suite for Pineapple Defense. Copyright (c) 2026 JNFoo. All rights reserved.
+/* In-page QA suite for Pineapple Defense. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
    Evaluated as the body of an async function by tools/qa.py in Chromium and Firefox (page opened with #qa).
    It fast-forwards game time with __pd.step (no per-frame waiting), checks invariants, fuzzes random actions and walks the card flows. */
 const P = window.__pd, R = [], ERR = (window.__qaErr = window.__qaErr || []), FUZZ = window.__qaFuzz || 60;
@@ -758,6 +758,13 @@ await T('Repeat budget: a cleared stage gets shorter waits between waves, a firs
 await T('Sideways tip: not shown upright, and it never changes the saved flag there', async () => {
   const sv = P.sv(); sv.lp = 0; await go(1, 1); const t = document.getElementById('landTip'); if (!t) throw new Error('no tip element');
   if (!t.hidden || sv.lp) throw new Error('tip showed in portrait'); return 'portrait: no tip, flag still 0';
+});
+
+await T('License notice: header comment, branding notice and visible credit are present', async () => {
+  const c = [...document.head.childNodes].filter(n => n.nodeType === 8).map(n => n.data).join('\n');
+  for (const w of ['FORGED BY : LFC Foundry', 'MIT License', 'Copyright (c) 2026 LFC Foundry', 'BRANDING NOTICE']) if (c.indexOf(w) < 0) throw new Error('header lacks: ' + w);
+  const l = document.querySelector('.legal'); if (!l || !/LFC Foundry/.test(l.textContent) || !/MIT/.test(l.textContent) || !/Forged by/.test(l.textContent)) throw new Error('title credit missing: ' + (l && l.textContent));
+  return 'header and credit ok';
 });
 
 await T('Test Lab: first tap time reads out a verdict', async () => {

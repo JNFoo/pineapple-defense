@@ -108,5 +108,6 @@ Everything is one self-contained HTML file built from `src/`. There are no runti
 
 ## Credits and license
 
-Copyright © 2026 JNFoo. All rights reserved.
-Fonts: Bricolage Grotesque and Figtree (SIL OFL 1.1, see `src/fonts/`). `sticker-text` from JS-modules (MIT, see header in `src/vendor/`). LZMA decoder: lzma-js (MIT, see `src/vendor/lzma/`).
+Forged by LFC Foundry. Copyright © 2026 LFC Foundry, released under the MIT License (see `LICENSE`). Branding notice: the name "LFC Foundry" and the project identities are reserved; if you fork, significantly modify or commercially redistribute this game, change the public product name and branding. The same notice sits at the top of every built page and the credit "Forged by LFC Foundry, MIT License" shows on the title screen.
+
+Pieces with their own notices: fonts Bricolage Grotesque and Figtree (SIL OFL 1.1, see `src/fonts/`). `sticker-text` from JS-modules (MIT, see header in `src/vendor/`). LZMA decoder: lzma-js (MIT, see `src/vendor/lzma/`).

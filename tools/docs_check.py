@@ -1,5 +1,5 @@
 #!/usr/bin/env python3 -I
-"""Docs-drift check for Pineapple Defense. Copyright (c) 2026 JNFoo. All rights reserved.
+"""Docs-drift check for Pineapple Defense. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 
   python3 -I tools/docs_check.py        about 0.1 s, no browser, no network; release.py runs it before packing
 

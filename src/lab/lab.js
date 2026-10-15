@@ -1,4 +1,4 @@
-/* Test Lab: tester build only. Not part of the public game. Copyright (c) 2026 JNFoo. All rights reserved. */
+/* Test Lab: tester build only. Not part of the public game. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE). */
 var LAB0 = { aim: SK_AIM, g: SK_G, kz: SK_KZ, inc: SK_INC, rb: SK_RB, balls: SK_BALLS, rim: SK_RIM, wall: SK_WALL, din: SK_DIN, cup: 1, spd: 1 }, LAB_R = SK_HOLES.map(function (h) { return h.r; }), labCup = 1;
 (function () {
   var st = document.createElement('style');

@@ -1,6 +1,6 @@
 # QA and build process
 
-Copyright (c) 2026 JNFoo. All rights reserved.
+Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 
 ## One command
 - `python3 -I tools/qa.py` builds, syntax-checks every inline script, then runs the in-page suite in Chromium (about 10 seconds).
@@ -42,6 +42,8 @@ Round 43 additions: keep-screen-on is wanted only while playing (and held, or re
 Round 42 additions: `--quick` (about 25 s), `--calm`, `--only REGEX`; back swipe guard follows play and pause; the resume snapshot is kept, resumed and dropped; hit pause freezes only the hit object and nothing in Calm; shake strengths; sticky aim and its window; coalesced-event flick; Little hands setup and undo; the grown-ups card text; canvas calls per frame under a ceiling and `save()`/`restore()` balanced; the old-save fixture loads; no network call or link in the shipped page. Time budget: full run about 70 s in Chromium plus about 70 s in Firefox; quick tier about 25 s. Use quick while iterating and the full run once before a release.
 
 Round 41 additions: the layout check runs a Large-buttons combination; edge touches at the screen edge reach the pills and pause; the first-run card sets Flick or Tap and closes; the early flick helper keeps a flick 0.1 s early, drops one 0.3 s early, and does nothing when off; the FPS badge text accepts the tap line and the verdict; fonts are embedded as WOFF2.
+
+Round 46 addition: a check that the header comment (forged by, MIT, copyright, branding notice) and the title credit are in the page.
 
 Round 45 additions: the layout check also runs sideways (892 x 412 and 640 x 360; there only the game screen is swept for 44 px targets, and the side-margin picks, Rain and Pause are checked to stay on screen without overlapping the counters); checks for the shorter waits on a cleared stage and for no sideways tip upright; `tools/motion_audit.py` lists animation lengths.
 

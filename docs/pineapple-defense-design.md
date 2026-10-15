@@ -1,6 +1,6 @@
 # Pineapple Defense: Design Brief (Draft 1)
 
-Copyright © 2026 JNFoo. All Rights Reserved.
+Copyright © 2026 LFC Foundry. MIT License (see LICENSE).
 Brief date: 2026.10.12 (version stamps use year.month.day.HHMM, US Eastern)
 
 ## Status
@@ -71,7 +71,7 @@ Bosses: one Penguin Champion per stage (Bronze, Silver, Gold, Platinum, Grand), 
 - Plain words, short replies; every question asked with the multiple-choice pop-up, recommended option first.
 - No checks or benchmarks while the design is open; run them once the design is final.
 - Test targets: Firefox 158 (stress test), ungoogled-Chromium on Windows, Chrome on the Pixel; laptop first, phone second.
-- Version stamps: year.month.day.HHMM in US Eastern. Copyright holder: JNFoo only. American English.
+- Version stamps: year.month.day.HHMM in US Eastern. Copyright holder and credit: LFC Foundry (MIT, see LICENSE); commits are authored as JNFoo. American English.
 - Sessions follow AGENTS.md and TASKS.md rules (section 28 of the guide).
 
 ## Decisions made, round 3 (2026.10.12.1531)
@@ -449,3 +449,6 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Minigame physics:** floor drag `0.14 + 0.08 * speed`, landing restitution `clamp(0.52 - 0.05 * impact, 0.25, 0.5)`, walls keep 0.55 of the normal speed and lose 6% of the tangential.
 - **Chase cam:** `skChase` (last ball, balls 0, one ball in lane/play/sink/out), `skCam(dt)` eases zoom (1.12 to 1.2 on the lane, 1.36 to 1.68 near rings, 1.75 sinking), focus and slow-mo `K.ts` (down to 0.3 on a sink). The view transform is applied inside `drawSkee` (anchor `SK_AY = 0.62`, clamped to the baked background with a 6 px margin for shake). `K.ts` also scales the effects clock. Shake `K.shake` comes from `skHit` (landings, rims, walls) and `skSinkFx`.
 - **Minigame art:** baked in `skBg` (dusk sky, tents, pennants, pole lamps, brass rails, felt grain, light pool, wood grain, lacquer sheen); drawn live: Ferris wheel, beams, party lights, marquee with chasing bulbs, ring glows (`drawHoleGlow`, `SK_COL`), ball trail and overlay sprite `skBallOv`, sink light columns (`K.bm`), crowd wave and camera flashes.
+
+### Round 46: license and credit
+- `LICENSE` (MIT, Copyright (c) 2026 LFC Foundry, branding notice, third-party list). `src/header.txt` is the one source of the header block: `build.py` fills `<!--{{header}}-->` right after `<head>`, `tools/pack.py` writes it into the outer comment of the packed file. The title screen's `.legal` line reads "Alpha VERSION, Forged by LFC Foundry, MIT License". First-party file headers read "Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE)."; `src/vendor/` keeps JNFoo MIT headers from JS-modules and `src/fonts/` keeps the OFL files.

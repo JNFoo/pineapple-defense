@@ -1,4 +1,4 @@
-/* ---------- parachute fish and penguin evolution. Copyright (c) 2026 JNFoo. All rights reserved. ---------- */
+/* ---------- parachute fish and penguin evolution. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE). ---------- */
 /* every so often a fish floats down on a handkerchief parachute and lands in front of a walking penguin; the penguin eats it
    and levels up: Rockhopper -> Adelie (faster) -> Gentoo (faster and takes two hits) -> Mecha (a robot suit: takes three hits, a little slower than a Gentoo). A hit at any moment still counts. */
 var LEVEL = { rh: 'ad', ad: 'gt', gt: 'mc' }, LMULT = { rh: 1, ad: 1.3, gt: 1.5, mc: 1.35 }, LHP = { rh: 1, ad: 1, gt: 2, mc: 3 }, LNAME = { ad: 'Adélie!', gt: 'Gentoo!', mc: 'MECHA!' };

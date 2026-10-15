@@ -1,5 +1,5 @@
 #!/usr/bin/env python3 -I
-"""Tests docs_check.py by planting each kind of drift in a throwaway copy. Copyright (c) 2026 JNFoo. All rights reserved.  python3 -I tools/test_docs_check.py"""
+"""Tests docs_check.py by planting each kind of drift in a throwaway copy. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).  python3 -I tools/test_docs_check.py"""
 import os, shutil, subprocess, sys, tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def fresh():

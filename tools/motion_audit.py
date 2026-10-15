@@ -1,5 +1,5 @@
 #!/usr/bin/env python3 -I
-# Copyright (c) 2026 JNFoo. All rights reserved.
+# Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 """Motion audit (X21, X64-X66): lists every animation and transition length in the page against a small
 duration scale and prints a plain table. Reads src/title.html and src/game.js only; no browser, under a second.
 Run: python3 -I tools/motion_audit.py            (table)   |   python3 -I tools/motion_audit.py --check   (exit 1 on a flagged one-shot)

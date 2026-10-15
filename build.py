@@ -59,6 +59,7 @@ def main():
     t = (S / "title.html").read_text(encoding="utf-8")
     sp = S / "sprites"
     rep = {
+        "<!--{{header}}-->": "<!--\n" + (S / "header.txt").read_text(encoding="utf-8").rstrip("\n") + "\n-->",
         "<!--{{pineapple}}-->": (sp / "pineapple.svg").read_text(),
         "<!--{{rockhopper}}-->": (sp / "rockhopper.svg").read_text(),
         "<!--{{land}}-->": (sp / "land.svg").read_text(),

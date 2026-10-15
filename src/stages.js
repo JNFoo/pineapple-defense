@@ -1,4 +1,4 @@
-/* ---------- stages 2 to 5: scenery and Champions. Copyright (c) 2026 JNFoo. All rights reserved. ---------- */
+/* ---------- stages 2 to 5: scenery and Champions. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE). ---------- */
 /* every stage is split in two: a warm color on the pineapple side (left) and a cool color on the penguin side (right) */
 function hexRgb(c) { return [parseInt(c.substr(1, 2), 16), parseInt(c.substr(3, 2), 16), parseInt(c.substr(5, 2), 16)]; }
 function mixc(a, b, t) { var x = hexRgb(a), y = hexRgb(b); return 'rgb(' + Math.round(x[0] + (y[0] - x[0]) * t) + ',' + Math.round(x[1] + (y[1] - x[1]) * t) + ',' + Math.round(x[2] + (y[2] - x[2]) * t) + ')'; }
