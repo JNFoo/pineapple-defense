@@ -104,7 +104,7 @@ The owner asked on Oct 12 that this style be understood and used. In one line: g
 - Story stays silly: the penguins are jealous because they can't eat tropical fruit or visit the tropics.
 
 ## JS-modules to use (owner said: use all you need)
-Cloned read-only for this session from https://github.com/JNFoo/JS-modules (commit be68acd). Each module is one dependency-free file copied in at build time with its MIT header kept.
+Cloned read-only for this session from https://github.com/lfcfoundry/JS-modules (commit be68acd). Each module is one dependency-free file copied in at build time with its MIT header kept.
 | Module | Use in Pineapple Defense |
 |---|---|
 | cartoon-3d-kit | The style guide above and its demo, as the visual reference |

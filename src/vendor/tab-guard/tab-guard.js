@@ -1,7 +1,7 @@
 /*!
  * tab-guard.js: keep only one open copy of a page "in charge", so two tabs (or two copies of a game) do not overwrite
  * each other's saved data. Uses the Web Locks API. No timers, no storage, no polling.
- * Part of JS-modules, https://github.com/JNFoo/JS-modules
+ * Part of JS-modules, https://github.com/lfcfoundry/JS-modules
  * Copyright (c) 2026 JNFoo. MIT License (see LICENSE at the repository root).
  *
  *   var g = TabGuard.start({
