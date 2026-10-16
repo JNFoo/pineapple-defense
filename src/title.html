@@ -28,6 +28,7 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--wash,#23203f);ov
 body{height:100dvh;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);display:flex;align-items:center;justify-content:center}
 #stage{position:relative;flex:none;width:360px;height:640px;container-type:size;overflow:hidden;border-radius:14px;background:#cfe6ec;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 12px 60px rgba(0,0,0,.5)}
 .title{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,var(--sky-top) 0%,#cfe6ec 50%,var(--sky-bot) 80%)}
+.scene{position:absolute;inset:0;overflow:hidden;border-radius:14px}
 .title::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;background:radial-gradient(ellipse at 50% 55%,transparent 62%,rgba(42,18,13,.2) 100%)}
 .sun{position:absolute;right:7cqw;top:7cqh;width:clamp(70px,15cqmin,160px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff3c4 0 36%,#ffe08a 37% 60%,rgba(255,217,138,.32) 61% 100%);animation:breathe 5.2s ease-in-out infinite}
 .cloud{position:absolute;left:-30cqw;width:clamp(110px,24cqmin,260px);opacity:.85;animation:drift 110s linear infinite}
@@ -178,6 +179,18 @@ html[data-land="1"] .picks{left:calc(12px - var(--side));bottom:12px;flex-direct
 html[data-land="1"][data-st] .pick{height:46px;min-width:124px;font-size:15px;gap:.4rem}html[data-land="1"][data-st] .pick svg{width:36px;height:36px}
 html[data-land="1"][data-st] .raid{right:calc(12px - var(--side));bottom:12px}html[data-land="1"][data-st][data-lh="1"] .raid{right:auto;left:calc(12px - var(--side))}
 html[data-land="1"] .game:has(#gcw:not([hidden])) :is(.pause,.pick,.raid){pointer-events:none;opacity:.35}
+/* sideways phone, menus and cards: the title art stays clipped to the stage picture (.scene) while the menu buttons and cards use the whole screen at a bigger size */
+html[data-land="1"] #stage,html[data-land="1"] .title{overflow:visible}
+html[data-land="1"] .menu{left:calc(-1*var(--side));right:calc(-1*var(--side));top:0;bottom:0;padding:0;display:grid;grid-template-columns:var(--side) 1fr var(--side);grid-template-rows:repeat(5,auto);align-content:center;justify-items:center;align-items:center;gap:12px 0}
+html[data-land="1"] .menu .row{display:contents}
+html[data-land="1"] .menu .btn{font-size:16px;min-height:48px;min-width:150px;justify-content:center}html[data-land="1"] .menu .btn-play{font-size:24px;min-height:64px}
+html[data-land="1"] .menu #bPlay{grid-column:1;grid-row:1}html[data-land="1"] .menu #bCont{grid-column:1;grid-row:2}html[data-land="1"] .menu #bRep{grid-column:1;grid-row:3}html[data-land="1"] .menu #bShop{grid-column:1;grid-row:4}
+html[data-land="1"] .menu #bHow{grid-column:3;grid-row:1}html[data-land="1"] .menu #bTro{grid-column:3;grid-row:2}html[data-land="1"] .menu #bSet{grid-column:3;grid-row:3}html[data-land="1"] .menu #bCalm{grid-column:3;grid-row:4}
+html[data-land="1"] .menu .goal{grid-column:1/-1;grid-row:5;font-size:14px;max-width:70%}
+html[data-land="1"] .card-wrap{left:calc(-1*var(--side));right:calc(-1*var(--side));padding:8px}
+html[data-land="1"] .cbox{zoom:var(--cz);width:calc(min(560px,var(--side)*1.7)/var(--cz))}
+html[data-land="1"] .card{max-height:calc((var(--ah) - 28px)/var(--cz))}
+html[data-land="1"] .xbtn{width:3.4rem;height:3.4rem}html[data-land="1"] .card .sb{min-height:max(34px,2.4rem)}
 .landtip{position:absolute;z-index:5;pointer-events:none;left:calc(12px - var(--side));top:44%;width:calc(var(--side) - 28px);padding:.6em .8em;border-radius:14px;background:rgba(255,247,227,.96);color:#4a2b0f;font:800 14px/1.25 var(--display);box-shadow:0 3px 0 #b79a63,0 6px 12px rgba(0,0,0,.2)}
 .landtip[hidden]{display:none}html[data-lh="1"] .landtip{left:auto;right:calc(12px - var(--side))}
 .pick[data-t="lobber"]{padding-right:1.35rem}.pick[aria-pressed="true"]{border-color:#3fbf68;box-shadow:0 .2em 0 #1b5c32,0 0 0 4px rgba(63,191,104,.35),0 .4em .6em rgba(0,0,0,.25),inset 0 .12em 0 rgba(255,255,255,.7)}
@@ -263,6 +276,7 @@ html[data-big="1"] .pick{height:2.9rem;min-width:7.8rem;font-size:1rem}html[data
 <!--{{icons}}--><svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><!--{{logo-defs}}--></svg>
 <div id="stage">
 <main class="title" id="title">
+<div class="scene">
 <div class="sun" aria-hidden="true"></div>
 <svg class="cloud c1" viewBox="0 0 120 50" aria-hidden="true"><ellipse cx="60" cy="38" rx="52" ry="10" fill="#fff"/><circle cx="42" cy="28" r="16" fill="#fff"/><circle cx="68" cy="24" r="20" fill="#fff"/><circle cx="92" cy="32" r="12" fill="#fff"/></svg>
 <svg class="cloud c2" viewBox="0 0 120 50" aria-hidden="true"><ellipse cx="60" cy="38" rx="52" ry="10" fill="#fff"/><circle cx="42" cy="28" r="16" fill="#fff"/><circle cx="68" cy="24" r="20" fill="#fff"/><circle cx="92" cy="32" r="12" fill="#fff"/></svg>
@@ -305,6 +319,7 @@ html[data-big="1"] .pick{height:2.9rem;min-width:7.8rem;font-size:1rem}html[data
 <div class="char pg" id="pg" role="button" tabindex="0" aria-label="Poke the penguin" data-mood="happy" style="--glow:var(--pg-glow)">
 <div class="aura"></div><div class="ground"></div>
 <div class="bob"><div class="wig"><div class="art"><!--{{rockhopper}}--></div></div></div>
+</div>
 </div>
 </div>
 <nav class="menu" aria-label="Main menu">
@@ -461,7 +476,7 @@ html[data-big="1"] .pick{height:2.9rem;min-width:7.8rem;font-size:1rem}html[data
 (function(){
 'use strict';
 var root=document.documentElement,title=document.getElementById('title');
-function fit(){var cs=getComputedStyle(document.body),pl=parseFloat(cs.paddingLeft)||0,pr=parseFloat(cs.paddingRight)||0,pt=parseFloat(cs.paddingTop)||0,pb=parseFloat(cs.paddingBottom)||0,aw=Math.max(120,innerWidth-pl-pr),ah=Math.max(120,innerHeight-pt-pb),u=Math.min(aw/360,ah/640),st=document.getElementById('stage');st.style.width=Math.floor(360*u)+'px';st.style.height=Math.floor(640*u)+'px';root.style.fontSize=(16*u).toFixed(2)+'px';var sw=Math.floor(360*u),side=Math.floor((aw-sw)/2),land=aw>=ah*1.4&&ah<=540&&side>=130;root.setAttribute('data-land',land?'1':'0');root.style.setProperty('--side',(land?side:0)+'px');root.style.setProperty('--u',u.toFixed(4)+'px')}
+function fit(){var cs=getComputedStyle(document.body),pl=parseFloat(cs.paddingLeft)||0,pr=parseFloat(cs.paddingRight)||0,pt=parseFloat(cs.paddingTop)||0,pb=parseFloat(cs.paddingBottom)||0,aw=Math.max(120,innerWidth-pl-pr),ah=Math.max(120,innerHeight-pt-pb),u=Math.min(aw/360,ah/640),st=document.getElementById('stage');st.style.width=Math.floor(360*u)+'px';st.style.height=Math.floor(640*u)+'px';root.style.fontSize=(16*u).toFixed(2)+'px';var sw=Math.floor(360*u),side=Math.floor((aw-sw)/2),land=aw>=ah*1.4&&ah<=540&&side>=130;root.setAttribute('data-land',land?'1':'0');root.style.setProperty('--side',(land?side:0)+'px');root.style.setProperty('--u',u.toFixed(4)+'px');root.style.setProperty('--ah',ah+'px');root.style.setProperty('--cz',Math.max(1.4,0.9/u).toFixed(3))}
 fit();addEventListener('resize',fit);addEventListener('orientationchange',fit);
 function $(i){return document.getElementById(i)}
 function mk(c){var e=document.createElement('span');e.className=c;return e}

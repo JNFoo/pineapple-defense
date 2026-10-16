@@ -5,8 +5,8 @@ const hit = (a, b) => a.l < b.r - 1 && b.l < a.r - 1 && a.t < b.b - 1 && b.t < a
 const vw = window.innerWidth, vh = window.innerHeight;
 if (document.documentElement.scrollWidth > vw + 1) bad.push('page scrolls sideways: ' + document.documentElement.scrollWidth + ' > ' + vw);
 /* target-size sweep (idea X134): every visible button, link or field must be at least 44 CSS px on its short side; the weapon picks carry an invisible pad, so they are skipped */
-const land = document.documentElement.getAttribute('data-land') === '1';   /* a phone held sideways: HUD buttons live in the side margins; menus and cards stay at stage scale, so only the game screen is swept there (known gap, see docs/qa-process.md) */
-const sweep = where => (land && where !== 'game') ? 0 : document.querySelectorAll('button,[role=button],a,input,select').forEach(e => { if (!e.offsetParent || e.hidden || e.closest('.pick')) return; const r = R(e); if (r.w && r.h && Math.min(r.w, r.h) < 44) bad.push('target under 44 px in ' + where + ': ' + (e.id || e.className || e.tagName) + ' ' + Math.round(r.w) + 'x' + Math.round(r.h)); });
+const land = document.documentElement.getAttribute('data-land') === '1';   /* a phone held sideways: HUD buttons live in the side margins and menus and cards are enlarged, so every screen is swept there too */
+const sweep = where => document.querySelectorAll('button,[role=button],a,input,select').forEach(e => { if (!e.offsetParent || e.hidden || e.closest('.pick')) return; const r = R(e); if (r.w && r.h && Math.min(r.w, r.h) < 44) bad.push('target under 44 px in ' + where + ': ' + (e.id || e.className || e.tagName) + ' ' + Math.round(r.w) + 'x' + Math.round(r.h)); });
 sweep('title');
 /* title cards: shop, trophies, how to play must fit the screen */
 for (const id of ['bShop', 'bTro', 'bHow', 'bSet']) {
@@ -45,5 +45,5 @@ for (const v of [{ lh: 1, lt: 0, hc: 0, bb: 0 }, { lh: 1, lt: 1, hc: 1, bb: 0 },
 Object.assign(sv, { lh: 0, lt: 0, hc: 0, bb: 0 }); ['lh', 'lt', 'hc', 'big'].forEach(k => document.documentElement.setAttribute('data-' + k, '0'));
 /* run end card with the longest text */
 P.go(5, 0); for (let i = 0; i < 80 && !(P.S && P.S.stage === 5); i++) await wait(25); await wait(40); P.sv().run = 6; P.win(); await wait(80);
-const gc = document.querySelector('#gcw .card'), gr = R(gc); if (gr.l < -1 || gr.r > vw + 1 || gr.t < -1 || gr.b > vh + 1) bad.push('run end card outside screen ' + JSON.stringify(gr));
+sweep('run end card'); const gc = document.querySelector('#gcw .card'), gr = R(gc); if (gr.l < -1 || gr.r > vw + 1 || gr.t < -1 || gr.b > vh + 1) bad.push('run end card outside screen ' + JSON.stringify(gr));
 return { vw, vh, bad };
