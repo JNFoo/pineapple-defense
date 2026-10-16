@@ -2,6 +2,12 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 
+## 2026.10.16.1720
+- **Sideways menus and cards:** held sideways on a phone, the title buttons now sit in the side margins (Play, Continue, Replay a stage and Shop at left; How to play, Trophies, Settings and Calm mode at right), and Settings, Shop, Trophies, How to play and the run end card fill the screen at a bigger size. Every button there is at least 44 px; the layout check now sweeps every screen sideways, so the old known gap is closed.
+- **Roomy letters (Settings, off by default):** wider letter and word spacing and taller lines in cards and menu buttons.
+- **Soft plate behind the HUD counters:** the two counter rows sit on a soft cream plate in portrait play (no blur, so no extra cost per frame); sideways play and the bonus game keep the bare pills.
+- **Moved:** the game now lives at https://github.com/lfcfoundry/pineapple-defense (play page https://lfcfoundry.github.io/pineapple-defense/) and the shared code library at https://github.com/lfcfoundry/JS-modules; the old addresses redirect.
+
 ## 2026.10.15.1102
 - **Forged by LFC Foundry, MIT licensed:** a `LICENSE` file (MIT, with the branding notice and the notices of the vendored pieces), the same header block at the top of every built page (the packed file carries it outside the compressed part too), and "Forged by LFC Foundry, MIT License" on the title screen. First-party source, tool and doc headers now say Copyright (c) 2026 LFC Foundry. The vendored JS-modules files keep their own JNFoo MIT notices. Commits are still authored as JNFoo.
 - **Developer:** the header text lives in `src/header.txt` (used by `build.py` and `tools/pack.py`); a new check confirms the header comment, branding notice and title credit are present.
