@@ -2,7 +2,7 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 
-## @VER@
+## 2026.10.16.1720
 - **Sideways menus and cards:** held sideways on a phone, the title buttons now sit in the side margins (Play, Continue, Replay a stage and Shop at left; How to play, Trophies, Settings and Calm mode at right), and Settings, Shop, Trophies, How to play and the run end card fill the screen at a bigger size. Every button there is at least 44 px; the layout check now sweeps every screen sideways, so the old known gap is closed.
 - **Roomy letters (Settings, off by default):** wider letter and word spacing and taller lines in cards and menu buttons.
 - **Soft plate behind the HUD counters:** the two counter rows sit on a soft cream plate in portrait play (no blur, so no extra cost per frame); sideways play and the bonus game keep the bare pills.
