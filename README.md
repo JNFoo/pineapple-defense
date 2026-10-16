@@ -100,7 +100,7 @@ Everything is one self-contained HTML file built from `src/`. There are no runti
 - Checks: `python3 -I tools/qa.py` (add `--ff` for Firefox). Release: `python3 -I tools/release.py`.
 - Tested in Chromium and Firefox 158. Targets: Android Chrome, Firefox and Chromium-based desktop browsers.
 
-## More from JNFoo
+## More from LFC Foundry
 
 - [Apple Press](https://github.com/JNFoo/apple-press): a clicker game for kids ([play](https://jnfoo.github.io/apple-press/))
 - [Fancy Banana](https://github.com/JNFoo/fancy-banana): a one-tap flying-banana arcade game ([play](https://jnfoo.github.io/fancy-banana/))
