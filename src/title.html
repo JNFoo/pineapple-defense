@@ -191,6 +191,13 @@ html[data-land="1"] .card-wrap{left:calc(-1*var(--side));right:calc(-1*var(--sid
 html[data-land="1"] .cbox{zoom:var(--cz);width:calc(min(560px,var(--side)*1.7)/var(--cz))}
 html[data-land="1"] .card{max-height:calc((var(--ah) - 28px)/var(--cz))}
 html[data-land="1"] .xbtn{width:3.4rem;height:3.4rem}html[data-land="1"] .card .sb{min-height:max(34px,2.4rem)}
+/* soft plate behind the two HUD counter rows (portrait play; sideways and the bonus game keep bare pills; no blur, so nothing is re-filtered every frame) */
+html:not([data-land="1"]) .game:not([data-bonus]) .hud .hrow{background:rgba(255,247,227,.5);border-radius:1rem;padding:.3rem .5rem;margin-inline:.3rem;box-shadow:0 .12em 0 rgba(183,154,99,.5)}
+html:not([data-land="1"]) .game:not([data-bonus]) .hud .hrow+.hrow{align-self:flex-start}
+html[data-lh="1"]:not([data-land="1"]) .game:not([data-bonus]) .hud .hrow+.hrow{align-self:flex-end}
+/* Roomy letters (setting ro): wider letter and word spacing and taller lines in cards and menus */
+html[data-ro="1"] .card *:not(svg):not(path):not(h2):not(h3),html[data-ro="1"] .menu .btn{letter-spacing:.04em;word-spacing:.16em}
+html[data-ro="1"] .card :is(p,li,span,div,small,i){line-height:1.55}
 .landtip{position:absolute;z-index:5;pointer-events:none;left:calc(12px - var(--side));top:44%;width:calc(var(--side) - 28px);padding:.6em .8em;border-radius:14px;background:rgba(255,247,227,.96);color:#4a2b0f;font:800 14px/1.25 var(--display);box-shadow:0 3px 0 #b79a63,0 6px 12px rgba(0,0,0,.2)}
 .landtip[hidden]{display:none}html[data-lh="1"] .landtip{left:auto;right:calc(12px - var(--side))}
 .pick[data-t="lobber"]{padding-right:1.35rem}.pick[aria-pressed="true"]{border-color:#3fbf68;box-shadow:0 .2em 0 #1b5c32,0 0 0 4px rgba(63,191,104,.35),0 .4em .6em rgba(0,0,0,.25),inset 0 .12em 0 rgba(255,255,255,.7)}
@@ -422,6 +429,7 @@ html[data-big="1"] .pick{height:2.9rem;min-width:7.8rem;font-size:1rem}html[data
 <button class="so" id="cmArc" type="button"><span><b>Aim dots</b><small>A dotted line shows where your flick will go.</small></span><i class="st"></i></button>
 <button class="so" id="cmHc" type="button"><span><b>High contrast</b><small>Thick outlines and plainer colors.</small></span><i class="st"></i></button>
 <button class="so" id="cmLt" type="button"><span><b>Larger text</b><small>Bigger words in the game and in menus.</small></span><i class="st"></i></button>
+<button class="so" id="cmRo" type="button"><span><b>Roomy letters</b><small>More space between letters and words in menus and cards.</small></span><i class="st"></i></button>
 <button class="so" id="cmBig" type="button"><span><b>Large buttons</b><small>Bigger pineapple, pause and Rain buttons.</small></span><i class="st"></i></button>
 <button class="so" id="cmCalm" type="button"><span><b>Calm mode</b><small>No bobbing, confetti or squishing. Starts on by itself if your device asks for less motion.</small></span><i class="st"></i></button>
 <button class="so" id="cmSave" type="button"><span><b>Battery saver</b><small>About 30 pictures a second. Same game, cooler and longer-lasting.</small></span><i class="st"></i></button>

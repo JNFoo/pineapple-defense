@@ -743,6 +743,14 @@ await T('Every finger plays: off keeps the first finger, on lets the second take
   return 'setting wired (flick throws need real speed; checked the hand-over only), shots ' + offShots + ' -> ' + P.shots;
 });
 
+await T('Roomy letters: off by default, the Settings row turns the page attribute on and off and spaces the text', async () => {
+  const sv = P.sv(), d = document.documentElement; if (sv.ro !== 0) throw new Error('not off by default: ' + sv.ro);
+  $('bSet').click(); await wait(80); const b = $('cmRo'); if (!b) throw new Error('no Roomy letters row');
+  const ls = () => getComputedStyle(document.querySelector('#cw .card small')).letterSpacing; const before = ls();
+  b.click(); await wait(60); if (d.getAttribute('data-ro') !== '1' || sv.ro !== 1) throw new Error('did not turn on'); const on = ls(); if (on === before) throw new Error('letter spacing unchanged: ' + on);
+  b.click(); await wait(60); if (d.getAttribute('data-ro') !== '0' || sv.ro !== 0) throw new Error('did not turn off'); $('cardOk').click(); await wait(40); return 'off by default; on spaced letters (' + before + ' to ' + on + '); off restored';
+});
+
 await T('Danger glow: on by default, off skips, on draws for a penguin near the stand', async () => {
   await go(1, 2); const sv = P.sv(); if (sv.dg !== 1) throw new Error('not on by default: ' + sv.dg); P.step(6, 0.033); const pg = P.penguins.find(q => q.st === 'walk'); if (!pg) throw new Error('no walking penguin');
   pg.p = 0.85; P.step(0.05, 0.033, 1); sv.dg = 0; P.step(0.05, 0.033, 1); sv.dg = 1; return 'default on; drew with and without it at p=0.85';
