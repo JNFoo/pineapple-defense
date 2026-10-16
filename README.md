@@ -102,8 +102,8 @@ Everything is one self-contained HTML file built from `src/`. There are no runti
 
 ## More from LFC Foundry
 
-- [Apple Press](https://github.com/JNFoo/apple-press): a clicker game for kids ([play](https://jnfoo.github.io/apple-press/))
-- [Fancy Banana](https://github.com/JNFoo/fancy-banana): a one-tap flying-banana arcade game ([play](https://jnfoo.github.io/fancy-banana/))
+- [Apple Press](https://github.com/lfcfoundry/apple-press): a clicker game for kids ([play](https://lfcfoundry.github.io/apple-press/))
+- [Fancy Banana](https://github.com/lfcfoundry/fancy-banana): a one-tap flying-banana arcade game ([play](https://lfcfoundry.github.io/fancy-banana/))
 - [JS-modules](https://github.com/lfcfoundry/JS-modules): free (MIT) code pieces for single-file browser games, a few of which this game uses ([demos](https://lfcfoundry.github.io/JS-modules/))
 
 ## Credits and license
