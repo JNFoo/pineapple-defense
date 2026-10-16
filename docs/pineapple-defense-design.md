@@ -65,7 +65,7 @@ Bosses: one Penguin Champion per stage (Bronze, Silver, Gold, Platinum, Grand), 
 - Art: reuse the JS-modules sprite kits (cartoon-3d-kit and sprite-baker first, then frame-kit, fx-governor and others as they fit). Check `modules.json` and the public page before writing any reusable code. Apple Press style guide to be attached by the owner so the penguins match.
 - First beta: 5 stages (four themed plus a final boss stage), 5 waves each (4, 5, 6, 7 and 8 penguins), then the stage's Champion.
 - Saving: copy/paste save code and save file, like Fancy (save-kit from JS-modules). No sound or music in the first alpha; added later only with approval.
-- Repo: https://github.com/JNFoo/pineapple-defense created by the owner on Oct 12 and attached to this session with push access.
+- Repo: created by the owner on Oct 12 as JNFoo/pineapple-defense, moved on Oct 16 to https://github.com/lfcfoundry/pineapple-defense (history kept; Pages is now https://lfcfoundry.github.io/pineapple-defense/).
 
 ## How we work (from the Master Guide)
 - Plain words, short replies; every question asked with the multiple-choice pop-up, recommended option first.
@@ -78,7 +78,7 @@ Bosses: one Penguin Champion per stage (Bronze, Silver, Gold, Platinum, Grand), 
 - Premise (owner's own words): penguins despise tropical fruit because they can't eat it and can't go to the tropical zones. Played for slapstick envy, not cruelty.
 - Stages: 1 Beach, 2 Ice flats, 3 Iceberg harbor, 4 Storm sea, 5 Glacier fortress. Each stage pushes the penguins closer to their home.
 - Bosses: one big Penguin Champion per stage, each with a gimmick and a weak spot that a particular pineapple exploits (names and gimmicks still to be proposed).
-- Pages: https://jnfoo.github.io/pineapple-defense/ is live (README only for now).
+- Pages: https://lfcfoundry.github.io/pineapple-defense/ is live (README only for now).
 - Push access to the repo confirmed Oct 12 (commit 5bc738e).
 
 ## Look: the glossy 3D toy style (source: JS-modules `modules/cartoon-3d-kit/STYLE-GUIDE.md`)

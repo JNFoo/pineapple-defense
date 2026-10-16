@@ -3,7 +3,7 @@
 <p align="center"><b>Flick pineapples at jealous penguins. Defend your fruit stand. Nobody gets hurt.</b></p>
 
 <p align="center">
-<a href="https://jnfoo.github.io/pineapple-defense/"><b>▶ Play it now</b></a> · free · one small file · works offline · no ads · no tracking
+<a href="https://lfcfoundry.github.io/pineapple-defense/"><b>▶ Play it now</b></a> · free · one small file · works offline · no ads · no tracking
 </p>
 
 <p align="center">
