@@ -45,7 +45,7 @@ Round 41 additions: the layout check runs a Large-buttons combination; edge touc
 
 Round 46 addition: a check that the header comment (forged by, MIT, copyright, branding notice) and the title credit are in the page.
 
-Round 45 additions: the layout check also runs sideways (892 x 412 and 640 x 360; there only the game screen is swept for 44 px targets, and the side-margin picks, Rain and Pause are checked to stay on screen without overlapping the counters); checks for the shorter waits on a cleared stage and for no sideways tip upright; `tools/motion_audit.py` lists animation lengths.
+Round 45 additions: the layout check also runs sideways (892 x 412 and 640 x 360; there every screen is swept for 44 px targets from Round 47, and the side-margin picks, Rain and Pause are checked to stay on screen without overlapping the counters); checks for the shorter waits on a cleared stage and for no sideways tip upright; `tools/motion_audit.py` lists animation lengths.
 
 Round 44 additions: the layout check sweeps every visible button, link and field on the title, each title card and the game screen for a 44 CSS px minimum (weapon picks skipped because of their invisible pad); the run end test now holds the Reset button (a tap, an early release and a slide-off must not reset; the lift of the same finger must not click Undo; Undo must bring the save back); new checks for shop reasons and sizes, the Pause size, the pressed ring, the Resume skip, Every finger plays, the Danger glow default and draw and, in the tester build only, the Flash check (plus a synthetic strobe that proves the meter counts) and First tap time (a plain verdict each).
 
