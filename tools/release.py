@@ -4,7 +4,7 @@
    Test browsers are the ones on the "browsers" branch of JNFoo/knowledgebase-single-file (read its README first; versions can change):
    Firefox, ungoogled Chromium and WebKitGTK, one at a time (set PD_CHROME, PD_FF, PD_GECKO). The release records the versions that really ran
    and writes them into the changelog entry ("Tested in"); it stops if one of the three did not run or the README does not name them."""
-import glob, json, os, re, subprocess, sys
+import glob, json, os, re, shutil, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); py = [sys.executable, '-I']
 def run(*a):
     r = subprocess.run(py + list(a), cwd=ROOT, capture_output=True, text=True); sys.stdout.write(r.stdout); sys.stderr.write(r.stderr)
@@ -14,6 +14,7 @@ if r.returncode: sys.stderr.write(r.stdout + r.stderr); sys.exit(r.returncode)  
 run('tools/test_docs_check.py'); run('tools/docs_check.py', '--allow-unreleased')   # cheap, so before the browsers
 print('reminder: re-read the browsers branch README (git -C <kb-browsers> pull) before relying on these versions')
 run('tools/qa.py', '--ff', '--wk', *[a for a in sys.argv[1:] if a in ('--force', '--fuzz') or a.isdigit()])   # three browsers, always
+for d in ('dist/min', 'dist/lab-min'): shutil.rmtree(os.path.join(ROOT, d), ignore_errors=True)   # a minified page left from an earlier build must never be tested, stamped or shipped as this one
 run('build.py', '--lab', '--min'); run('build.py', '--min')
 if os.path.exists(os.path.join(ROOT, 'dist/min/index.html')):
     run('tools/qa.py', '--min', *[a for a in sys.argv[1:] if a == '--force'])   # the minified page is what ships, so it gets the same suite

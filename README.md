@@ -98,7 +98,7 @@ Everything is one self-contained HTML file built from `src/`. There are no runti
 - Packed single file: `python3 tools/pack.py` makes one smaller, self-unpacking `.html` in `dist/`; add `--min` to pack the minified page (`python3 build.py --min` first, needs `esbuild`).
 - Icons: `python3 -I tools/make_icons.py` regenerates `src/sprites/icons.svg` and the standalone files in `docs/icons/`.
 - Checks: `python3 -I tools/qa.py` (add `--ff` for Firefox). Release: `python3 -I tools/release.py`.
-- Test browsers: Firefox 158, ungoogled Chromium 155 and WebKitGTK 2.52.6 / GNOME Web 46.5, one at a time. WebKitGTK was added to the rule on 2026-10-17, so no release has been tested in it yet. The changelog lists what each release was tested in, and says "not recorded" where that was not noted. Targets: Android Chrome, Firefox and Chromium-based desktop browsers.
+- Test browsers: Firefox 158, ungoogled Chromium 155 and WebKitGTK 2.52.6 / GNOME Web 46.5, one at a time. WebKitGTK was added to the rule on 2026-10-17; release 2026.10.17.0716 is the first one tested in it. The changelog lists what each release was tested in, and says "not recorded" where that was not noted. Targets: Android Chrome, Firefox and Chromium-based desktop browsers.
 
 ## More from LFC Foundry
 

@@ -163,7 +163,11 @@ def twintabs(br):
         try: a.wait_for_function(twin, timeout=5000)   # and the first tab becomes the twin
         except Exception: pass
         if a.evaluate(title) != 'Open in another tab': bad.append('after Use this tab, the first tab did not become the twin (it shows %r)' % a.evaluate(title))
-        if b.evaluate(title) == 'Open in another tab': bad.append('after taking over, the second tab is still a twin')
+        for _ in range(20):   # the tab that takes over reloads itself, so a read can land mid-reload: wait for the new page and read again
+            try: b.wait_for_load_state('load'); bt = b.evaluate(title); break
+            except Exception: b.wait_for_timeout(150)
+        else: bt = ''; bad.append('the second tab never settled after taking over')
+        if bt == 'Open in another tab': bad.append('after taking over, the second tab is still a twin')
     ctx.close(); return bad
 CBV = "(()=>{document.getElementById('bLab').click();})()"
 def labview(shoot, run_js, name):
@@ -209,7 +213,9 @@ with sync_playwright() as p:
         q.goto(url); q.wait_for_function('window.__pd'); lps.append((vw, vh, q))
     for vw, vh, q in lps: q.evaluate('window.__lay=(async()=>{' + layout + '})();0')
     for vw, vh, q in lps:
-        out = q.evaluate('window.__lay'); lay.append((out['vw'], out['vh'], out['bad']))
+        out = q.evaluate('Promise.race([window.__lay, new Promise(r => setTimeout(() => r({ hung: document.visibilityState + " " + innerWidth + "x" + innerHeight + " " + (document.getElementById("cardTitle") || {}).textContent }), 60000))])')   # a stuck layout page fails with its state instead of waiting forever
+        if out.get('hung'): lay.append((vw, vh, ['layout script did not finish in 60 s (' + out['hung'] + ')'])); q.context.close(); continue
+        lay.append((out['vw'], out['vh'], out['bad']))
         if SHOTS: q.screenshot(path=os.path.join(SHOTS, 'layout-%dx%d.png' % (vw, vh)))
         q.context.close()
     phase('chromium: layout, 6 sizes')
