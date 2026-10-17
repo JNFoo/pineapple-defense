@@ -8,11 +8,14 @@ if (!window.__qaHooked) {
   window.addEventListener('unhandledrejection', e => ERR.push('promise: ' + e.reason));
   const ce = console.error; console.error = function () { ERR.push([].join.call(arguments, ' ')); return ce.apply(console, arguments); };
 }
-const wait = ms => new Promise(r => setTimeout(r, ms));
+const wait0 = ms => new Promise(r => setTimeout(r, ms));
+/* wait(ms): a pause of up to 100 ms is "let the click's effects land", and one painted frame does that; it is cut short by the old ms, so it can only be shorter than before (30 to 80 ms became about 16).
+   Longer waits are real time on purpose (game speed, the wake lock timer, nothing-happens checks) and stay as they were. */
+const wait = ms => ms > 100 ? wait0(ms) : Promise.race([new Promise(r => requestAnimationFrame(() => r())), wait0(ms)]);
 const $ = id => document.getElementById(id);
 const cardUp = () => !$('gcw').hidden;
 const card = () => ({ t: $('gTitle').textContent, b1: $('gBtn1').textContent, b2: $('gBtn2').textContent, b3: $('gBtn3').hidden ? '' : $('gBtn3').textContent, body: $('gBody').textContent });
-async function wf(fn, ms) { const t0 = Date.now(); while (Date.now() - t0 < (ms || 3000)) { if (fn()) return true; await wait(25); } return false; }
+async function wf(fn, ms) { const t0 = Date.now(); while (Date.now() - t0 < (ms || 3000)) { if (fn()) return true; await wait0(8); } return false; }
 /* P.step draws and updates the page at the end of every call. Loops of 0.05 s ticks used to draw hundreds of frames nobody looks at (a Champion fight is about 500 of them);
    WebKitGTK queues them and pays at the next pause, so the stage start after a fight took 12 to 18 s. tk() ticks without drawing and draws one frame every 20 ticks (one game second),
    so the draw code still meets every phase of the fight; the fuzz check keeps drawing every 25 ticks and the page's own loop draws real frames while the suite waits. */
@@ -44,16 +47,18 @@ let skipped = 0;
 async function T(name, fn) {
   if (ONLY && !ONLY.test(name)) return;
   if (QUICK && SLOW.has(name) && (qHash(name) + QUICK) % 4 !== 0) { skipped++; return; }
+  if (P && P.idleLoop) P.idleLoop();   /* every check starts with the page's own loop stopped, so none depends on a loop an earlier check left running; a check that needs real frames asks for them with go(stage, wave, true) */
   const t0 = performance.now(), e0 = ERR.length; let ok = true, d = '';
   try { const r = await fn(); if (typeof r === 'string') d = r; } catch (e) { ok = false; d = String(e && e.message || e); }
   if (ERR.length > e0) { ok = false; d += ' | page errors: ' + ERR.slice(e0).join(' // ').slice(0, 300); }
   R.push({ n: name, ok, ms: Math.round(performance.now() - t0), d });
 }
-async function go(st, w) { P.go(st, w); if (!await wf(() => P.S && P.S.stage === st && P.penguins !== undefined && !$('game').hidden, 4000 * (window.__qaSlow || 1))) throw new Error('go timeout ' + JSON.stringify({ want: st, stage: P.S && P.S.stage, pen: P.penguins !== undefined, gameHidden: $('game').hidden, card: cardUp(), paused: !!(P.S && P.S.paused), docHidden: document.hidden, waitedMs: 4000 * (window.__qaSlow || 1) })); await wait(80); P.bot = false; }
+async function go(st, w, live) { const gp = P.go(st, w, !(live || window.__qaLive));   /* idle by default: the page's own loop would draw real frames nobody looks at while the suite steps the game itself (a frame costs 150 to 1,250 ms in WebKitGTK) */
+   if (gp && gp.then) await gp; if (!await wf(() => P.S && P.S.stage === st && P.penguins !== undefined && !$('game').hidden, 4000 * (window.__qaSlow || 1))) throw new Error('go timeout ' + JSON.stringify({ want: st, stage: P.S && P.S.stage, pen: P.penguins !== undefined, gameHidden: $('game').hidden, card: cardUp(), paused: !!(P.S && P.S.paused), docHidden: document.hidden, waitedMs: 4000 * (window.__qaSlow || 1) })); await wait(80); P.bot = false; }
 
 await T('load', async () => { if (!P) throw new Error('no __pd'); const sv = P.sv(); ['stage', 'wave', 'bank', 'ach', 'ac2', 'gu', 'um', 'ra', 'run', 'cd', 'rl', 'lm', 'lh', 'aim', 'arc', 'hc', 'lt', 'thr'].forEach(k => { if (!isFinite(sv[k])) throw new Error('save field ' + k + ' = ' + sv[k]); }); });
 
-for (let st = 1; st <= 5; st++) await T('stage ' + st + ' runs', async () => { await go(st, 0); P.bot = true; P.step(25, 0.033, 40); inv('stage' + st); P.bot = false; });
+for (let st = 1; st <= 5; st++) await T('stage ' + st + ' runs', async () => { await go(st, 0); if (P.bgAlpha() !== 255) throw new Error('the stage background has a see-through pixel (lowest alpha ' + P.bgAlpha() + '); the opaque canvas would show it as a dark line'); P.bot = true; P.step(25, 0.033, 40); inv('stage' + st); P.bot = false; });
 
 await T('page policy: WebAssembly may run (wasm-unsafe-eval), nothing else loosened', async () => {
   /* owner's rule 2026-10-17: 'wasm-unsafe-eval' on every page. The policy text must be exactly this; an empty module (\0asm, version 1) must compile where the browser enforces the policy for page scripts (WebKitGTK does; Playwright and Selenium script injection in Chromium and Firefox is exempt, so there the text check is the real one). */
@@ -139,7 +144,7 @@ await T('auto slingshot is slower and sometimes misses', async () => {
 });
 
 await T('mecha penguins: a Gentoo that eats a fish is tougher than a normal penguin', async () => {
-  await go(2, 2); P.bot = false; P.step(4, 0.05); const S = P.S, L = P.penguins, sv0 = P.sv(); if (!L.length) throw new Error('no penguins');
+  await go(2, 2, true); P.bot = false; P.step(4, 0.05); const S = P.S, L = P.penguins, sv0 = P.sv(); if (!L.length) throw new Error('no penguins');
   L.forEach(pg => { if (pg.st === 'walk') { pg.kind = 'gt'; pg.hp = 2; pg.big = 1.12; pg.p = 0.18; pg.v = Math.min(pg.v, 0.02); } });
   let mc = null, drops = 0, k; for (k = 0; k < 24 && !mc; k++) { if (P.fish()) drops++; P.step(4.5, 0.05); mc = P.penguins.find(pg => pg.kind === 'mc'); if (!mc) P.penguins.forEach(pg => { if (pg.st === 'walk') { if (pg.kind === 'ad') { pg.kind = 'gt'; pg.hp = 2; } if (pg.p > 0.3) pg.p = 0.18; } }); }
   if (!mc) throw new Error('no Gentoo ever became a mecha penguin (' + drops + ' fish dropped in ' + k + ' tries; gull level ' + sv0.gu + '; penguins ' + P.penguins.map(pg => pg.kind + '/' + pg.st + '/' + pg.p.toFixed(2)).join(' ') + '; fish left ' + S.fish.length + ')');
@@ -221,13 +226,15 @@ await T('settings: rows, game speed, large buttons, battery saver', async () => 
   $('cmSave').click(); if (!sv.bv) throw new Error('battery saver did not switch on'); $('cmSave').click();
   const warn = $('svWarn'); if (!warn || !warn.hidden) throw new Error('storage warning shown although saving works');
   $('cardOk').click(); document.getElementById('title').hidden = true; document.getElementById('game').hidden = false;
-  /* the speed setting slows the game clock in real play */
-  /* three samples of each, middle one kept: one browser hitch inside a 600 ms window cannot flip the verdict */
-  const meas = async (sp) => { sv.sp = sp; await go(1, 3); P.bot = false; const S = P.S; await wait(150); const t0 = S.t; await wait(600); return S.t - t0; };
-  const med = (a) => a.sort((x, y) => x - y)[1], fs = [], ss = [];
-  for (let i = 0; i < 3; i++) { fs.push(await meas(0)); ss.push(await meas(4)); }
-  const full = med(fs), slow = med(ss); sv.sp = 0;
-  if (!(full > 0.3)) throw new Error('the clock did not run (' + full + ')'); if (slow > full * 0.8 || slow < full * 0.4) throw new Error('60% speed ran at ' + Math.round(slow / full * 100) + '% of normal');
+  /* the speed setting slows the game clock in real play. Measured per frame, not per second: each real frame the game moves its clock by min(frame gap, 50 ms) times the speed, so
+     (game clock moved) / (capped frame gaps) is the speed itself whatever the browser's frame rate (WebKitGTK draws a frame in 150 ms or more; a fixed 300 ms window caught one or two of them). */
+  const meas = async (sp) => {
+    sv.sp = sp; await go(1, 3, true); P.bot = false; const S = P.S; let n = 0, prevNow = 0, prevT = 0, gap = 0, moved = 0;
+    await new Promise(res => { const f = now => { if (n >= 3) { gap += Math.min(now - prevNow, 50) / 1000; moved += S.t - prevT; } prevNow = now; prevT = S.t; if (++n >= 9) res(); else requestAnimationFrame(f); }; requestAnimationFrame(f); });   /* the game's own frame callback runs first in each frame, so S.t already holds this frame's step */
+    return moved / gap;
+  };
+  const full = await meas(0), slow = await meas(4); sv.sp = 0;
+  if (!(full > 0.9 && full < 1.1)) throw new Error('the clock ran at ' + Math.round(full * 100) + '% of real time at 100% speed'); if (slow > full * 0.8 || slow < full * 0.4) throw new Error('60% speed ran at ' + Math.round(slow / full * 100) + '% of normal');
   return 'steps 100>90, 60% ran at ' + Math.round(slow / full * 100) + '% of normal';
 });
 
@@ -257,11 +264,11 @@ await T('tap or hold on a penguin throws at it; flicks still work', async () => 
 });
 
 await T('FPS counter: row, badge, numbers', async () => {
-  const sv = P.sv(); sv.fp = 0; sv.hp = 0; await go(1, 2); P.bot = false;
+  const sv = P.sv(); sv.fp = 0; sv.hp = 0; await go(1, 2, true); P.bot = false;
   const fps = $('fps'); if (!fps || !fps.hidden) throw new Error('badge shown while the setting is off');
   document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bSet').click(); await wait(50);
   if (!$('cmFps') || !$('cmHold')) throw new Error('rows missing'); $('cmFps').click(); if (!sv.fp) throw new Error('FPS row did not switch on'); $('cmHold').click(); if (!sv.hp) throw new Error('Hold row did not switch on'); $('cmHold').click(); $('cardOk').click();
-  await go(1, 2); P.bot = false; await wf(() => !fps.hidden && /^\d+ fps/.test(fps.textContent), 4000 * (window.__qaSlow || 1));
+  await go(1, 2, true); P.bot = false; await wf(() => !fps.hidden && /^\d+ fps/.test(fps.textContent), 4000 * (window.__qaSlow || 1));
   if (fps.hidden) throw new Error('badge hidden while playing with the setting on');
   const tx = fps.textContent; if (!/^\d+ fps\nworst \d+ ms\nquality [0-2]\n(tap \d+ ms\n)?(smooth|\d+ hitch(es)?: [a-z ]+)$/.test(tx)) throw new Error('badge text: ' + tx);
   const r = fps.getBoundingClientRect(), bad = ['pause', 'raid', 'bRaid'].map(i => document.getElementById(i) || document.querySelector('.' + i)).filter(e => e && !e.hidden && (() => { const q = e.getBoundingClientRect(); return q.width && !(r.right < q.left || r.left > q.right || r.bottom < q.top || r.top > q.bottom); })());
@@ -315,7 +322,7 @@ await T('fonts are WOFF2 when the build machine can compress them', async () => 
 });
 
 await T('back swipe: pauses while playing; nothing watches on the Paused card', async () => {
-  await go(1, 2); P.bot = false; if (!P.backArmed()) throw new Error('not watching for a back swipe while playing');
+  await go(1, 2, true); P.bot = false; if (!P.backArmed()) throw new Error('not watching for a back swipe while playing');
   $('bPause').click(); await wait(30); if (!cardUp()) throw new Error('no Paused card'); if (P.backArmed()) throw new Error('still watching on the Paused card: a second back swipe could never leave');
   $('gBtn1').click(); await wait(60); if (!P.backArmed()) throw new Error('not watching again after Resume');
   P.pause(); await wait(30); if (!cardUp() || P.S.paused !== true) throw new Error('the back handler (pause) did not pause'); $('gBtn1').click(); await wait(30);
@@ -323,7 +330,7 @@ await T('back swipe: pauses while playing; nothing watches on the Paused card', 
 });
 
 await T('resume snapshot: pausing notes the penguins left; Continue picks the wave up', async () => {
-  const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.stage = 2; sv.wave = 2; sv.sl = 0; await go(2, 2); P.bot = false; const S = P.S;
+  const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.stage = 2; sv.wave = 2; sv.sl = 0; await go(2, 2, true); P.bot = false; const S = P.S;
   P.bot = true; for (let i = 0; i < 800 && !(S.mode === 'run' && S.spawned >= 4 && S.toSpawn - S.spawned + P.penguins.filter(p => p.st === 'walk').length < S.toSpawn - 1); i++) tk(0.1, 0.05); P.bot = false;
   const full = S.toSpawn, left = S.toSpawn - S.spawned + P.penguins.filter(p => p.st === 'walk').length;
   $('bPause').click(); await wait(30); const sn = P.snap();
@@ -340,7 +347,7 @@ await T('hit pause: only the hit penguin freezes; the clock runs; off and Calm d
   const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 1; sv.thr = 99; const root = document.documentElement, cv = $('cv');
   const fire = (type, x, y, id) => { const r = cv.getBoundingClientRect(); cv.dispatchEvent(new PointerEvent(type, { pointerId: id, clientX: r.left + x, clientY: r.top + y, bubbles: true, cancelable: true, pointerType: 'touch' })); };
   const hitOne = async (hs) => {
-    sv.hs = hs; await go(1, 3); P.bot = false; const S = P.S;
+    sv.hs = hs; await go(1, 3, true); P.bot = false; const S = P.S;
     for (let i = 0; i < 300 && !P.penguins.some(p => p.st === 'walk' && p.p > 0.25); i++) tk(0.1, 0.05);
     const pg = P.penguins.find(p => p.st === 'walk' && p.p > 0.25); if (!pg) throw new Error('no penguin'); pg.hp = 1; S.cd = 0; const c = P.center(pg); fire('pointerdown', c.x, c.y, 71); fire('pointerup', c.x, c.y, 71);
     for (let i = 0; i < 80 && pg.st !== 'hit'; i++) P.step(0.02, 0.01); if (pg.st !== 'hit') throw new Error('penguin never got hit');
@@ -358,7 +365,7 @@ await T('screen shake: strength setting; Strong adds a little on every hit', asy
   const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 1; sv.thr = 99; const cv = $('cv'), root = document.documentElement;
   const fire = (type, x, y, id) => { const r = cv.getBoundingClientRect(); cv.dispatchEvent(new PointerEvent(type, { pointerId: id, clientX: r.left + x, clientY: r.top + y, bubbles: true, cancelable: true, pointerType: 'touch' })); };
   const wasCalm = root.getAttribute('data-calm') === '1'; if (wasCalm) $('bCalm').click();
-  const shakeAfterHit = async (sk) => { sv.sk = sk; await go(1, 3); P.bot = false; const S = P.S; S.shk = 0; for (let i = 0; i < 300 && !P.penguins.some(p => p.st === 'walk' && p.p > 0.25); i++) tk(0.1, 0.05); const pg = P.penguins.find(p => p.st === 'walk' && p.p > 0.25); pg.hp = 1; S.cd = 0; const c = P.center(pg); fire('pointerdown', c.x, c.y, 72); fire('pointerup', c.x, c.y, 72); let mx = 0; for (let i = 0; i < 60; i++) { P.step(0.02, 0.01, 1); mx = Math.max(mx, S.shk); } return mx; };
+  const shakeAfterHit = async (sk) => { sv.sk = sk; await go(1, 3, true); P.bot = false; const S = P.S; S.shk = 0; for (let i = 0; i < 300 && !P.penguins.some(p => p.st === 'walk' && p.p > 0.25); i++) tk(0.1, 0.05); const pg = P.penguins.find(p => p.st === 'walk' && p.p > 0.25); pg.hp = 1; S.cd = 0; const c = P.center(pg); fire('pointerdown', c.x, c.y, 72); fire('pointerup', c.x, c.y, 72); let mx = 0; for (let i = 0; i < 60; i++) { P.step(0.02, 0.01, 1); mx = Math.max(mx, S.shk); } return mx; };
   const n = await shakeAfterHit(2), st = await shakeAfterHit(3); if (n > 0.01) throw new Error('Normal shook on a single hit: ' + n); if (st < 0.1) throw new Error('Strong did not shake on a hit: ' + st);
   for (const sk of [0, 1, 2, 3]) { sv.sk = sk; P.S.shk = 1; P.step(0.1, 0.05, 1); }   /* every strength draws without an error */
   sv.sk = 2; sv.hp = 0; if (wasCalm) $('bCalm').click(); return 'Normal ' + n.toFixed(2) + ', Strong ' + st.toFixed(2) + ' after one hit; all four strengths draw';
@@ -404,10 +411,10 @@ await T('For grown-ups card: opens from Settings and says what is true', async (
 
 await T('canvas work per frame stays under its ceiling in every stage (counts, not time)', async () => {
   if (typeof CanvasProbe === 'undefined') return 'skipped: the probe was not loaded';
-  const CEIL = [0, 620, 600, 750, 950, 670], out = [], sv = P.sv(); sv.au = 1; sv.um = 3; sv.ra = 2;
+  const CEIL = [0, 620, 600, 750, 950, 670], out = [], sv = P.sv(), NF = 45; sv.au = 1; sv.um = 3; sv.ra = 2;   /* 45 frames: the median of counts does not need more (100 took 6.8 s) */
   for (let st = 1; st <= 5; st++) {
-    await go(st, st === 5 ? 6 : 3); P.bot = true; P.step(4, 0.033, 0); const probe = CanvasProbe.install({ keep: 100 });
-    for (let i = 0; i < 100; i++) { P.step(0.033, 0.033, 1); probe.frame(); }
+    await go(st, st === 5 ? 6 : 3); P.bot = true; P.step(4, 0.033, 0); const probe = CanvasProbe.install({ keep: NF });
+    for (let i = 0; i < NF; i++) { P.step(0.033, 0.033, 1); probe.frame(); }
     const r = probe.report(); probe.uninstall(); P.bot = false;
     const total = Object.keys(r.calls).reduce((a, k) => a + r.calls[k].median, 0); out.push(st + ':' + total);
     if (total > CEIL[st]) throw new Error('stage ' + st + ' draws ' + total + ' canvas calls a frame, ceiling ' + CEIL[st] + ' (' + probe.text().slice(0, 160) + ')');
@@ -425,7 +432,7 @@ await T('hints: a Champion tip shows until you beat that Champion; the helper hi
 });
 
 await T('keep screen on: held only while playing; Battery saver and the setting turn it off', async () => {
-  const sv = P.sv(); sv.wl = 1; sv.bv = 0; await go(1, 2); P.bot = false; await wait(120); let w = P.wake();
+  const sv = P.sv(); sv.wl = 1; sv.bv = 0; await go(1, 2, true); P.bot = false; await wait(120); let w = P.wake();
   if (!w.want) throw new Error('not asking for the lock while playing'); if (w.sup && !w.held && !w.refusals) throw new Error('supported, not refused, but not held');
   $('bPause').click(); await wait(60); w = P.wake(); if (w.want || w.held) throw new Error('lock kept on the Paused card'); $('gBtn1').click(); await wait(120); w = P.wake(); if (!w.want) throw new Error('not asking again after Resume');
   sv.bv = 1; if (P.wake().want) throw new Error('Battery saver should turn the lock off'); sv.bv = 0; sv.wl = 0; if (P.wake().want) throw new Error('the setting should turn the lock off'); sv.wl = 1;
@@ -444,7 +451,7 @@ await T('assist offer: the same wave lost twice gets one kind offer, never again
 });
 
 await T('context loss: the game pauses on a lost picture and offers a reload', async () => {
-  await go(1, 2); P.bot = false; const e = new Event('contextlost', { cancelable: true }); $('cv').dispatchEvent(e);
+  await go(1, 2, true); P.bot = false; const e = new Event('contextlost', { cancelable: true }); $('cv').dispatchEvent(e);
   if (!e.defaultPrevented) throw new Error('contextlost was not prevented, so the browser would never restore the canvas'); await wait(30);
   if (!cardUp() || card().t !== 'The picture hiccuped' || card().b1 !== 'Reload') throw new Error('no reload card: ' + JSON.stringify(card()));
   if (!P.S.paused) throw new Error('the game kept running'); $('cv').dispatchEvent(new Event('contextlost', { cancelable: true })); if (!cardUp()) throw new Error('a second event closed the card');
@@ -459,7 +466,7 @@ await T('second tab: a twin copy plays without saving and can take over', async 
   document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('twLook').click(); $('bSet').click(); await wait(30);
   $('cmHc').click(); if (raw() !== r1) throw new Error('a twin tab wrote the save'); $('cmHc').click(); if (raw() !== r1) throw new Error('a twin tab wrote the save (second click)');
   P.twinTest(false); $('cmHc').click(); if (raw() === r1) throw new Error('saving did not come back after leaving twin mode'); $('cmHc').click(); $('cardOk').click(); sv.hc = 0;
-  await go(1, 2); P.bot = false; P.twinTest(true); await wait(30); if (!cardUp() || card().t !== 'Open in another tab' || card().b1 !== 'Use this tab' || card().b2 !== 'Keep playing without saving') throw new Error('in-game twin card: ' + JSON.stringify(card()));
+  await go(1, 2, true); P.bot = false; P.twinTest(true); await wait(30); if (!cardUp() || card().t !== 'Open in another tab' || card().b1 !== 'Use this tab' || card().b2 !== 'Keep playing without saving') throw new Error('in-game twin card: ' + JSON.stringify(card()));
   if (!P.S.paused) throw new Error('the game kept running under the twin card'); $('gBtn2').click(); await wait(60); if (P.S.paused) throw new Error('Keep playing did not resume'); P.twinTest(false);
   return 'title card, in-game card, no writes while twin, saving returns';
 });
@@ -605,7 +612,7 @@ await T('stage 4 offer, roll, on to 5', async () => {
 });
 
 await T('bonus game: two rolls per run', async () => {
-  const sv = P.sv(); sv.rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('first roll'); if (sv.rl !== 1) throw new Error('rl ' + sv.rl);
+  const sv = P.sv(); sv.rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('first roll'); if (sv.rl !== 1) throw new Error('rl ' + sv.rl); if (P.bgAlpha() !== 255) throw new Error('the bonus game background has a see-through pixel (lowest alpha ' + P.bgAlpha() + ')');
   P.endSk(50); P.step(0.2, 0.033); if (!await wf(cardUp, 2000)) throw new Error('no card'); let c = card();
   if (!/Roll again/.test(c.b1) || !/one more/.test(c.body)) throw new Error(JSON.stringify(c));
   $('gBtn1').click(); if (!await wf(() => P.K && P.sv().rl === 2, 3000)) throw new Error('second roll');
@@ -662,25 +669,25 @@ await T('bonus game: balls roll off ring walls instead of hanging, and rims ratt
 });
 
 await T('grand finale fireworks delay the card', async () => {
-  P.sv().rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('no minigame'); const had = !!(P.sv().ac2 & (1 << 10));
+  await go(1, 0, true); P.sv().rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('no minigame'); const had = !!(P.sv().ac2 & (1 << 10));
   P.endSk(100); P.step(0.3, 0.033); if (!CALM && cardUp()) throw new Error('card came before the fireworks');   /* calm mode skips the fireworks, so the card may come at once */
    P.step(4, 0.033, 12);
   if (!cardUp()) throw new Error('card never came'); if (!had && !/Grand Finale/.test(card().body)) throw new Error('trophy text missing'); $('gBtn2').click(); await wait(100);
 });
 
 await T('run end card: save, reset, confirm', async () => {
-  await go(5, 0); const sv = P.sv(); sv.bank = 500; sv.gu = 2; sv.ra = 1; sv.ach = sv.ach | 5; const ach0 = sv.ach, run0 = sv.run;
+  await go(5, 0, true); const sv = P.sv(); sv.bank = 500; sv.gu = 2; sv.ra = 1; sv.ach = sv.ach | 5; const ach0 = sv.ach, run0 = sv.run;
   P.win(); await wait(50); let c = card(); if (c.t !== 'You did it!' || c.b1 !== 'Save and restart' || c.b2 !== 'Save and go to title' || c.b3 !== 'Reset completely') throw new Error(JSON.stringify(c));
   if (sv.run !== run0 + 1) throw new Error('run did not count: ' + sv.run);
   $('gBtn3').click(); await wait(30); c = card(); if (c.t !== 'Reset everything?' || c.b1 !== 'Keep my stuff') throw new Error('no confirm: ' + JSON.stringify(c));
   $('gBtn1').click(); await wait(30); c = card(); if (c.t !== 'You did it!') throw new Error('keep did not return: ' + c.t); if (sv.bank < 500) throw new Error('keep lost credits');
   $('gBtn1').click(); if (!await wf(() => !cardUp() && P.S.stage === 1, 3000)) throw new Error('save and restart did not start stage 1'); if (sv.bank < 500 || sv.gu !== 2) throw new Error('save and restart lost upgrades');
   /* save and go to title: the card closes, the title shows, the progress is kept and Continue is ready */
-  await go(5, 0); sv.bank = 321; P.win(); await wait(50); $('gBtn2').click(); await wait(50);
+  await go(5, 0, true); sv.bank = 321; P.win(); await wait(50); $('gBtn2').click(); await wait(50);
   if (cardUp() || document.getElementById('title').hidden || !document.getElementById('game').hidden) throw new Error('did not return to the title screen'); if (sv.bank !== 321) throw new Error('save lost credits');
   if (JSON.parse(localStorage.getItem('pd-save')).bank !== 321) throw new Error('the credits were not written to the saved game');
   document.getElementById('title').hidden = true; document.getElementById('game').hidden = false;
-  await go(5, 0); P.win(); await wait(50); const bank0 = sv.bank; if (!$('gBtn3').classList.contains('quiet')) throw new Error('Reset is not drawn as the small quiet link');
+  await go(5, 0, true); P.win(); await wait(50); const bank0 = sv.bank; if (!$('gBtn3').classList.contains('quiet')) throw new Error('Reset is not drawn as the small quiet link');
   $('gBtn3').click(); await wait(30); const hb = $('gBtn2'), down = () => hb.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 7, button: 0, bubbles: true })), up = () => hb.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, bubbles: true }));
   if (hb.textContent !== 'Hold to reset') throw new Error('confirm button says ' + hb.textContent);
   hb.click(); await wait(30); if (card().t !== 'Reset everything?' || sv.bank !== bank0) throw new Error('a plain tap reset the game');
@@ -701,7 +708,7 @@ await T('run end card: save, reset, confirm', async () => {
 });
 
 await T('pause keys', async () => {
-  await go(1, 2); const S = P.S; P.key('p'); if (!S.paused || !cardUp()) throw new Error('p did not pause'); P.key('p'); if (S.paused || cardUp()) throw new Error('p did not resume');
+  await go(1, 2, true); const S = P.S; P.key('p'); if (!S.paused || !cardUp()) throw new Error('p did not pause'); P.key('p'); if (S.paused || cardUp()) throw new Error('p did not resume');
   P.key('Escape'); if (!S.paused) throw new Error('escape did not pause'); P.resume();
 });
 
