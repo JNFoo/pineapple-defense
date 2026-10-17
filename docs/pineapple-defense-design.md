@@ -468,3 +468,9 @@ Built and playable in `index.html`. It is made from `src/` by `build.py` (never 
 - **Copy report** puts the same text on the clipboard (clipboard API, then a hidden textarea as the fallback; if both fail the text on the card is selectable) so one paste brings the numbers back. Flash check stays separate because it steps time itself and says nothing about device speed.
 - QA: `window.__deviceCheck({warm, run}, cb)` runs a 1.5 s version in the tester suite and checks the report lines and the verdict word.
 
+### Round 50: slow-CPU test, a blind spot in the quality governor
+- **Method:** the packed tester file in the container's Chromium at 412 x 892 (2.625x), CDP CPU throttle 1x, 4x and 6x, Device check each time. Direction only: the container has no GPU, so the numbers say how the code behaves when slow, not how a Pixel looks.
+- **Found 1:** the Device check called a steady 8 to 15 frames a second "Smooth" because it only judged evenness. It now has an absolute floor: a typical frame over 25 ms (40 ms with battery saver on) is **Slow**, and the report line no longer calls the spacing a screen rate when it is that slow.
+- **Found 2:** `QualityGovernor` ignored gaps over 100 ms (meant for tab switches), so a device under about 10 fps was never stepped down and one at 10 to 15 fps with jitter rarely was. `src/vendor/frame-kit/quality-governor.js` is now JS-modules frame-kit 1.1.0 (four long gaps in a row count as a slow device) and the game passes `maxGap: 250` so jittery slow frames are measured too. Result at 4x: quality drops to level 1 of 2 (canvas step 3 of 4) and the frame rate rises (about 12 to 14.5 or more, run to run). At 6x (7.5 fps) it needs 100 slow frames per step, so no drop shows inside the 22 s window; a longer run would.
+- **Not changed:** `slowFrames` (100) stays; making it smaller would also lower quality on borderline devices that are fine, which is a look decision for the owner.
+

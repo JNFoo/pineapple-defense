@@ -121,7 +121,7 @@ var calm = false, running = false, raf = 0, last = 0, timeScale = 1, qLevel = 0;
 var even = new EvenDt();
 /* five governor steps: the canvas resolution walks down in small bites (2, 1.75, 1.5, 1.25, 1) and the heavier effects thin out on the 3-level scale qLevel */
 var DPR_STEPS = [2, 1.75, 1.5, 1.25, 1], Q_OF = [0, 0, 1, 1, 2], dprStep = 0;
-var gov = new QualityGovernor({ levels: 5, onChange: function (l) { dprStep = l; qLevel = Q_OF[l]; resize(); } });
+var gov = new QualityGovernor({ levels: 5, maxGap: 250, onChange: function (l) { dprStep = l; qLevel = Q_OF[l]; resize(); } });
 
 function newState() {
   S = { wave: 0, spawned: 0, toSpawn: 0, spawnT: 0, mode: 'intro', modeT: 0, cheer: 100, golden: 0, bumps: 0,
