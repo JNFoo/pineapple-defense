@@ -133,7 +133,7 @@ def labview(shoot, run_js, name):
 from playwright.sync_api import sync_playwright
 url = 'file://' + page + '#qa'
 with sync_playwright() as p:
-    br = p.chromium.launch(executable_path='/opt/pw-browsers/chromium')
+    br = p.chromium.launch(executable_path=os.environ.get('PD_CHROME', '/opt/pw-browsers/chromium'), args=['--no-sandbox'])
     pg = br.new_page(viewport={'width': 500, 'height': 827}, **({'reduced_motion': 'reduce'} if CALM else {})); perr = []
     pg.on('pageerror', lambda e: perr.append(str(e))); pg.on('console', lambda m: perr.append(m.text) if m.type == 'error' else None)
     pg.goto(url); pg.wait_for_function('window.__pd')
