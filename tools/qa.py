@@ -13,6 +13,7 @@
                                     (SEED defaults to the day number, so four days in a row cover every slow check) and 5 s of fuzzing.
                                     Never cached and never a release gate: the full run stays mandatory before a release.
   python3 -I tools/qa.py --only REGEX  run only the checks whose name matches REGEX (fast loop while writing a check; not cached)
+  python3 -I tools/qa.py --smart    pick the cheapest run for what changed since the last passing run: notes only = no browser, nothing = 2 s smoke, code = quick tier
   python3 -I tools/qa.py --calm     run the suite with the system's reduced-motion setting on (calm mode starts by itself)
 
 Test browsers: only the ones on the "browsers" branch of JNFoo/knowledgebase-single-file (Firefox, ungoogled Chromium,
@@ -30,10 +31,34 @@ args = sys.argv[1:]
 flag = lambda f: f in args
 opt = lambda f, d: args[args.index(f) + 1] if f in args and args.index(f) + 1 < len(args) else d
 QUICK = flag('--quick'); CALM = flag('--calm')
-_qi = args.index('--quick') + 1 if QUICK else 0
+LEGS = ['chromium'] + (['firefox'] if flag('--ff') else []) + (['webkit'] if flag('--wk') else [])
+# --smart: choose the cheapest run that still covers what changed since the last passing run (file fingerprints kept in .qa-smart.json)
+SMART_ONLY = ''
+def _fingerprints():
+    import hashlib
+    r = subprocess.run(['git', 'ls-files', '-c', '-o', '--exclude-standard'], cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))), capture_output=True, text=True)
+    out = {}
+    for f in r.stdout.split('\n'):
+        full = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), f)
+        if f and f != 'index.html' and os.path.isfile(full): out[f] = hashlib.sha1(open(full, 'rb').read()).hexdigest()
+    return out
+_docs_only = lambda f: f.endswith('.md') or f.startswith('docs/') or f in ('LICENSE', '.gitignore')
+_smart_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.qa-smart.json')
+if flag('--smart') and not QUICK:
+    _now = _fingerprints(); _old = json.load(open(_smart_path)) if os.path.exists(_smart_path) else None
+    if not _old or not set(LEGS) <= set(_old['legs']): QUICK = True; print('smart: no earlier passing run covers these browsers, so the quick tier')
+    else:
+        _chg = sorted(f for f in set(_now) | set(_old['files']) if _now.get(f) != _old['files'].get(f))
+        if not _chg: SMART_ONLY = '^(load|stage 1 runs)$'; print('smart: nothing changed since the last passing run, so only the 2 second smoke check')
+        elif all(_docs_only(f) for f in _chg): print('smart: only notes changed (%s), so no browser run is needed' % ', '.join(_chg[:4])); sys.exit(0)
+        else: QUICK = True; print('smart: %d file(s) changed (%s), so the quick tier' % (len(_chg), ', '.join(_chg[:4])))
+_qi = args.index('--quick') + 1 if '--quick' in args else len(args)
 SEED = int(args[_qi]) if QUICK and _qi < len(args) and args[_qi].isdigit() else int(time.time() // 86400)
-FUZZ = int(opt('--fuzz', 5 if QUICK else 60)); SHOTS = opt('--shots', ''); ONLY = opt('--only', '')   # --only REGEX runs just the checks whose names match (never cached)
+FUZZ = int(opt('--fuzz', 5 if QUICK else 60)); SHOTS = opt('--shots', ''); ONLY = opt('--only', SMART_ONLY)   # --only REGEX runs just the checks whose names match (never cached)
 t0 = time.time(); stamp = lambda: '%5.1fs' % (time.time() - t0)
+TIMES = os.environ.get('QA_TIMES') == '1'; _ph = [time.time()]; PHASES = []   # QA_TIMES=1 prints where each leg's time goes (checks, layout, old saves, launches) and the slowest checks
+def phase(label):
+    now = time.time(); PHASES.append((label, now - _ph[0])); _ph[0] = now
 
 def run(cmd):
     return subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
@@ -81,6 +106,7 @@ VIEWPORTS = [(360, 640), (412, 915), (1280, 720), (820, 1180), (892, 412), (640,
 fails = []
 
 def report(label, res, lay):
+    if TIMES: PHASES.append(('%s: slowest checks' % label, sorted(((r['ms'] / 1000.0, r['n'][:50]) for r in res['r']), reverse=True)[:5]))
     for r in res['r']:
         print('  %-4s %-46s %5d ms  %s' % ('ok' if r['ok'] else 'FAIL', r['n'], r['ms'], r['d'] if (not r['ok'] or r['d']) else ''))
         if not r['ok']: fails.append(label + ': ' + r['n'] + ': ' + r['d'])
@@ -112,11 +138,17 @@ def oldsaves(br):
 # 3c. two real tabs, and the tester's color view (screenshots of the lab build, compared in numbers)
 def twintabs(br):
     bad = []; u0 = 'file://' + page; ctx = br.new_context(viewport={'width': 500, 'height': 827}); title = "(()=>{const c=document.getElementById('cw');return c&&!c.hidden?document.getElementById('cardTitle').textContent:''})()"
-    a = ctx.new_page(); a.goto(u0); a.wait_for_timeout(500); b = ctx.new_page(); b.goto(u0); b.wait_for_timeout(1500)
+    twin = "() => { const c = document.getElementById('cw'); return !!c && !c.hidden && document.getElementById('cardTitle').textContent === 'Open in another tab'; }"
+    booted = '() => !!document.getElementById("cardTitle") && document.readyState === "complete"'
+    a = ctx.new_page(); a.goto(u0); a.wait_for_function(booted); a.wait_for_timeout(300); b = ctx.new_page(); b.goto(u0); b.wait_for_function(booted)
+    try: b.wait_for_function(twin, timeout=5000)   # the second tab shows the twin card (wait for it instead of sleeping 1.5 s)
+    except Exception: pass
     if b.evaluate(title) != 'Open in another tab': bad.append('the second tab did not show the twin card (it shows %r)' % b.evaluate(title))
     if a.evaluate(title) == 'Open in another tab': bad.append('the first tab was called a twin')
     if not bad:
-        b.evaluate("document.getElementById('twUse').click()"); a.wait_for_timeout(1500)
+        b.evaluate("document.getElementById('twUse').click()")
+        try: a.wait_for_function(twin, timeout=5000)   # and the first tab becomes the twin
+        except Exception: pass
         if a.evaluate(title) != 'Open in another tab': bad.append('after Use this tab, the first tab did not become the twin (it shows %r)' % a.evaluate(title))
         if b.evaluate(title) == 'Open in another tab': bad.append('after taking over, the second tab is still a twin')
     ctx.close(); return bad
@@ -146,21 +178,30 @@ with sync_playwright() as p:
     br = p.chromium.launch(executable_path=CHROME, args=['--no-sandbox'])
     _cv = br.version; _cn = 'ungoogled Chromium' if 'ungoogled' in CHROME.lower() else 'Chromium'
     USED.append(('%s %s' % (_cn, _cv.split('.')[0]), '%s %s' % (_cn, _cv)))
+    phase('chromium: launch')
     pg = br.new_page(viewport={'width': 500, 'height': 827}, **({'reduced_motion': 'reduce'} if CALM else {})); perr = []
     pg.on('pageerror', lambda e: perr.append(str(e))); pg.on('console', lambda m: perr.append(m.text) if m.type == 'error' else None)
     pg.goto(url); pg.wait_for_function('window.__pd')
     pg.evaluate('window.__qaFuzz=%d;window.__qaQuick=%d;window.__qaOnly=%s' % (FUZZ, SEED if QUICK else 0, json.dumps(ONLY))); pg.evaluate(PROBE)
+    phase('chromium: page load')
     res = pg.evaluate('(async()=>{' + suite + '})()')
+    phase('chromium: suite')
     if SHOTS:
         os.makedirs(SHOTS, exist_ok=True); pg.screenshot(path=os.path.join(SHOTS, 'suite-end.png'))
-    lay = []
-    for vw, vh in VIEWPORTS:
-        q = br.new_page(viewport={'width': vw, 'height': vh}); q.on('pageerror', lambda e: perr.append(str(e)))
-        q.goto(url); q.wait_for_function('window.__pd')
-        out = q.evaluate('(async()=>{' + layout + '})()'); lay.append((out['vw'], out['vh'], out['bad']))
+    # the six sizes are independent pages (each its own context, so the twin-tab guard never sees a second copy): start all six layout
+    # scripts, then collect them, so their fixed waits overlap (about 1.5 s per size when run one after the other)
+    lay = []; lps = []
+    for vw, vh in ([] if ONLY else VIEWPORTS):   # --only (and smart's smoke) skip the layout sizes: they are a separate pass
+        q = br.new_context(viewport={'width': vw, 'height': vh}).new_page(); q.on('pageerror', lambda e: perr.append(str(e)))
+        q.goto(url); q.wait_for_function('window.__pd'); lps.append((vw, vh, q))
+    for vw, vh, q in lps: q.evaluate('window.__lay=(async()=>{' + layout + '})();0')
+    for vw, vh, q in lps:
+        out = q.evaluate('window.__lay'); lay.append((out['vw'], out['vh'], out['bad']))
         if SHOTS: q.screenshot(path=os.path.join(SHOTS, 'layout-%dx%d.png' % (vw, vh)))
-        q.close()
+        q.context.close()
+    phase('chromium: layout, 6 sizes')
     old = oldsaves(br) if not QUICK and not ONLY else []
+    phase('chromium: old saves')
     extra = []
     if not QUICK and not ONLY:
         extra.append(('two real tabs', twintabs(br)))
@@ -168,6 +209,7 @@ with sync_playwright() as p:
         lp = br.new_page(viewport={'width': 500, 'height': 827}); lp.goto('file://' + os.path.join(ROOT, 'dist/lab/index.html') + '#qa'); lp.wait_for_function('window.__pd')
         extra.append(('tester color view', labview(lambda: lp.screenshot(), lp.evaluate, 'chromium'))); lp.close()
     br.close()
+    phase('chromium: two tabs, color view, close')
 print('[%s] Chromium%s' % (stamp(), ' (reduced motion on)' if CALM else '')); report('chromium', res, lay)
 for nm, bad in extra:
     print('  %-4s %s %s' % ('ok' if not bad else 'FAIL', nm, '; '.join(bad)))
@@ -178,18 +220,28 @@ for fx, bad in old:
 for e in perr: fails.append('chromium console: ' + e)
 
 # 5. Firefox and WebKitGTK (optional): the same suite through WebDriver, one browser after the other
+def ready(d):   # wait until the page has made its test hook (instead of sleeping 0.4 s and hoping)
+    t = time.time()
+    while time.time() - t < 20:
+        if d.execute_script('return !!window.__pd'): return
+        time.sleep(0.03)
+
 def sel_leg(d, name, slow=1):   # slow: patience factor for stage starts and the script timeout; WebKitGTK is slower to start stages here (its first frames take up to a second)
-    d.set_script_timeout(120 * slow)
+    d.set_script_timeout(120 * slow); phase(name + ': start')
     try: d.set_window_size(500, 900)
     except Exception: pass
-    d.get(url); time.sleep(0.4)
+    d.get(url); ready(d)
+    phase(name + ': page load')
     d.execute_script('window.__qaSlow=%d;window.__qaFuzz=%d;window.__qaQuick=%d;window.__qaOnly=%s' % (slow, min(FUZZ, 60), SEED if QUICK else 0, json.dumps(ONLY))); d.execute_script(PROBE)
     res = d.execute_async_script('var cb=arguments[arguments.length-1];(async()=>{' + suite + '})().then(cb,e=>cb({r:[{n:"suite crashed",ok:false,ms:0,d:String(e)}],errs:[]}))')
+    phase(name + ': suite')
     lay = []
-    try: d.set_window_size(412, 915)
-    except Exception: pass
-    d.get(url); time.sleep(0.4)
-    out = d.execute_async_script('var cb=arguments[arguments.length-1];(async()=>{' + layout + '})().then(cb,e=>cb({vw:0,vh:0,bad:[String(e)]}))'); lay.append((out['vw'], out['vh'], out['bad']))
+    if not ONLY:
+        try: d.set_window_size(412, 915)
+        except Exception: pass
+        d.get(url); ready(d)
+        out = d.execute_async_script('var cb=arguments[arguments.length-1];(async()=>{' + layout + '})().then(cb,e=>cb({vw:0,vh:0,bad:[String(e)]}))'); lay.append((out['vw'], out['vh'], out['bad']))
+    phase(name + ': layout')
     print('[%s] %s' % (stamp(), name)); report(name.split()[0].lower(), res, lay)
 
 if flag('--ff'):
@@ -233,10 +285,15 @@ if flag('--wk'):
         try: os.killpg(drv.pid, signal.SIGTERM)
         except Exception: pass
 
+if TIMES:
+    for nm, v in PHASES:
+        if isinstance(v, list): print('  times  %s: %s' % (nm, '; '.join('%.1f s %s' % x for x in v)))
+        else: print('  times  %-44s %5.1f s' % (nm, v))
 if fails:
     print('\nFAILED (%d):' % len(fails)); [print(' - ' + f) for f in fails]; sys.exit(1)
 if not QUICK and not ONLY: store[mode] = key; json.dump(store, open(cache, 'w'))
 if QUICK: print('(quick tier, seed %d: not cached, not a release gate)' % SEED)
+if not ONLY and not SMART_ONLY: json.dump({'files': _fingerprints(), 'legs': LEGS}, open(_smart_path, 'w'))   # baseline for --smart: what was green, in which browsers
 if not QUICK and not ONLY:   # what a release records: which browsers really ran this page (tools/release.py reads this file)
     rec = json.load(open(os.path.join(ROOT, '.qa-browsers.json'))) if os.path.exists(os.path.join(ROOT, '.qa-browsers.json')) else {}
     rec[mode] = [{'key': k, 'label': l} for k, l in USED]; json.dump(rec, open(os.path.join(ROOT, '.qa-browsers.json'), 'w'), indent=1)
