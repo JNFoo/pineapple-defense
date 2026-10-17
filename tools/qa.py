@@ -6,6 +6,7 @@
   python3 -I tools/qa.py --wk       also run it in WebKitGTK (the nearest WebKit a Linux cloud machine can run)
   python3 -I tools/qa.py --lab      test the tester (lab) build instead
   python3 -I tools/qa.py --min      test the minified page (the one that gets packed)
+  python3 -I tools/qa.py --packed FILE  open a packed file (what players get) and run the 2 second smoke checks; add --ff --wk for the other browsers
   python3 -I tools/qa.py --fuzz 300 longer random-action fuzzing (game seconds per stage, default 60)
   python3 -I tools/qa.py --force    ignore the "nothing changed since the last pass" cache
   python3 -I tools/qa.py --shots DIR  save a few screenshots into DIR
@@ -54,8 +55,9 @@ if flag('--smart') and not QUICK:
         else: QUICK = True; print('smart: %d file(s) changed (%s), so the quick tier' % (len(_chg), ', '.join(_chg[:4])))
 _qi = args.index('--quick') + 1 if '--quick' in args else len(args)
 SEED = int(args[_qi]) if QUICK and _qi < len(args) and args[_qi].isdigit() else int(time.time() // 86400)
-FUZZ = int(opt('--fuzz', 5 if QUICK else 60)); SHOTS = opt('--shots', ''); ONLY = opt('--only', SMART_ONLY)   # --only REGEX runs just the checks whose names match (never cached)
+FUZZ = int(opt('--fuzz', 5 if QUICK else 60)); SHOTS = opt('--shots', ''); PACKED = opt('--packed', ''); ONLY = opt('--only', '^(load|stage 1 runs)$' if PACKED else SMART_ONLY)   # --only REGEX runs just the checks whose names match (never cached)
 t0 = time.time(); stamp = lambda: '%5.1fs' % (time.time() - t0)
+import faulthandler; faulthandler.dump_traceback_later(int(os.environ.get('QA_MAX_S', 150 + 120 * (('--ff' in sys.argv) + ('--wk' in sys.argv)) + (300 if '--fuzz' in sys.argv else 0))), file=sys.stdout, exit=True)   # a run that hangs (a browser call with no timeout) ends with the stack of where it sat: 150 s for Chromium alone (a full run takes about 55 s), +120 s per extra browser
 TIMES = os.environ.get('QA_TIMES') == '1'; _ph = [time.time()]; PHASES = []   # QA_TIMES=1 prints where each leg's time goes (checks, layout, old saves, launches) and the slowest checks
 def phase(label):
     now = time.time(); PHASES.append((label, now - _ph[0])); _ph[0] = now
@@ -66,15 +68,19 @@ def run(cmd):
 # 1. build (about 0.4 s) and the page under test
 lab = flag('--lab')
 mini = flag('--min')
-b = run([sys.executable, '-I', 'build.py'] + (['--lab'] if lab else []) + (['--min'] if mini else []))
-if b.returncode: print(b.stdout, b.stderr); sys.exit(2)
-page = os.path.join(ROOT, ('dist/lab-min' if lab else 'dist/min') + '/index.html' if mini else 'dist/lab/index.html' if lab else 'index.html')
-if not os.path.exists(page): print('minified page missing (npm i --no-save esbuild)'); sys.exit(2)
+if PACKED:   # --packed FILE: open the packed file players get (not a build) and run the smoke checks; nothing is cached or recorded
+    page = os.path.abspath(PACKED)
+    if not os.path.exists(page): print('packed file missing: ' + page); sys.exit(2)
+else:
+    b = run([sys.executable, '-I', 'build.py'] + (['--lab'] if lab else []) + (['--min'] if mini else []))
+    if b.returncode: print(b.stdout, b.stderr); sys.exit(2)
+    page = os.path.join(ROOT, ('dist/lab-min' if lab else 'dist/min') + '/index.html' if mini else 'dist/lab/index.html' if lab else 'index.html')
+    if not os.path.exists(page): print('minified page missing (npm i --no-save esbuild)'); sys.exit(2)
 src = open(page, encoding='utf-8').read()
 
 # 2. syntax check of every inline script before any browser starts
 node = shutil.which('node')
-if node:
+if node and not PACKED:
     import re
     for i, m in enumerate(re.finditer(r'<script(?![^>]*src)[^>]*>(.*?)</script>', src, re.S)):
         tmp = os.path.join(ROOT, '.qa-syntax.js'); open(tmp, 'w', encoding='utf-8').write(m.group(1))
@@ -83,13 +89,13 @@ if node:
 print('[%s] built and syntax ok (%d KB)' % (stamp(), len(src) // 1024))
 
 # 2b. the shipped page makes no network requests and has no links out (the "For grown-ups" card says so, so a machine checks it)
-if not lab:
+if not lab and not PACKED:
     import re as _re
     net = _re.findall(r'\bfetch\s*\(|XMLHttpRequest|sendBeacon|WebSocket|EventSource|importScripts|<script[^>]+\ssrc=|<link[^>]+href=["\']?https?:|<a\s[^>]*href|window\.open\s*\(', src)
     if net: print('NETWORK OR LINK FOUND in the shipped page (the grown-ups card says there is none): %s' % sorted(set(net))); sys.exit(4)
 
 # 2c. every floating word (popText) must read at 3:1 or better against the cream outline it is drawn with (the cartoon-3d-kit 1.1.0 rule for pop numbers)
-if not lab:
+if not lab and not PACKED:
     def _lum(h):
         h = h.lstrip('#'); c = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
         c = [x / 12.92 if x <= 0.03928 else ((x + 0.055) / 1.055) ** 2.4 for x in c]; return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
