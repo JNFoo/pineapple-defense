@@ -17,11 +17,11 @@ async function wf(fn, ms) { const t0 = Date.now(); while (Date.now() - t0 < (ms 
    WebKitGTK queues them and pays at the next pause, so the stage start after a fight took 12 to 18 s. tk() ticks without drawing and draws one frame every 20 ticks (one game second),
    so the draw code still meets every phase of the fight; the fuzz check keeps drawing every 25 ticks and the page's own loop draws real frames while the suite waits. */
 /* Fake clock for the page's own timers: the hold-to-reset bar reads performance.now(), so the check jumps the clock instead of sleeping through it (it spent 5.3 s of real waiting).
-   jump(ms) moves performance.now forward and lets three real frames pass so the page notices; restore() puts the real clock back. */
+   performance.now stands still until jump(ms) moves it forward and lets three real frames pass so the page notices; restore() puts the real clock back. */
 const fakeClock = () => {
-  const real = performance.now.bind(performance); let off = 0; performance.now = () => real() + off;
+  const real = performance.now.bind(performance); let cur = real(); performance.now = () => cur;   /* frozen between jumps: real time that passes while frames are drawn (slow in WebKitGTK) must not count toward a hold */
   const frames = n => new Promise(r => { let k = 0; const f = () => (++k >= n ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); });
-  return { jump: async ms => { off += ms; await frames(3); }, restore: () => { performance.now = real; } };
+  return { jump: async ms => { cur += ms; await frames(3); }, restore: () => { performance.now = real; } };
 };
 let tkN = 0; const tk = (sec, dt) => P.step(sec, dt, 0, ++tkN % 20 !== 0);
 function inv(tag) {
@@ -129,10 +129,10 @@ await T('auto slingshot is slower and sometimes misses', async () => {
 });
 
 await T('mecha penguins: a Gentoo that eats a fish is tougher than a normal penguin', async () => {
-  await go(2, 2); P.bot = false; P.step(4, 0.05); const S = P.S, L = P.penguins; if (!L.length) throw new Error('no penguins');
+  await go(2, 2); P.bot = false; P.step(4, 0.05); const S = P.S, L = P.penguins, sv0 = P.sv(); if (!L.length) throw new Error('no penguins');
   L.forEach(pg => { if (pg.st === 'walk') { pg.kind = 'gt'; pg.hp = 2; pg.big = 1.12; pg.p = 0.18; pg.v = Math.min(pg.v, 0.02); } });
-  let mc = null; for (let k = 0; k < 24 && !mc; k++) { P.fish(); P.step(4.5, 0.05); mc = P.penguins.find(pg => pg.kind === 'mc'); if (!mc) P.penguins.forEach(pg => { if (pg.st === 'walk') { if (pg.kind === 'ad') { pg.kind = 'gt'; pg.hp = 2; } if (pg.p > 0.3) pg.p = 0.18; } }); }
-  if (!mc) throw new Error('no Gentoo ever became a mecha penguin');
+  let mc = null, drops = 0, k; for (k = 0; k < 24 && !mc; k++) { if (P.fish()) drops++; P.step(4.5, 0.05); mc = P.penguins.find(pg => pg.kind === 'mc'); if (!mc) P.penguins.forEach(pg => { if (pg.st === 'walk') { if (pg.kind === 'ad') { pg.kind = 'gt'; pg.hp = 2; } if (pg.p > 0.3) pg.p = 0.18; } }); }
+  if (!mc) throw new Error('no Gentoo ever became a mecha penguin (' + drops + ' fish dropped in ' + k + ' tries; gull level ' + sv0.gu + '; penguins ' + P.penguins.map(pg => pg.kind + '/' + pg.st + '/' + pg.p.toFixed(2)).join(' ') + '; fish left ' + S.fish.length + ')');
   if (mc.hp !== 3) throw new Error('mecha hp ' + mc.hp + ', wanted 3'); if (!(mc.hp > 2 && mc.hp < 8)) throw new Error('mecha toughness out of range');
   const hits0 = mc.hp; P.penguins.forEach(pg => { if (pg !== mc) pg.p = -9; }); return 'mecha with ' + hits0 + ' hits';
 });
@@ -212,8 +212,11 @@ await T('settings: rows, game speed, large buttons, battery saver', async () => 
   const warn = $('svWarn'); if (!warn || !warn.hidden) throw new Error('storage warning shown although saving works');
   $('cardOk').click(); document.getElementById('title').hidden = true; document.getElementById('game').hidden = false;
   /* the speed setting slows the game clock in real play */
+  /* three samples of each, middle one kept: one browser hitch inside a 600 ms window cannot flip the verdict */
   const meas = async (sp) => { sv.sp = sp; await go(1, 3); P.bot = false; const S = P.S; await wait(150); const t0 = S.t; await wait(600); return S.t - t0; };
-  const full = await meas(0), slow = await meas(4); sv.sp = 0;
+  const med = (a) => a.sort((x, y) => x - y)[1], fs = [], ss = [];
+  for (let i = 0; i < 3; i++) { fs.push(await meas(0)); ss.push(await meas(4)); }
+  const full = med(fs), slow = med(ss); sv.sp = 0;
   if (!(full > 0.3)) throw new Error('the clock did not run (' + full + ')'); if (slow > full * 0.8 || slow < full * 0.4) throw new Error('60% speed ran at ' + Math.round(slow / full * 100) + '% of normal');
   return 'steps 100>90, 60% ran at ' + Math.round(slow / full * 100) + '% of normal';
 });
@@ -727,7 +730,7 @@ await T('shop: a row you cannot buy yet is dimmed and says why', async () => {
   const au = rows.find(r => /^Auto Slingshot/.test(name(r))), ff = rows.find(r => /^Faster Fling/.test(name(r))), ml = rows.find(r => /^More Limes/.test(name(r)));
   if (!/^Need 30 more$/.test(btn(au).textContent) || btn(au).getAttribute('aria-disabled') !== 'true' || btn(au).disabled) throw new Error('Auto Slingshot: ' + btn(au).textContent + ' disabled=' + btn(au).disabled);
   if (btn(ff).textContent !== 'Needs Slingshot' || btn(ml).textContent !== 'Needs Launcher') throw new Error('lock reasons: ' + btn(ff).textContent + ' / ' + btn(ml).textContent);
-  btn(au).click(); await wait(20); if (sv.bank !== 10 || sv.au) throw new Error('a dimmed Buy still bought'); if (!btn(document.querySelector('#shList .ti')).classList.contains('nope')) throw new Error('no shake on the dimmed tap');
+  btn(au).click(); await wait(20); if (sv.bank !== 10 || sv.au) throw new Error('a dimmed Buy still bought (credits ' + sv.bank + ', Auto Slingshot ' + sv.au + ')'); if (!btn(document.querySelector('#shList .ti')).classList.contains('nope')) throw new Error('no shake on the dimmed tap');
   sv.bank = 100; $('cardOk').click(); $('bShop').click(); await wait(60); const au2 = [...document.querySelectorAll('#shList .ti')].find(r => /^Auto Slingshot/.test(r.querySelector('b').textContent)); if (btn(au2).textContent !== 'Buy 40' || btn(au2).getAttribute('aria-disabled')) throw new Error('affordable row still dimmed: ' + btn(au2).textContent);
   const h = Math.round(btn(au2).getBoundingClientRect().height), ht = Math.round(au2.querySelector('.sb.try').getBoundingClientRect().height); sv.bank = 0; $('cardOk').click();
   if (h < 47 || ht < 47) throw new Error('shop buttons are ' + h + ' and ' + ht + ' px tall, under the 48 px floor');
