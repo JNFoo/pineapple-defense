@@ -21,7 +21,7 @@ for lc in range(0, 5):
         if best is None or len(c) < len(best): best = c
 dec = (root / 'src/vendor/lzma/lzma-d-min.js').read_text(encoding='utf-8')
 b64 = base64.b64encode(best).decode()
-csp = "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"
+csp = "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"
 hdr = (pathlib.Path(__file__).resolve().parent.parent / 'src' / 'header.txt').read_text(encoding='utf-8').rstrip('\n')
 html = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
