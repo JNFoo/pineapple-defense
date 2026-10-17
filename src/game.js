@@ -887,6 +887,7 @@ function fxUpdate(dt) {
   for (i = flys.length - 1; i >= 0; i--) { b = flys[i]; b.t += dt; if (b.t > b.ttl) { if (!b.back) pulseBank('#fff2a8'); flys.splice(i, 1); } }
   if (S.gl > 0) S.gl = Math.max(0, S.gl - dt * 1.6);
 }
+var labTick = null;   /* Test Lab only: the Device check listens to every frame here */
 var labBot = false;   /* Test Lab only: a helper that always throws, used by the flash check */
 function update(dt) {
   if (S.rc > 0) { S.rc -= dt; if (S.rc < 0) S.rc = 0; return; }
@@ -2048,7 +2049,7 @@ function frame(now) {
   if (!last) { last = now; return; }
   var gap = now - last; last = now;
   if (sv.fp) fpsTick(gap, now);
-  var w0 = sv.fp ? performance.now() : 0;
+  var w0 = (sv.fp || labTick) ? performance.now() : 0;
   if (hold) holdTick();
   var dtMs = even.next(gap) || gap;
   gov.frame(gap, now);
@@ -2056,6 +2057,7 @@ function frame(now) {
   calm = root.getAttribute('data-calm') === '1';
   if (K) { updateSkee(dt); drawSkee(); hudSkee(); } else { update(dt); draw(); hud(); }
   if (w0) fmWork = performance.now() - w0;
+  if (labTick) labTick(gap, now, fmWork);
 }
 function run() { if (running) return; running = true; $('bcGuard').hidden = false; wakeSet(); last = 0; even.reset(); fpsShow(); raf = requestAnimationFrame(frame); }
 function halt() { running = false; $('bcGuard').hidden = true; if (wk) wk.want(false); cancelAnimationFrame(raf); hold = null; if (elFps) elFps.hidden = true; }

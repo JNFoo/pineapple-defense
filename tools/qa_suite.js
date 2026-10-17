@@ -788,6 +788,15 @@ await T('Test Lab: the flash meter counts a strobe and calls a still picture qui
   return 'still ' + still.g.n + ', 2 Hz ' + slow.g.n + ', 8 Hz ' + fast.g.n;
 });
 
+await T('Test Lab: Device check measures real frames and ends with a copyable report', async () => {
+  if (!window.__deviceCheck) return 'not the tester build';
+  const rep = await new Promise(r => window.__deviceCheck({ warm: 300, run: 1500 }, r));
+  for (const k of ['Pineapple Defense Device check', 'Version: ', 'Result: ', 'Browser: ', 'Screen: ', 'User agent: ']) if (!rep.includes(k)) throw new Error('report lacks "' + k + '": ' + rep.slice(0, 200));
+  if (!/Result: (Smooth|Mostly smooth|Choppy|Could not check)\. /.test(rep)) throw new Error('no plain verdict: ' + rep.slice(0, 200));
+  if (!/Result: Could not check/.test(rep) && !/Frames a second: \d/.test(rep)) throw new Error('no frame numbers: ' + rep.slice(0, 300));
+  P.go(1, 1); return rep.split('\n')[2].slice(0, 70);
+});
+
 await T('Test Lab: flash check finishes with a plain verdict', async () => {
   if (!document.getElementById('bLab')) return 'not the tester build';
   document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bLab').click(); await wait(50); document.querySelector('.lab [data-a="flash"]').click();
