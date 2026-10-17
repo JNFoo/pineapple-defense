@@ -55,6 +55,16 @@ await T('load', async () => { if (!P) throw new Error('no __pd'); const sv = P.s
 
 for (let st = 1; st <= 5; st++) await T('stage ' + st + ' runs', async () => { await go(st, 0); P.bot = true; P.step(25, 0.033, 40); inv('stage' + st); P.bot = false; });
 
+await T('page policy: WebAssembly may run (wasm-unsafe-eval), nothing else loosened', async () => {
+  /* owner's rule 2026-10-17: 'wasm-unsafe-eval' on every page. The policy text must be exactly this; an empty module (\0asm, version 1) must compile where the browser enforces the policy for page scripts (WebKitGTK does; Playwright and Selenium script injection in Chromium and Firefox is exempt, so there the text check is the real one). */
+  const meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]').content;
+  if (!/script-src 'unsafe-inline' 'wasm-unsafe-eval';/.test(meta)) throw new Error('script-src is not exactly inline plus wasm-unsafe-eval: ' + meta);
+  let wasm = false;
+  try { new WebAssembly.Module(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0])); wasm = true; } catch (e) { /* blocked */ }
+  if (!wasm) throw new Error('a WebAssembly module did not compile under the page policy');
+  return 'script-src is inline + wasm-unsafe-eval; an empty wasm module compiles';
+});
+
 await T('combo calls', async () => {
   await go(1, 1); const S = P.S;
   P.cmb(2, 2); P.step(0.1, 0.033); if (!S.call || S.call.txt !== 'Double!') throw new Error('double: ' + JSON.stringify(S.call));
