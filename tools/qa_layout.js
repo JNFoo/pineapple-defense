@@ -1,5 +1,5 @@
 /* In-page layout checks, run by tools/qa.py once per viewport. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE). */
-const P = window.__pd, bad = [], wait = ms => new Promise(r => setTimeout(r, ms)), $ = id => document.getElementById(id);
+const P = window.__pd, bad = [], wait = ms => new Promise(r => setTimeout(r, ms)), fr = () => Promise.race([new Promise(r => requestAnimationFrame(() => r())), wait(50)]), $ = id => document.getElementById(id);
 const R = e => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height }; };
 const hit = (a, b) => a.l < b.r - 1 && b.l < a.r - 1 && a.t < b.b - 1 && b.t < a.b - 1;
 const vw = window.innerWidth, vh = window.innerHeight;
@@ -10,16 +10,16 @@ const sweep = where => document.querySelectorAll('button,[role=button],a,input,s
 sweep('title');
 /* title cards: shop, trophies, how to play must fit the screen */
 for (const id of ['bShop', 'bTro', 'bHow', 'bSet']) {
-  $(id).click(); await wait(60);
+  $(id).click(); await fr();
   sweep(id);
   const c = document.querySelector('#cw .card'); if (!c) { bad.push(id + ': no card'); continue; }
   const r = R(c); if (r.l < -1 || r.r > vw + 1 || r.t < -1 || r.b > vh + 1) bad.push(id + ' card outside screen ' + JSON.stringify(r));
   const sc = c.scrollHeight > c.clientHeight + 2 || $('cardBody').scrollHeight > $('cardBody').clientHeight + 2; const ok = $('cardOk'); if (ok) { const o = R(ok); if (o.t < -1 || o.r > vw + 1) bad.push(id + ' close button off screen'); }
-  $('cardOk').click(); await wait(40);
+  $('cardOk').click(); await fr();
 }
 /* game HUD: maxed shop so the raid button shows */
 const sv = P.sv(); sv.ra = 2; sv.um = 3; sv.gu = 3; sv.au = 1;
-P.go(2, 2); for (let i = 0; i < 80 && !(P.S && P.S.stage === 2 && !$('bRaid').hidden); i++) await wait(25); await wait(60);
+P.go(2, 2); for (let i = 0; i < 80 && !(P.S && P.S.stage === 2 && !$('bRaid').hidden); i++) await wait(8); await fr();
 sweep('game');
 const ids = ['waveBox', 'leftPill', 'comboPill', 'bPause', 'bankTxt', 'cupsTxt'];
 const els = ids.map(i => $(i)).filter(Boolean).map(e => e.closest('.pill') || e);
@@ -35,7 +35,7 @@ if (rb.hidden) bad.push('raid button hidden although bought'); else {
 }
 /* comfort options: left-handed, large text and high contrast must not overlap or leave the screen */
 for (const v of [{ lh: 1, lt: 0, hc: 0, bb: 0 }, { lh: 1, lt: 1, hc: 1, bb: 0 }, { lh: 0, lt: 1, hc: 0, bb: 0 }, { lh: 0, lt: 0, hc: 0, bb: 1 }, { lh: 1, lt: 1, hc: 0, bb: 1 }]) {
-  Object.assign(sv, v); const d = document.documentElement; d.setAttribute('data-big', v.bb); d.setAttribute('data-lh', v.lh); d.setAttribute('data-lt', v.lt); d.setAttribute('data-hc', v.hc); await wait(60);
+  Object.assign(sv, v); const d = document.documentElement; d.setAttribute('data-big', v.bb); d.setAttribute('data-lh', v.lh); d.setAttribute('data-lt', v.lt); d.setAttribute('data-hc', v.hc); await fr();
   const tag = ' (lh' + v.lh + ' lt' + v.lt + ' hc' + v.hc + ' bb' + v.bb + ')', vis = ids.map(i => $(i)).filter(Boolean).map(e => e.closest('.pill') || e).filter(e => e.offsetParent);
   for (let i = 0; i < vis.length; i++) for (let j = i + 1; j < vis.length; j++) if (vis[i] !== vis[j] && hit(R(vis[i]), R(vis[j]))) bad.push('HUD overlap ' + vis[i].id + '/' + vis[j].id + tag);
   vis.forEach(e => { const r = R(e); if (r.r > vw + 1 || r.l < -1) bad.push('HUD item off screen ' + (e.id || e.textContent.slice(0, 12)) + tag); });
@@ -44,6 +44,6 @@ for (const v of [{ lh: 1, lt: 0, hc: 0, bb: 0 }, { lh: 1, lt: 1, hc: 1, bb: 0 },
 }
 Object.assign(sv, { lh: 0, lt: 0, hc: 0, bb: 0 }); ['lh', 'lt', 'hc', 'big'].forEach(k => document.documentElement.setAttribute('data-' + k, '0'));
 /* run end card with the longest text */
-P.go(5, 0); for (let i = 0; i < 80 && !(P.S && P.S.stage === 5); i++) await wait(25); await wait(40); P.sv().run = 6; P.win(); await wait(80);
+P.go(5, 0); for (let i = 0; i < 80 && !(P.S && P.S.stage === 5); i++) await wait(8); await fr(); P.sv().run = 6; P.win(); await fr();
 sweep('run end card'); const gc = document.querySelector('#gcw .card'), gr = R(gc); if (gr.l < -1 || gr.r > vw + 1 || gr.t < -1 || gr.b > vh + 1) bad.push('run end card outside screen ' + JSON.stringify(gr));
 return { vw, vh, bad };
