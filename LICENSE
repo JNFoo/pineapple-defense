@@ -28,6 +28,6 @@ product name and branding.
 Third-party and vendored pieces keep their own notices:
 - src/vendor/ (back-close, frame-kit, save-kit, sticker-text, tab-guard, wake-keeper):
   MIT, Copyright (c) 2026 JNFoo, as stated in each file's header.
-- src/vendor/lzma/: lzma-js, MIT, see its header.
+- tools/vendor/ (lzma-pack, lzma-decode): MIT, Copyright (c) 2026 LFC Foundry, from JS-modules.
 - src/fonts/: Bricolage Grotesque and Figtree, SIL Open Font License 1.1, see the
   LICENSE-*.txt files there.

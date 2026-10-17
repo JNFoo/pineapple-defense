@@ -1,8 +1,8 @@
 #!/usr/bin/env python3 -I
 """Pack index.html into one self-extracting, LZMA-compressed .html file.
 Usage: python3 -I tools/pack.py [out.html]   (run build.py first)
-The decoder is lzma-js (MIT), vendored in src/vendor/lzma/. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE)."""
-import base64, lzma, re, sys, pathlib
+The packer and unpacker are JS-modules lzma-pack and lzma-decode (MIT), vendored in tools/vendor/. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE)."""
+import os, re, subprocess, sys, pathlib
 root = pathlib.Path(__file__).resolve().parent.parent
 lab = '--lab' in sys.argv
 mn = '--min' in sys.argv   # pack the esbuild-minified page (build.py --min first); falls back to the readable page if it is missing
@@ -13,31 +13,17 @@ src = pg.read_bytes()
 src = re.sub(rb'<meta http-equiv="Content-Security-Policy"[^>]*>\n?', b'', src)  # the wrapper carries the same policy
 ver = re.search(rb'Alpha ([0-9.]+)', src)
 ver = ver.group(1).decode() if ver else 'dev'
-best = None
-for lc in range(0, 5):
-    for pb in range(0, 3):
-        f = [{'id': lzma.FILTER_LZMA1, 'preset': 9 | lzma.PRESET_EXTREME, 'dict_size': 1 << 20, 'lc': lc, 'lp': 0, 'pb': pb}]
-        c = lzma.compress(src, format=lzma.FORMAT_ALONE, filters=f)
-        if best is None or len(c) < len(best): best = c
-dec = (root / 'src/vendor/lzma/lzma-d-min.js').read_text(encoding='utf-8')
-b64 = base64.b64encode(best).decode()
 csp = "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'"
-hdr = (pathlib.Path(__file__).resolve().parent.parent / 'src' / 'header.txt').read_text(encoding='utf-8').rstrip('\n')
-html = f'''<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta http-equiv="Content-Security-Policy" content="{csp}"><title>Pineapple Defense{' Test Lab' if lab else ''}</title>
-</head>
-<body><p id="m" style="font:700 18px system-ui,sans-serif;text-align:center;margin:30vh 1em 0;color:#23203f">Unpacking Pineapple Defense...</p><noscript>Pineapple Defense needs JavaScript to run. Sorry!</noscript>
-<!-- Pineapple Defense {ver}, LZMA self-extracting. Decoder: lzma-js (MIT).
-{hdr}
--->
-<script>{dec}</script>
-<script>
-(function(){{try{{var s=atob("{b64}"),a=new Array(s.length),i;for(i=0;i<s.length;i++)a[i]=s.charCodeAt(i);
-var t=LZMA.decompress(a),m=document.getElementById("m");m.parentNode.removeChild(m);document.open();document.write(t);document.close()}}catch(e){{document.getElementById("m").textContent="Sorry, the game could not unpack: "+e}}}}());
-</script></body></html>
-'''
+hdr = (root / 'src' / 'header.txt').read_text(encoding='utf-8').rstrip('\n')
+head = f'<meta http-equiv="Content-Security-Policy" content="{csp}">\n<!-- Pineapple Defense {ver}, LZMA self-extracting (lzma-pack and lzma-decode from JS-modules, MIT).\n{hdr}\n-->'
 out = pathlib.Path(args[0]) if args else root / 'dist' / (f'pineapple-defense-tester-{ver}.html' if lab else f'pineapple-defense-{ver}.html')
 out.parent.mkdir(exist_ok=True)
-out.write_text(html, encoding='utf-8')
-print(f'{out.name}: {len(src)//1024} KB -> {len(best)//1024} KB lzma, {len(html)//1024} KB file (lc/pb searched)')
+tmp = out.with_name(out.name + '.src.html')
+tmp.write_bytes(src)
+try:
+    r = subprocess.run([sys.executable, '-I', str(root / 'tools/vendor/tools/lzma-pack/pack.py'), str(tmp), str(out), '--title', 'Pineapple Defense' + (' Test Lab' if lab else ''),
+                        '--head', head, '--encoding', 'base64', '--tune', '--wasm'], capture_output=True, text=True, env={**os.environ, **({'ESBUILD': os.environ['PD_ESBUILD']} if os.environ.get('PD_ESBUILD') else {})})
+finally:
+    tmp.unlink()
+if r.returncode: sys.exit(r.stdout + r.stderr)
+print(f'{out.name}: {len(src)//1024} KB -> {out.stat().st_size//1024} KB file (lzma-pack, text-safe, with the WebAssembly unpacker and the plain one as fallback)')

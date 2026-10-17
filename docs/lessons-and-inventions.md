@@ -40,7 +40,7 @@ Words like "new here" mean "not in the Apple Press, Fancy the Banana or JS-modul
 | Penguin outfits | `src/gear.js` | `rollGear` rarity; baked SVG overlays. |
 | Tester Lab | `src/lab/lab.js` | Only in the tester build. Sliders for roll physics and game speed. |
 | Sprites, icons, logo | `src/sprites/*.svg` | `icons.svg` is **generated** by `tools/make_icons.py`. |
-| Vendored modules | `src/vendor/{frame-kit,save-kit,sticker-text,lzma}` | Copied from JS-modules with MIT headers kept. |
+| Vendored modules | `src/vendor/{frame-kit,save-kit,sticker-text}`, `tools/vendor/{lzma-pack,lzma-decode}` | Copied from JS-modules with MIT headers kept. |
 | Build / QA / release | `build.py`, `tools/qa.py`, `tools/qa_suite.js`, `tools/release.py`, `tools/pack.py` | See section 6. |
 
 Build facts: `python3 -I build.py` (the `-I` isolates Python from the working directory). `--min` uses esbuild; `--lab` adds the tester. The inline script and CSS are minified for the shipped build and the font is subset to the glyphs used. The packed file is a tiny decoder plus a base64 LZMA blob; the build stays strict-CSP friendly (no eval).
@@ -130,7 +130,7 @@ Each item says what it is and where to find it. If you are starting a new game, 
 
 1. Create the repo with `src/`, `build.py`, `tools/`, `docs/`, `CHANGELOG.md`, `README.md` (players first, with screenshots), a design doc, and a qa-process doc. Set git identity to JNFoo before the first commit.
 2. Copy `tools/qa.py`, `tools/release.py`, `tools/pack.py` and the `__pd` hook pattern. Write the first test (the game loads and runs a stage) before the second feature.
-3. Vendor `save-kit`, `frame-kit` (EvenDt, QualityGovernor), `sticker-text`, `lzma`. Keep MIT headers.
+3. Vendor `save-kit`, `frame-kit` (EvenDt, QualityGovernor), `sticker-text`; `lzma-pack` and `lzma-decode` go in `tools/vendor/`. Keep MIT headers.
 4. Add the Settings rows pattern (`.so`, `wireComfort`, `applyPrefs`) and the comfort set: left-handed, aim help, calm, high contrast, larger text, large buttons, game speed, battery saver, FPS counter, hold to press, full screen, save warning.
 5. Put the kid-safe tone rules and the "free means free" rules in the design doc on day one; they decide a lot of later arguments.
 6. Ask the owner through popups, ship small releases, send both builds, and always report real time and approximate compute.
