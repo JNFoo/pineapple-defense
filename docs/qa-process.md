@@ -5,6 +5,7 @@ Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 ## One command
 - `python3 -I tools/qa.py` builds, syntax-checks every inline script, then runs the in-page suite in Chromium (about 10 seconds).
 - `--ff` also runs it in Firefox 158 (the stress test, about 25 seconds). `--lab` tests the tester build. `--min` tests the esbuild-minified page (`build.py --min`), which is the page that gets packed. `--fuzz N` fuzzes N game seconds per stage (default 60). `--force` ignores the cache. `--shots DIR` saves screenshots.
+- Test browsers (rule from 2026-10-17): only the ones on the `browsers` branch of JNFoo/knowledgebase-single-file, one at a time, version labeled: Firefox 158, ungoogled Chromium 155 and WebKitGTK 2.52.6 / GNOME Web 46.5. Read that branch's README before each run, since versions can change and browsers can be added or removed (the release tool prints a reminder). `install.sh` (as root, for WebKitGTK) installs them. Point the harness at them with `PD_CHROME` (Chromium path, required), `PD_FF` and `PD_GECKO` (Firefox and geckodriver paths, for `--ff`); `--wk` needs `WebKitWebDriver`, `xvfb-run` and `dbus-run-session`, which the installer provides. WebKitGTK ignores the window size, so its layout check runs at about 447 x 877. `tools/release.py` always runs all three, writes the versions that really ran into the changelog entry ("Tested in") and refuses to finish if the README does not name them. Stock Chromium, Chromium 153 and Firefox 157 are not used.
 - `python3 -I tools/release.py` runs QA, then writes the regular and tester files into `dist/` and prunes older ones (keeps the newest two versions).
 
 ## Why it is cheap
@@ -14,6 +15,16 @@ Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 - A JavaScript syntax error stops the run in under a second, before any browser starts.
 - Layout checks measure element rectangles instead of relying on screenshots.
 
+## Keeping the checks fast (rules from the universal QA guide, 2026-10-17)
+- **Time every check first.** `QA_TIMES=1 python3 -I tools/qa.py ...` also prints where each browser's time went (start, page load, suite, layout) and its five slowest checks. A check that takes a round number of milliseconds is a sleep, not work.
+- **Do not draw frames nobody looks at.** `__pd.step(sec, dt, every, lazy)` draws and refreshes the page at the end of every call; in a loop of 0.05 s ticks that was hundreds of full frames per Champion fight. WebKitGTK queues them and pays at the next pause (a stage start 12 to 18 s later, which is what used to time out). The suite's `tk(sec, dt)` ticks without drawing and draws one frame every 20 ticks (one game second), so the draw code still meets every phase of a fight. The fuzz check keeps drawing every 25 ticks, and the page's own loop draws real frames whenever the suite waits.
+- **Wait for the thing, not the clock.** The suite polls with `wf(condition)`; the FPS badge check waits for the badge text instead of 1.3 s. The WebDriver legs wait for the test hook instead of sleeping 0.4 s.
+- **A fake clock for the game's own timers.** `fakeClock()` moves `performance.now()` forward (hold-to-reset reads it), so the run-end check jumps over 1.2 second holds instead of sleeping through them. It also tests more: a 1.1 second hold must not finish and a 1.3 second hold must. Broken on purpose, a hold length of 1.0 s and one of 1.5 s both fail the check. Only the game's own timers can be jumped; CSS animations still take real time.
+- **Layout sizes run side by side.** The six sizes are independent pages (each in its own browser context, so the twin-tab guard never sees a second copy); all six scripts start, then the results are collected. It is one browser, not several.
+- **Smart mode.** `--smart` compares file fingerprints with the last passing run (`.qa-smart.json`, not committed): only notes changed means no browser run, nothing changed means a 2 second smoke check (load and stage 1), anything else means the quick tier. No earlier pass for the requested browsers means the quick tier. A pass of the quick tier counts as the baseline, so `--smart` is for iterating; the full run before a release is unchanged.
+- **Off switches.** Every shortcut can be turned off: no `--quick` or `--smart` runs everything (`tk` is the only change to what the checks do and the full run uses it too, so a check that must draw every tick calls `P.step` directly); `--only` and smart's smoke skip the layout sizes, a full run never does.
+- **Measured (2026-10-17, Chromium 155, Firefox 158.0, WebKitGTK 2.52.6, quick tier):** see the changelog entry for the numbers.
+
 ## What it checks
 - All five stages start and run with the auto-player; no NaN positions, cheer in range, bank a whole non-negative number, particle and shot lists bounded.
 - Lime Launcher tiers (never more limes than 6 / 12 / 20 per fight), Lime Launcher (no missiles without it; with it, shield snowballs pop before the Champion loses health; missiles in flight stay bounded), combo calls, paper umbrellas (no cheer loss, stock counts), Air Raid (stock, one at a time), gulls (grab and leave), run speed math and its cap.
@@ -22,6 +33,7 @@ Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 - Card flows: stage clear cards, the run-end card (Save and restart, Reset completely, the confirm step, trophies kept), pause keys.
 - Random-action fuzzing of raids, pickups, gulls, combos, pauses, taps and zones across every stage, clicking through win and lose cards.
 - Layout at 360x640, 412x915, 1280x720 and 820x1180: no sideways scroll, HUD pills do not overlap, the raid button clears the cheer bar and the picks, cards fit the screen.
+- Every floating word (pop text) has at least 3:1 contrast against its cream outline, read straight from the source before any browser starts.
 - Any page error or console error fails the run.
 
 ## Old saves

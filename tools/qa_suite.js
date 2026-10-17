@@ -13,6 +13,17 @@ const $ = id => document.getElementById(id);
 const cardUp = () => !$('gcw').hidden;
 const card = () => ({ t: $('gTitle').textContent, b1: $('gBtn1').textContent, b2: $('gBtn2').textContent, b3: $('gBtn3').hidden ? '' : $('gBtn3').textContent, body: $('gBody').textContent });
 async function wf(fn, ms) { const t0 = Date.now(); while (Date.now() - t0 < (ms || 3000)) { if (fn()) return true; await wait(25); } return false; }
+/* P.step draws and updates the page at the end of every call. Loops of 0.05 s ticks used to draw hundreds of frames nobody looks at (a Champion fight is about 500 of them);
+   WebKitGTK queues them and pays at the next pause, so the stage start after a fight took 12 to 18 s. tk() ticks without drawing and draws one frame every 20 ticks (one game second),
+   so the draw code still meets every phase of the fight; the fuzz check keeps drawing every 25 ticks and the page's own loop draws real frames while the suite waits. */
+/* Fake clock for the page's own timers: the hold-to-reset bar reads performance.now(), so the check jumps the clock instead of sleeping through it (it spent 5.3 s of real waiting).
+   jump(ms) moves performance.now forward and lets three real frames pass so the page notices; restore() puts the real clock back. */
+const fakeClock = () => {
+  const real = performance.now.bind(performance); let off = 0; performance.now = () => real() + off;
+  const frames = n => new Promise(r => { let k = 0; const f = () => (++k >= n ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); });
+  return { jump: async ms => { off += ms; await frames(3); }, restore: () => { performance.now = real; } };
+};
+let tkN = 0; const tk = (sec, dt) => P.step(sec, dt, 0, ++tkN % 20 !== 0);
 function inv(tag) {
   const S = P.S, bad = [], sv = P.sv();
   P.penguins.forEach(p => { if (!isFinite(p.xn) || !isFinite(p.p) || !isFinite(p.v)) bad.push('penguin NaN ' + p.kind + ' ' + p.st); if (p.p < -0.2 || p.p > 1.3) bad.push('penguin p out of range ' + p.p + ' ' + p.st); });
@@ -38,7 +49,7 @@ async function T(name, fn) {
   if (ERR.length > e0) { ok = false; d += ' | page errors: ' + ERR.slice(e0).join(' // ').slice(0, 300); }
   R.push({ n: name, ok, ms: Math.round(performance.now() - t0), d });
 }
-async function go(st, w) { P.go(st, w); if (!await wf(() => P.S && P.S.stage === st && P.penguins !== undefined && !$('game').hidden, 4000)) throw new Error('go timeout'); await wait(80); P.bot = false; }
+async function go(st, w) { P.go(st, w); if (!await wf(() => P.S && P.S.stage === st && P.penguins !== undefined && !$('game').hidden, 4000 * (window.__qaSlow || 1))) throw new Error('go timeout ' + JSON.stringify({ want: st, stage: P.S && P.S.stage, pen: P.penguins !== undefined, gameHidden: $('game').hidden, card: cardUp(), paused: !!(P.S && P.S.paused), docHidden: document.hidden, waitedMs: 4000 * (window.__qaSlow || 1) })); await wait(80); P.bot = false; }
 
 await T('load', async () => { if (!P) throw new Error('no __pd'); const sv = P.sv(); ['stage', 'wave', 'bank', 'ach', 'ac2', 'gu', 'um', 'ra', 'run', 'cd', 'rl', 'lm', 'lh', 'aim', 'arc', 'hc', 'lt', 'thr'].forEach(k => { if (!isFinite(sv[k])) throw new Error('save field ' + k + ' = ' + sv[k]); }); });
 
@@ -72,7 +83,7 @@ await T('air raid', async () => {
 
 await T('thrown pineapples: harder flicks fly farther, misses land and stay put, a vanished target is flown past', async () => {
   await go(1, 1); const S = P.S; S.mode = 'intro'; P.penguins.length = 0; S.spawnT = 99;
-  const land = async spd => { S.cd = 0; P.flick(0, -1, spd); const s = P.sh[P.sh.length - 1]; if (!s) throw new Error('no shot'); const pe = s.pEnd; for (let i = 0; i < 40 && P.sh.length; i++) P.step(0.05, 0.05); return pe; };
+  const land = async spd => { S.cd = 0; P.flick(0, -1, spd); const s = P.sh[P.sh.length - 1]; if (!s) throw new Error('no shot'); const pe = s.pEnd; for (let i = 0; i < 40 && P.sh.length; i++) tk(0.05, 0.05); return pe; };
   const soft = await land(1.6), hard = await land(4.0);
   if (!(hard < soft - 0.15)) throw new Error('a harder flick should land farther: soft ' + soft + ' hard ' + hard);
   S.cd = 0; P.flick(0, -1, 2.5); let s = P.sh[P.sh.length - 1]; P.step(s.T + 0.02, 0.01);
@@ -89,16 +100,16 @@ await T('thrown pineapples: harder flicks fly farther, misses land and stay put,
 await T('helpers wait for the first throw each round', async () => {
   const sv = P.sv(); sv.au = 1; sv.ar = 3; sv.lm = 3; await go(1, 1); P.bot = false; const S = P.S;
   if (S.pt) throw new Error('pt should start false');
-  let seen = 0; for (let i = 0; i < 120; i++) { P.step(0.05, 0.05); seen = Math.max(seen, P.sh.length); }
+  let seen = 0; for (let i = 0; i < 120; i++) { tk(0.05, 0.05); seen = Math.max(seen, P.sh.length); }
   if (seen) throw new Error('a helper fired before the first throw');
   P.flick(0, -1, 3); if (!S.pt) throw new Error('first throw did not release the helpers');
-  const ids = new Set(); for (let i = 0; i < 160; i++) { P.step(0.05, 0.05); P.sh.forEach(s => ids.add(s)); } const fired = ids.size; if (fired < 3) throw new Error('helpers never joined in: ' + fired);
+  const ids = new Set(); for (let i = 0; i < 160; i++) { tk(0.05, 0.05); P.sh.forEach(s => ids.add(s)); } const fired = ids.size; if (fired < 3) throw new Error('helpers never joined in: ' + fired);
   P.win(); sv.au = 0; sv.ar = 0; sv.lm = 0; return 'shots after first throw ' + fired;
 });
 
 await T('auto slingshot only turns slightly', async () => {
   const sv = P.sv(); sv.au = 1; await go(1, 3); P.bot = false; P.S.pt = true; let mx = 0;
-  for (let i = 0; i < 300; i++) { P.step(0.1, 0.05); mx = Math.max(mx, Math.abs(P.S.au.a)); }
+  for (let i = 0; i < 300; i++) { tk(0.1, 0.05); mx = Math.max(mx, Math.abs(P.S.au.a)); }
   sv.au = 0; if (mx > 0.125) throw new Error('auto slingshot leaned ' + mx.toFixed(2)); return 'max turn ' + mx.toFixed(2) + ' rad';
 });
 
@@ -107,7 +118,7 @@ await T('auto slingshot is slower and sometimes misses', async () => {
   try {
     for (let r = 0; r < 4; r++) {
       await go(1, 3); P.bot = false; P.S.pt = true; const seen = new Map();
-      for (let i = 0; i < 300; i++) { P.step(0.1, 0.05); P.S.cheer = 100; P.sh.forEach(q => { if (q.auto && !seen.has(q)) seen.set(q, P.S.t); }); }
+      for (let i = 0; i < 300; i++) { tk(0.1, 0.05); P.S.cheer = 100; P.sh.forEach(q => { if (q.auto && !seen.has(q)) seen.set(q, P.S.t); }); }
       const ts = [...seen.values()].sort((x, y) => x - y); for (let k = 1; k < ts.length; k++) minGap = Math.min(minGap, ts[k] - ts[k - 1]);
       n += seen.size; miss += [...seen.keys()].filter(q => q.miss).length;
     }
@@ -137,7 +148,7 @@ await T('stage progress bar fills with each wave and lights the Champion medal',
 });
 
 await T('more fish fall in the last two waves', async () => {
-  const count = async (w) => { let tot = 0; for (let k = 0; k < 3; k++) { await go(2, w); P.bot = true; const S = P.S, seen = new Set(), wave = S.wave; for (let i = 0; i < 1000 && S.wave === wave && S.mode !== 'boss' && S.mode !== 'bossIntro' && !S.over; i++) { P.step(0.05, 0.05); S.fish.forEach(f => seen.add(f)); } tot += seen.size; } P.bot = false; return tot; };
+  const count = async (w) => { let tot = 0; for (let k = 0; k < 3; k++) { await go(2, w); P.bot = true; const S = P.S, seen = new Set(), wave = S.wave; for (let i = 0; i < 1000 && S.wave === wave && S.mode !== 'boss' && S.mode !== 'bossIntro' && !S.over; i++) { tk(0.05, 0.05); S.fish.forEach(f => seen.add(f)); } tot += seen.size; } P.bot = false; return tot; };
   const early = await count(1), late = await count(3); if (late < 1 || late <= early) throw new Error('only ' + late + ' fish in 3 late-wave tries (early ' + early + ')');
   return 'fish in 3 tries: waves 2 = ' + early + ', wave 4 = ' + late;
 });
@@ -147,7 +158,7 @@ await T('no giggling anywhere in the page text', async () => {
 });
 
 await T('penguin outfits: props are rare, two at once are rarer, mecha penguins have none', async () => {
-  await go(2, 3); P.bot = false; const S = P.S; for (let i = 0; i < 300 && P.penguins.length < 4; i++) { P.step(0.1, 0.1); S.cheer = 100; }
+  await go(2, 3); P.bot = false; const S = P.S; for (let i = 0; i < 300 && P.penguins.length < 4; i++) { tk(0.1, 0.1); S.cheer = 100; }
   const L = P.penguins.filter(p => p.kind !== 'mc'); if (L.length < 2) throw new Error('too few penguins: ' + L.length);
   if (L.some(p => !Array.isArray(p.gear) || p.gear.length !== 4)) throw new Error('bad gear shape');
   /* roll many outfits the way the spawner does (a fresh spawn each) and count: about 33% have a prop, 8% two or more */
@@ -169,11 +180,11 @@ await T('the main sling only tilts a little, like the helpers', async () => {
 
 await T('no throws leave any slingshot during the Champion Ready, Set, GO', async () => {
   const sv = P.sv(); sv.au = 1; sv.lm = 1; await go(1, 8); const S = P.S, sh0 = P.sh.length; let saw = 0;
-  for (let i = 0; i < 400 && !(S.boss && S.boss.rs > 0); i++) P.step(0.05, 0.05);   /* run into the Ready window */
+  for (let i = 0; i < 400 && !(S.boss && S.boss.rs > 0); i++) tk(0.05, 0.05);   /* run into the Ready window */
   if (!P.rsg()) throw new Error('never saw the Ready window');
   const before = P.sh.length; S.cd = 0; P.flick(0, -1, 4); P.step(0.1, 0.05); S.au.cd = 0; S.lm.cd = 0; S.pt = true; P.step(1.5, 0.05); P.flick(0.1, -1, 4); P.step(0.2, 0.05); saw++;
   if (P.sh.length !== before) throw new Error('a shot left a slingshot during Ready (' + (P.sh.length - before) + ')'); if (S.lm.sup < 6 && sv.lm) throw new Error('the lime launcher fired during Ready');
-  for (let i = 0; i < 400 && P.rsg(); i++) P.step(0.05, 0.05); if (P.rsg()) throw new Error('Ready, Set, GO never ended');
+  for (let i = 0; i < 400 && P.rsg(); i++) tk(0.05, 0.05); if (P.rsg()) throw new Error('Ready, Set, GO never ended');
   S.cd = 0; P.flick(0, -1, 4); if (P.sh.length <= before) throw new Error('could not throw after GO'); sv.au = 0; sv.lm = 0;
   return 'blocked until GO, then free';
 });
@@ -211,7 +222,7 @@ await T('tap or hold on a penguin throws at it; flicks still work', async () => 
   const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 1; sv.thr = 99; await go(1, 3); P.bot = false; const S = P.S, cv = $('cv');
   const fire = (type, x, y, id) => { const r = cv.getBoundingClientRect(); cv.dispatchEvent(new PointerEvent(type, { pointerId: id, clientX: r.left + x, clientY: r.top + y, bubbles: true, cancelable: true, pointerType: 'touch' })); };
   const walkers = () => P.penguins.filter(p => p.st === 'walk');
-  for (let i = 0; i < 300 && !walkers().length; i++) P.step(0.1, 0.05);
+  for (let i = 0; i < 300 && !walkers().length; i++) tk(0.1, 0.05);
   const pg = walkers()[0]; if (!pg) throw new Error('no walking penguin to tap');
   const c = P.center(pg), n0 = P.sh.length; S.cd = 0;
   fire('pointerdown', c.x, c.y, 41);
@@ -220,9 +231,9 @@ await T('tap or hold on a penguin throws at it; flicks still work', async () => 
   if (!P.holdOn()) throw new Error('hold did not start'); fire('pointerup', c.x, c.y, 41); if (P.holdOn()) throw new Error('hold did not end on release');
   /* the hold keeps throwing at a tough target: the Champion */
   await go(1, 8); P.bot = false; const S2 = P.S; let b = null;
-  for (let i = 0; i < 600; i++) { P.step(0.1, 0.05); b = S2.boss; if (b && b.st === 'hold' && !P.rsg()) break; }
+  for (let i = 0; i < 600; i++) { tk(0.1, 0.05); b = S2.boss; if (b && b.st === 'hold' && !P.rsg()) break; }
   if (!b || P.rsg()) throw new Error('Champion never opened'); b.hp = 6; const bc = P.center(b), m0 = P.sh.length; S2.cd = 0;
-  b.hp = 30; fire('pointerdown', bc.x, bc.y, 42); let held = 0, made = 0, pc = S2.cd; for (let i = 0; i < 240 && made < 3; i++) { P.step(0.05, 0.05); held += 0.05; if (S2.cd > pc + 0.1) made++; pc = S2.cd; } made++;   /* the first throw happened on the press; shots in the air do not count, they land */ fire('pointerup', bc.x, bc.y, 42);
+  b.hp = 30; fire('pointerdown', bc.x, bc.y, 42); let held = 0, made = 0, pc = S2.cd; for (let i = 0; i < 240 && made < 3; i++) { tk(0.05, 0.05); held += 0.05; if (S2.cd > pc + 0.1) made++; pc = S2.cd; } made++;   /* the first throw happened on the press; shots in the air do not count, they land */ fire('pointerup', bc.x, bc.y, 42);
   if (made < 3) throw new Error('holding made only ' + made + ' throws in ' + held.toFixed(1) + ' seconds (hold ' + P.holdOn() + ', boss ' + b.st + ' hp ' + b.hp + ', cd ' + S2.cd + ', over ' + S2.over + ', paused ' + S2.paused + ', rsg ' + P.rsg() + ')');
   if (held < 0.8) throw new Error('holding threw too fast: ' + made + ' in ' + held.toFixed(2) + ' s');
   /* nothing under the finger: a normal flick still throws */
@@ -237,7 +248,7 @@ await T('FPS counter: row, badge, numbers', async () => {
   const fps = $('fps'); if (!fps || !fps.hidden) throw new Error('badge shown while the setting is off');
   document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bSet').click(); await wait(50);
   if (!$('cmFps') || !$('cmHold')) throw new Error('rows missing'); $('cmFps').click(); if (!sv.fp) throw new Error('FPS row did not switch on'); $('cmHold').click(); if (!sv.hp) throw new Error('Hold row did not switch on'); $('cmHold').click(); $('cardOk').click();
-  await go(1, 2); P.bot = false; await wait(1300);
+  await go(1, 2); P.bot = false; await wf(() => !fps.hidden && /^\d+ fps/.test(fps.textContent), 4000 * (window.__qaSlow || 1));
   if (fps.hidden) throw new Error('badge hidden while playing with the setting on');
   const tx = fps.textContent; if (!/^\d+ fps\nworst \d+ ms\nquality [0-2]\n(tap \d+ ms\n)?(smooth|\d+ hitch(es)?: [a-z ]+)$/.test(tx)) throw new Error('badge text: ' + tx);
   const r = fps.getBoundingClientRect(), bad = ['pause', 'raid', 'bRaid'].map(i => document.getElementById(i) || document.querySelector('.' + i)).filter(e => e && !e.hidden && (() => { const q = e.getBoundingClientRect(); return q.width && !(r.right < q.left || r.left > q.right || r.bottom < q.top || r.top > q.bottom); })());
@@ -248,7 +259,7 @@ await T('FPS counter: row, badge, numbers', async () => {
 
 await T('Early flick helper: a flick just before ready is kept; off, it is dropped; the row exists', async () => {
   const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 0; sv.thr = 99; await go(1, 3); P.bot = false; const S = P.S;
-  for (let i = 0; i < 40 && P.rsg(); i++) P.step(0.1, 0.05);
+  for (let i = 0; i < 40 && P.rsg(); i++) tk(0.1, 0.05);
   const n = () => P.sh.length;
   sv.ib = 0; S.cd = 0.1; S.buf = null; let b0 = n(); P.flick(0, -1, 4); P.step(0.2, 0.05); if (n() !== b0) throw new Error('flick was kept although the helper is off');
   sv.ib = 1; S.cd = 0.1; S.buf = null; b0 = n(); P.flick(0, -1, 4); if (n() !== b0) throw new Error('the early flick threw at once');
@@ -300,14 +311,14 @@ await T('back swipe: pauses while playing; nothing watches on the Paused card', 
 
 await T('resume snapshot: pausing notes the penguins left; Continue picks the wave up', async () => {
   const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.stage = 2; sv.wave = 2; sv.sl = 0; await go(2, 2); P.bot = false; const S = P.S;
-  P.bot = true; for (let i = 0; i < 800 && !(S.mode === 'run' && S.spawned >= 4 && S.toSpawn - S.spawned + P.penguins.filter(p => p.st === 'walk').length < S.toSpawn - 1); i++) P.step(0.1, 0.05); P.bot = false;
+  P.bot = true; for (let i = 0; i < 800 && !(S.mode === 'run' && S.spawned >= 4 && S.toSpawn - S.spawned + P.penguins.filter(p => p.st === 'walk').length < S.toSpawn - 1); i++) tk(0.1, 0.05); P.bot = false;
   const full = S.toSpawn, left = S.toSpawn - S.spawned + P.penguins.filter(p => p.st === 'walk').length;
   $('bPause').click(); await wait(30); const sn = P.snap();
   if (sn.sl !== left || left < 1 || left >= full) throw new Error('snapshot says ' + sn.sl + ' left, the wave has ' + left + ' of ' + full);
   $('gBtn2').click(); await wait(60);   /* "a phone threw the tab away": back to the title, then Continue from the save */
   P.cont(); await wait(150); const S2 = P.S;
   if (S2.wave !== 3 || S2.toSpawn !== sn.sl) throw new Error('Continue gave wave ' + S2.wave + ' with ' + S2.toSpawn + ' penguins, wanted wave 3 with ' + sn.sl);
-  P.bot = true; for (let i = 0; i < 4000 && S2.mode !== 'clear'; i++) P.step(0.1, 0.05); P.bot = false;
+  P.bot = true; for (let i = 0; i < 4000 && S2.mode !== 'clear'; i++) tk(0.1, 0.05); P.bot = false;
   if (S2.mode !== 'clear') throw new Error('the picked-up wave never cleared'); if (P.snap().sl !== 0) throw new Error('snapshot not cleared after the wave: ' + P.snap().sl);
   sv.sl = 0; return left + ' of ' + full + ' left were kept, wave resumed and cleared, snapshot dropped';
 });
@@ -317,7 +328,7 @@ await T('hit pause: only the hit penguin freezes; the clock runs; off and Calm d
   const fire = (type, x, y, id) => { const r = cv.getBoundingClientRect(); cv.dispatchEvent(new PointerEvent(type, { pointerId: id, clientX: r.left + x, clientY: r.top + y, bubbles: true, cancelable: true, pointerType: 'touch' })); };
   const hitOne = async (hs) => {
     sv.hs = hs; await go(1, 3); P.bot = false; const S = P.S;
-    for (let i = 0; i < 300 && !P.penguins.some(p => p.st === 'walk' && p.p > 0.25); i++) P.step(0.1, 0.05);
+    for (let i = 0; i < 300 && !P.penguins.some(p => p.st === 'walk' && p.p > 0.25); i++) tk(0.1, 0.05);
     const pg = P.penguins.find(p => p.st === 'walk' && p.p > 0.25); if (!pg) throw new Error('no penguin'); pg.hp = 1; S.cd = 0; const c = P.center(pg); fire('pointerdown', c.x, c.y, 71); fire('pointerup', c.x, c.y, 71);
     for (let i = 0; i < 80 && pg.st !== 'hit'; i++) P.step(0.02, 0.01); if (pg.st !== 'hit') throw new Error('penguin never got hit');
     const fz = pg.fz || 0, t0 = pg.t, s0 = S.t; if (fz > 0) P.step(0.02, 0.01);
@@ -334,7 +345,7 @@ await T('screen shake: strength setting; Strong adds a little on every hit', asy
   const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 1; sv.thr = 99; const cv = $('cv'), root = document.documentElement;
   const fire = (type, x, y, id) => { const r = cv.getBoundingClientRect(); cv.dispatchEvent(new PointerEvent(type, { pointerId: id, clientX: r.left + x, clientY: r.top + y, bubbles: true, cancelable: true, pointerType: 'touch' })); };
   const wasCalm = root.getAttribute('data-calm') === '1'; if (wasCalm) $('bCalm').click();
-  const shakeAfterHit = async (sk) => { sv.sk = sk; await go(1, 3); P.bot = false; const S = P.S; S.shk = 0; for (let i = 0; i < 300 && !P.penguins.some(p => p.st === 'walk' && p.p > 0.25); i++) P.step(0.1, 0.05); const pg = P.penguins.find(p => p.st === 'walk' && p.p > 0.25); pg.hp = 1; S.cd = 0; const c = P.center(pg); fire('pointerdown', c.x, c.y, 72); fire('pointerup', c.x, c.y, 72); let mx = 0; for (let i = 0; i < 60; i++) { P.step(0.02, 0.01, 1); mx = Math.max(mx, S.shk); } return mx; };
+  const shakeAfterHit = async (sk) => { sv.sk = sk; await go(1, 3); P.bot = false; const S = P.S; S.shk = 0; for (let i = 0; i < 300 && !P.penguins.some(p => p.st === 'walk' && p.p > 0.25); i++) tk(0.1, 0.05); const pg = P.penguins.find(p => p.st === 'walk' && p.p > 0.25); pg.hp = 1; S.cd = 0; const c = P.center(pg); fire('pointerdown', c.x, c.y, 72); fire('pointerup', c.x, c.y, 72); let mx = 0; for (let i = 0; i < 60; i++) { P.step(0.02, 0.01, 1); mx = Math.max(mx, S.shk); } return mx; };
   const n = await shakeAfterHit(2), st = await shakeAfterHit(3); if (n > 0.01) throw new Error('Normal shook on a single hit: ' + n); if (st < 0.1) throw new Error('Strong did not shake on a hit: ' + st);
   for (const sk of [0, 1, 2, 3]) { sv.sk = sk; P.S.shk = 1; P.step(0.1, 0.05, 1); }   /* every strength draws without an error */
   sv.sk = 2; sv.hp = 0; if (wasCalm) $('bCalm').click(); return 'Normal ' + n.toFixed(2) + ', Strong ' + st.toFixed(2) + ' after one hit; all four strengths draw';
@@ -342,7 +353,7 @@ await T('screen shake: strength setting; Strong adds a little on every hit', asy
 
 await T('sticky aim: the last target keeps the throw for a moment; off, it does not', async () => {
   const sv = P.sv(); sv.au = 0; sv.lm = 0; sv.hp = 0; sv.aim = 0; sv.thr = 99; await go(1, 3); P.bot = false; const S = P.S;
-  for (let i = 0; i < 400 && P.penguins.filter(p => p.st === 'walk').length < 2; i++) P.step(0.1, 0.05);
+  for (let i = 0; i < 400 && P.penguins.filter(p => p.st === 'walk').length < 2; i++) tk(0.1, 0.05);
   const w = P.penguins.filter(p => p.st === 'walk'); if (w.length < 2) throw new Error('need two penguins');
   const a = w[0], b = w[1]; for (const p of [a, b]) { p.v = 0; p.vx = 0; p.ev = 0; p.p = 0.5; p.hp = 9; p.aut = false; } a.xn = -0.1; b.xn = 0.1;
   const o = P.pouch(), ca = P.center(a), cb = P.center(b), M = { x: ca.x + 0.55 * (cb.x - ca.x), y: ca.y + 0.55 * (cb.y - ca.y) };
@@ -468,7 +479,7 @@ await T('stage 4 and 5 scenery reacts to taps', async () => {
 const fightSim = async (st, rule) => {
   await go(st, 8); const S = P.S; P.bot = true; let t = 0, prevHp = null, prevSafe = false, prevP = 0, seen = {};
   while (S.mode !== 'bossWin' && !S.over && t < 160) {
-    const b = S.boss; P.step(0.05, 0.05); t += 0.05; if (!S.boss) continue;
+    const b = S.boss; tk(0.05, 0.05); t += 0.05; if (!S.boss) continue;
     rule(S, S.boss, { prevHp, prevSafe, prevP, seen }); prevHp = S.boss.hp; prevSafe = S.boss.safe; prevP = S.boss.p;
   }
   P.bot = false; inv('fight' + st);
@@ -484,8 +495,8 @@ await T('champion 3 (Slidealot): charges, hits knock him back', async () => {
   if (!back || !chg) throw new Error('knockbacks ' + back + ', advances ' + chg); return 'knockbacks ' + back;
 });
 await T('champion 3 (Slidealot): reaching the table costs cheer', async () => {
-  await go(3, 8); const S = P.S; P.bot = false; let t = 0; while (!(S.boss && S.boss.st === 'hold') && t < 40) { P.step(0.1, 0.05); t += 0.1; }
-  const c0 = S.cheer; let bonk = false; for (let i = 0; i < 300 && !bonk; i++) { P.step(0.1, 0.05); if (S.cheer < c0 - 10) bonk = true; }
+  await go(3, 8); const S = P.S; P.bot = false; let t = 0; while (!(S.boss && S.boss.st === 'hold') && t < 40) { tk(0.1, 0.05); t += 0.1; }
+  const c0 = S.cheer; let bonk = false; for (let i = 0; i < 300 && !bonk; i++) { tk(0.1, 0.05); if (S.cheer < c0 - 10) bonk = true; }
   if (!bonk) throw new Error('he never reached the table'); if (S.boss.p > 0.6) throw new Error('he should be sent back, p=' + S.boss.p); return 'cheer ' + Math.round(S.cheer);
 });
 await T('champion 4 (Mohawk): shielded by her squad, then open', async () => {
@@ -501,9 +512,9 @@ await T('lime launcher: tiers set the limes per Champion fight', async () => {
   const sv = P.sv(), out = [];
   for (const tier of [1, 2, 3]) {
     sv.lm = tier; await go(1, 8); const S = P.S; let t = 0;
-    while (S.mode !== 'boss' || !S.boss || S.boss.st !== 'hold') { P.step(0.1, 0.05); if ((t += 0.1) > 30) throw new Error('boss never held'); }
+    while (S.mode !== 'boss' || !S.boss || S.boss.st !== 'hold') { tk(0.1, 0.05); if ((t += 0.1) > 30) throw new Error('boss never held'); }
     S.pt = true; const start = S.lm.sup; let low = start;
-    for (let i = 0; i < 1200 && S.boss && S.mode === 'boss'; i++) { P.step(0.05, 0.05); if (S.boss) low = Math.min(low, S.lm.sup); }
+    for (let i = 0; i < 1200 && S.boss && S.mode === 'boss'; i++) { tk(0.05, 0.05); if (S.boss) low = Math.min(low, S.lm.sup); }
     const fired = start - low;
     const want = [6, 12, 20][tier - 1]; if (start > want || fired > want) throw new Error('tier ' + tier + ' supply ' + start + ' fired ' + fired + ' (limit ' + want + ')');
     if (!fired) throw new Error('tier ' + tier + ' fired nothing'); if (tier === 1 && (fired < 5 || fired > 6)) throw new Error('tier 1 should use about 6 limes, used ' + fired); out.push(tier + ':' + fired);
@@ -513,11 +524,11 @@ await T('lime launcher: tiers set the limes per Champion fight', async () => {
 
 await T('lime launcher: shield first, then Champion', async () => {
   const sv = P.sv(); sv.lm = 0; await go(1, 8);
-  const S = P.S; let sawM = 0, t = 0; while (S.mode !== 'boss' || !S.boss || S.boss.st !== 'hold') { P.step(0.1, 0.05); if ((t += 0.1) > 30) throw new Error('boss never held'); }
+  const S = P.S; let sawM = 0, t = 0; while (S.mode !== 'boss' || !S.boss || S.boss.st !== 'hold') { tk(0.1, 0.05); if ((t += 0.1) > 30) throw new Error('boss never held'); }
   P.step(9, 0.05); sawM = S.ms.length; if (sawM || S.boss.hp !== S.bossMax) throw new Error('missiles fired without the launcher');
   sv.lm = 3; S.pt = true; S.boss.shield = S.boss.shield || 3; let popped = 0, hurt = 0, maxM = 0, hp = S.boss.hp, sh = S.boss.shield, first = '';
   for (let i = 0; i < 1600 && S.boss && S.mode === 'boss'; i++) {
-    P.step(0.05, 0.05); maxM = Math.max(maxM, S.ms.length); if (!S.boss) break;
+    tk(0.05, 0.05); maxM = Math.max(maxM, S.ms.length); if (!S.boss) break;
     if (S.boss.shield < sh && !first) first = 'pop'; if (S.boss.hp < hp && !first) first = 'hurt'; if (S.boss.hp < hp) hurt++; if (S.boss.shield < sh) popped++;
     hp = S.boss.hp; sh = S.boss.shield; if (S.boss.st === 'hold' && S.boss.shield > S.boss.hp + 10) break;
   }
@@ -547,7 +558,7 @@ await T('replay keeps the saved run; best scores', async () => {
 await T('shop: try it restores the save; undo refunds', async () => {
   const sv = P.sv(); sv.bank = 500; sv.lm = 0; sv.gu = 0; sv.au = 0; const before = JSON.stringify(sv);
   P.demo({ name: 'Lime Launcher', kind: 'boss', over: { lm: 3 } }); if (!await wf(() => P.S && P.S.stage === 2 && P.dm, 3000)) throw new Error('demo did not start');
-  if (sv.lm !== 3) throw new Error('upgrade was not lent'); for (let i = 0; i < 400 && P.dm; i++) P.step(0.1, 0.05); await wait(80);
+  if (sv.lm !== 3) throw new Error('upgrade was not lent'); for (let i = 0; i < 400 && P.dm; i++) tk(0.1, 0.05); await wait(80);
   if (P.dm) throw new Error('demo never ended'); const strip = (j) => j.replace(/,"seen":\d+/, ''); if (strip(JSON.stringify(sv)) !== strip(before)) throw new Error('save was not restored: ' + JSON.stringify(sv) + ' vs ' + before);   /* "seen" is the save time stamp and may move */
   $('cardOk') && $('cardOk').click(); document.getElementById('bShop').click(); const buy = [...document.querySelectorAll('#shList .sb')].find(b => /^Buy/.test(b.textContent)); buy.click();
   if (sv.bank >= 500) throw new Error('buy did nothing'); P.undoShop(); if (sv.bank !== 500 || sv.au) throw new Error('undo did not refund: bank ' + sv.bank + ' au ' + sv.au); $('cardOk').click();
@@ -560,7 +571,7 @@ await T('next goal chip', async () => {
 
 await T('gull grabs fish', async () => {
   await go(1, 2); P.st('gu', 3); const S = P.S; S.fishT = 1e9; /* no natural fish during the check */ P.step(1, 0.033); let ok = false;
-  for (let i = 0; i < 40 && !ok; i++) { ok = P.gull(); if (!ok) P.step(0.5, 0.033); }
+  for (let i = 0; i < 40 && !ok; i++) { ok = P.gull(); if (!ok) tk(0.5, 0.033); }
   if (!ok) throw new Error('no fish could drop'); if (!S.gulls.length) throw new Error('no gull at tier 3');
   P.step(2.2, 0.033, 10); if (S.fish.length) throw new Error('fish not grabbed'); P.step(2, 0.033); if (S.gulls.length) throw new Error('gull never left'); inv('gull');
 });
@@ -608,7 +619,7 @@ await T('bonus game: the last ball gets a chase camera with slow-mo at the hole'
   /* a ball with others still to throw is not chased */
   K.balls = 2; P.roll(Math.sin(f[0] * Math.PI / 180), -Math.cos(f[0] * Math.PI / 180), f[1]); P.step(0.3, 0.016); if (K.cam.z > 1.01) throw new Error('camera moved with balls left: ' + K.cam.z);
   K.cool = 0; K.balls = 1; P.roll(Math.sin(f[0] * Math.PI / 180), -Math.cos(f[0] * Math.PI / 180), f[1]); let zMax = 1, tsMin = 1;
-  for (let i = 0; i < 160; i++) { P.step(0.016, 0.016); zMax = Math.max(zMax, K.cam.z); tsMin = Math.min(tsMin, K.ts); if (!K.bl.length) break; }
+  for (let i = 0; i < 160; i++) { tk(0.016, 0.016); zMax = Math.max(zMax, K.cam.z); tsMin = Math.min(tsMin, K.ts); if (!K.bl.length) break; }
   if (CALM) { if (zMax > 1.05) throw new Error('calm mode still zoomed the chase camera: ' + zMax.toFixed(2)); }   /* calm mode removes the zoom on purpose */
   else { if (zMax < 1.3) throw new Error('chase cam never zoomed in: ' + zMax.toFixed(2)); if (tsMin > 0.5) throw new Error('no slow-mo at the hole: ' + tsMin.toFixed(2)); }
   P.step(3, 0.033, 6); if (K.cam.z > 1.05 || K.ts < 0.95) throw new Error('view did not ease back: z ' + K.cam.z.toFixed(2) + ' ts ' + K.ts.toFixed(2));
@@ -618,7 +629,7 @@ await T('bonus game: the last ball gets a chase camera with slow-mo at the hole'
 
 await T('bonus game: the ball rolls at real-feeling speed', async () => {
   const sv = P.sv(); sv.rl = 0; P.skee(); if (!await wf(() => P.K, 3000)) throw new Error('no minigame'); await wait(200); const K = P.K; K.balls = 3;
-  P.roll(0, -1, 6); const b = K.ball; let t = 0; while (b.st === 'lane' && t < 3) { P.step(0.01, 0.01); t += 0.01; } const tl = t;
+  P.roll(0, -1, 6); const b = K.ball; let t = 0; while (b.st === 'lane' && t < 3) { tk(0.01, 0.01); t += 0.01; } const tl = t;
   if (tl > 0.7) throw new Error('lane took ' + tl.toFixed(2) + ' s; the ball is rolling in molasses'); if (tl < 0.12) throw new Error('lane took only ' + tl.toFixed(2) + ' s');
   P.endSk(0); P.step(0.2, 0.033); await wait(50); if (cardUp()) $('gBtn1').click(); await wait(50); sv.rl = 0; return 'lane in ' + tl.toFixed(2) + ' s at a strong flick';
 });
@@ -628,7 +639,7 @@ await T('bonus game: balls roll off ring walls instead of hanging, and rims ratt
   let worst = 0, lip = 0, lipOut = 0, n = 0;
   for (let k = 0; k < 32 && (k < 14 || lip < 2 || lipOut < 1); k++) {
     K.cool = 0; K.bl.length = 0; const a = (Math.random() * 30 - 15) * Math.PI / 180, s = 3 + Math.random() * 5; P.roll(Math.sin(a), -Math.cos(a), s); const b = K.bl[0]; let t = 0, slow = 0, w = 0, touched = false;
-    while (K.bl.includes(b) && t < 6) { P.step(0.04, 0.04); t += 0.068; if (b.lh) touched = true; if (b.st === 'play' && Math.hypot(b.vu, b.vv) < 0.12 && b.z < 0.1) { slow += 0.068; w = Math.max(w, slow); } else slow = 0; }
+    while (K.bl.includes(b) && t < 6) { tk(0.04, 0.04); t += 0.068; if (b.lh) touched = true; if (b.st === 'play' && Math.hypot(b.vu, b.vv) < 0.12 && b.z < 0.1) { slow += 0.068; w = Math.max(w, slow); } else slow = 0; }
     worst = Math.max(worst, w); n++; if (touched) { lip++; if (!b.hole) lipOut++; }
   }
   if (worst > 0.5) throw new Error('a ball hung on something for ' + worst.toFixed(2) + ' s');
@@ -660,15 +671,18 @@ await T('run end card: save, reset, confirm', async () => {
   $('gBtn3').click(); await wait(30); const hb = $('gBtn2'), down = () => hb.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 7, button: 0, bubbles: true })), up = () => hb.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, bubbles: true }));
   if (hb.textContent !== 'Hold to reset') throw new Error('confirm button says ' + hb.textContent);
   hb.click(); await wait(30); if (card().t !== 'Reset everything?' || sv.bank !== bank0) throw new Error('a plain tap reset the game');
-  down(); await wait(400); if (!hb.classList.contains('holding') || !document.querySelector('.holdbar i').style.width) throw new Error('no hold bar while holding'); up(); await wait(1300);
+  const clk = fakeClock(); try {
+  down(); await clk.jump(400); if (!hb.classList.contains('holding') || !document.querySelector('.holdbar i').style.width) throw new Error('no hold bar while holding'); up(); await clk.jump(1300);
   if (card().t !== 'Reset everything?' || sv.bank !== bank0) throw new Error('letting go early still reset the game');
-  down(); hb.dispatchEvent(new PointerEvent('pointerleave', { pointerId: 7, bubbles: true })); await wait(1300); if (card().t !== 'Reset everything?' || sv.bank !== bank0) throw new Error('sliding off still reset the game');
-  down(); if (!await wf(() => card().t === 'Fresh start!', 3000)) throw new Error('no fresh start card after the hold: ' + JSON.stringify(card()));
+  down(); hb.dispatchEvent(new PointerEvent('pointerleave', { pointerId: 7, bubbles: true })); await clk.jump(1300); if (card().t !== 'Reset everything?' || sv.bank !== bank0) throw new Error('sliding off still reset the game');
+  down(); await clk.jump(1100); if (card().t !== 'Reset everything?' || sv.bank !== bank0) throw new Error('the hold finished before its 1.2 seconds: ' + JSON.stringify(card()));   /* a hold just short of the full time must not reset */
+  await clk.jump(200); if (card().t !== 'Fresh start!') throw new Error('no fresh start card once the hold passed 1.2 seconds: ' + JSON.stringify(card()));   /* 1.3 s held in all, read right away: a hold that needs longer fails here */
   hb.click(); up(); c = card(); if (c.t !== 'Fresh start!' || c.b2 !== 'Undo reset') throw new Error('lifting the finger right after the hold clicked Undo: ' + JSON.stringify(c));   /* the lift of the same finger must not undo the reset */
-  await wait(800);
+  await clk.jump(800);   /* past the half second after a hold when a lifting finger is ignored */
   if (sv.bank !== 0 || sv.gu || sv.ra) throw new Error('hold did not clear the save');
   $('gBtn2').click(); await wait(40); c = card(); if (c.t !== 'You did it!' || sv.bank !== bank0 || sv.gu !== 2) throw new Error('undo did not bring the game back: ' + JSON.stringify(c) + ' bank ' + sv.bank);
-  $('gBtn3').click(); await wait(30); down(); await wait(1500); up(); await wait(30); $('gBtn1').click();
+  $('gBtn3').click(); await wait(30); down(); await clk.jump(1500); up(); await wait(30); $('gBtn1').click();
+  } finally { clk.restore(); }
   if (!await wf(() => !cardUp() && P.S.stage === 1, 3000)) throw new Error('reset did not start stage 1');
   if (sv.bank !== 0 || sv.gu || sv.ra || sv.um || sv.au || sv.ar || sv.ap || sv.run) throw new Error('reset left data: ' + JSON.stringify(sv)); if ((sv.ach & ach0 & 5) !== 5 && (ach0 & 5) === 5 && (sv.ach & 5) !== 5) throw new Error('trophies lost');
 });
