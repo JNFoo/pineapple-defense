@@ -98,7 +98,7 @@ Everything is one self-contained HTML file built from `src/`. There are no runti
 - Packed single file: `python3 tools/pack.py` makes one smaller, self-unpacking `.html` in `dist/`; add `--min` to pack the minified page (`python3 build.py --min` first, needs `esbuild`).
 - Icons: `python3 -I tools/make_icons.py` regenerates `src/sprites/icons.svg` and the standalone files in `docs/icons/`.
 - Checks: `python3 -I tools/qa.py` (add `--ff` for Firefox). Release: `python3 -I tools/release.py`.
-- Tested in Chromium and Firefox 158. Targets: Android Chrome, Firefox and Chromium-based desktop browsers.
+- Tested in Firefox 158 and ungoogled Chromium 155 (one at a time); the changelog lists what each release was tested in, and says "not recorded" where that was not noted. Targets: Android Chrome, Firefox and Chromium-based desktop browsers.
 
 ## More from LFC Foundry
 

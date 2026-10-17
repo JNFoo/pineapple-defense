@@ -2,11 +2,14 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 
+**Tested in:** each release below lists the browsers its checks ran in, taken from what the test runs recorded. Where a version was not recorded it says "not recorded"; nothing here was guessed or re-run after the fact. Since 2026-10-17 the rule is Firefox 158 and ungoogled Chromium 155, one at a time.
+
 ## @VER@
 - **Device check (tester build only):** one button in the Test Lab plays Stage 2 wave 3 for 20 seconds (after a 2 second warm-up) and ends with a plain-words verdict: Smooth, Mostly smooth, Choppy, Slow or Could not check. It also reports frames a second, the slowest frames, how long the game's own work takes per frame, and whether picture quality had to drop, and a Copy report button puts it all on the clipboard to paste into a message. On the test laptop it reads Smooth at 60 frames a second.
 - **Slow phones are now called Slow, not Smooth:** a steady 8 to 15 frames a second used to count as Smooth because the frames were even. Now a typical frame over 25 ms (under 40 frames a second) is Slow, and over 40 ms (under 25 frames a second) with Battery saver on, because the game then draws about 30 pictures a second on purpose.
 - **The game steps its picture quality down on very slow devices:** the quality governor (JS-modules frame-kit 1.1.0) used to ignore frames slower than about 10 per second, so a very weak phone never got the cheaper picture. It now counts frames up to 250 ms apart (down to 4 frames a second). In a test with the processor slowed 4 times (about 12 to 16 frames a second) quality dropped one step; before, it stayed at full and the game kept stuttering.
 - **Developer:** vendored library headers and `tools/canvas-probe.js` now name LFC Foundry as the copyright holder (they said JNFoo); `qa.py` takes `PD_CHROME`, `PD_FF` and `PD_GECKO` to pick the test browsers (now Firefox 158 and ungoogled Chromium 155).
+- **Tested in (so far):** the quick checks pass in ungoogled Chromium 155 and Firefox 158 (106 s, one browser at a time). The Device check ran on the owner's laptop in Firefox 159.0 (tester build 2026.10.16.2048: Smooth, 60 frames a second) and in the cloud test machine in Chromium 141 with the processor slowed 1, 4 and 6 times. The full release run in the two new browsers is still to come, and the Pixel 7 Pro result is still open.
 
 ## 2026.10.16.1720
 - **Sideways menus and cards:** held sideways on a phone, the title buttons now sit in the side margins (Play, Continue, Replay a stage and Shop at left; How to play, Trophies, Settings and Calm mode at right), and Settings, Shop, Trophies, How to play and the run end card fill the screen and are drawn at least 1.4 times larger than before. Every button there is at least 44 px (the smallest sideways button used to be under that); the layout check now sweeps every screen sideways, so the old known gap is closed.
@@ -14,9 +17,13 @@ Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyri
 - **Soft plate behind the HUD counters:** the two counter rows sit on a soft cream plate that is half see-through, so the numbers stay readable over busy art, in portrait play (no blur, so no extra cost per frame); sideways play and the bonus game keep the bare pills.
 - **Moved:** the game now lives at https://github.com/lfcfoundry/pineapple-defense (play page https://lfcfoundry.github.io/pineapple-defense/) and the shared code library at https://github.com/lfcfoundry/JS-modules; the old addresses redirect.
 
+- **Tested in:** Chromium 141.0.7390.37 (the stock Playwright build, not ungoogled) for the full release run; no Firefox run for this release, because the cloud machine could not install Firefox then. Phone not tested.
+
 ## 2026.10.15.1102
 - **Forged by LFC Foundry, MIT licensed:** a `LICENSE` file (MIT, with the branding notice and the notices of the vendored pieces), the same header block at the top of every built page (the packed file carries it outside the compressed part too), and "Forged by LFC Foundry, MIT License" on the title screen. First-party source, tool and doc headers now say Copyright (c) 2026 LFC Foundry. The vendored JS-modules files keep their own JNFoo MIT notices. Commits are still authored as JNFoo.
 - **Developer:** the header text lives in `src/header.txt` (used by `build.py` and `tools/pack.py`); a new check confirms the header comment, branding notice and title credit are present.
+
+- **Tested in:** Chromium (version not recorded) and Firefox 158 through the release tool; the first release run had one Firefox timing flake (the FPS badge overlapping a pick) that passed on rerun.
 
 ## 2026.10.14.1352
 - **Sideways play is roomier:** held sideways on a phone, the counters, Pause, the weapon picks and Pineapple Rain move into the empty margins beside the picture and get bigger (the weapon picks were about 75 by 23 px, now 124 by 46). The picture itself is unchanged. While a card is open the side buttons go quiet so a stray tap cannot throw. Left-handed mode mirrors the sides. A small tip, once, on a touch phone: "Turn your phone upright for the biggest view." It never blocks and never comes back.
@@ -173,3 +180,5 @@ Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyri
 
 ## 2026.10.12.1556
 - First title screen, logo and original pineapple and Rockhopper sprites.
+
+**Tested in, releases before 2026.10.15.1102 (back to 2026.10.12.2343):** the release tool (`tools/release.py --ff`) runs the suite in Chromium and then Firefox, and Firefox 158 was the Firefox the checks were written for. Which of these releases actually had the Firefox run, and the Chromium version, were not recorded. Earlier builds before the one-command tools: not recorded.
