@@ -2,10 +2,16 @@
 
 Pineapple Defense. Version stamps use `year.month.day.HHMM` (US Eastern). Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 
+## @VER@
+- **Device check (tester build only):** one button in the Test Lab plays Stage 2 wave 3 for 20 seconds (after a 2 second warm-up) and ends with a plain-words verdict: Smooth, Mostly smooth, Choppy, Slow or Could not check. It also reports frames a second, the slowest frames, how long the game's own work takes per frame, and whether picture quality had to drop, and a Copy report button puts it all on the clipboard to paste into a message. On the test laptop it reads Smooth at 60 frames a second.
+- **Slow phones are now called Slow, not Smooth:** a steady 8 to 15 frames a second used to count as Smooth because the frames were even. Now a typical frame over 25 ms (under 40 frames a second) is Slow, and over 40 ms (under 25 frames a second) with Battery saver on, because the game then draws about 30 pictures a second on purpose.
+- **The game steps its picture quality down on very slow devices:** the quality governor (JS-modules frame-kit 1.1.0) used to ignore frames slower than about 10 per second, so a very weak phone never got the cheaper picture. It now counts frames up to 250 ms apart (down to 4 frames a second). In a test with the processor slowed 4 times (about 12 to 16 frames a second) quality dropped one step; before, it stayed at full and the game kept stuttering.
+- **Developer:** vendored library headers and `tools/canvas-probe.js` now name LFC Foundry as the copyright holder (they said JNFoo); `qa.py` takes `PD_CHROME`, `PD_FF` and `PD_GECKO` to pick the test browsers (now Firefox 158 and ungoogled Chromium 155).
+
 ## 2026.10.16.1720
-- **Sideways menus and cards:** held sideways on a phone, the title buttons now sit in the side margins (Play, Continue, Replay a stage and Shop at left; How to play, Trophies, Settings and Calm mode at right), and Settings, Shop, Trophies, How to play and the run end card fill the screen at a bigger size. Every button there is at least 44 px; the layout check now sweeps every screen sideways, so the old known gap is closed.
-- **Roomy letters (Settings, off by default):** wider letter and word spacing and taller lines in cards and menu buttons.
-- **Soft plate behind the HUD counters:** the two counter rows sit on a soft cream plate in portrait play (no blur, so no extra cost per frame); sideways play and the bonus game keep the bare pills.
+- **Sideways menus and cards:** held sideways on a phone, the title buttons now sit in the side margins (Play, Continue, Replay a stage and Shop at left; How to play, Trophies, Settings and Calm mode at right), and Settings, Shop, Trophies, How to play and the run end card fill the screen and are drawn at least 1.4 times larger than before. Every button there is at least 44 px (the smallest sideways button used to be under that); the layout check now sweeps every screen sideways, so the old known gap is closed.
+- **Roomy letters (Settings, off by default):** letters sit 0.04 of a letter-height further apart, gaps between words are 0.16 wider, and lines are 1.55 times the text size tall, in cards and menu buttons. This helps readers who find tight text hard; with it off, nothing changes.
+- **Soft plate behind the HUD counters:** the two counter rows sit on a soft cream plate that is half see-through, so the numbers stay readable over busy art, in portrait play (no blur, so no extra cost per frame); sideways play and the bonus game keep the bare pills.
 - **Moved:** the game now lives at https://github.com/lfcfoundry/pineapple-defense (play page https://lfcfoundry.github.io/pineapple-defense/) and the shared code library at https://github.com/lfcfoundry/JS-modules; the old addresses redirect.
 
 ## 2026.10.15.1102
