@@ -1,7 +1,7 @@
 #!/usr/bin/env python3 -I
 """Release in one command. Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
    python3 -I tools/release.py [--force]   QA in all three test browsers (skipped when nothing changed), then both packed files, old dist files pruned.
-   Test browsers are the ones on the "browsers" branch of JNFoo/knowledgebase-single-file (read its README first; versions can change):
+   Test browsers are the ones on the "browsers" branch of lfcfoundry/knowledge-base (read its README first; versions can change):
    Firefox, ungoogled Chromium and WebKitGTK, one at a time (set PD_CHROME, PD_FF, PD_GECKO). The release records the versions that really ran
    and writes them into the changelog entry ("Tested in"); it stops if one of the three did not run or the README does not name them."""
 import glob, json, os, re, shutil, subprocess, sys

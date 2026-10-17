@@ -17,7 +17,7 @@
   python3 -I tools/qa.py --smart    pick the cheapest run for what changed since the last passing run: notes only = no browser, nothing = 2 s smoke, code = quick tier
   python3 -I tools/qa.py --calm     run the suite with the system's reduced-motion setting on (calm mode starts by itself)
 
-Test browsers: only the ones on the "browsers" branch of JNFoo/knowledgebase-single-file (Firefox, ungoogled Chromium,
+Test browsers: only the ones on the "browsers" branch of lfcfoundry/knowledge-base (Firefox, ungoogled Chromium,
 WebKitGTK), one at a time, each with its version printed and recorded in .qa-browsers.json (tools/release.py puts them in the
 changelog). Point the harness at them with PD_CHROME, PD_FF, PD_GECKO; WebKitGTK needs WebKitWebDriver, xvfb-run and dbus-run-session
 (kb-browsers/install.sh as root). Read that branch's README before each run: versions and browsers can change.
