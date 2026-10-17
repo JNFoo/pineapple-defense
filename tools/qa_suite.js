@@ -38,7 +38,7 @@ async function T(name, fn) {
   if (ERR.length > e0) { ok = false; d += ' | page errors: ' + ERR.slice(e0).join(' // ').slice(0, 300); }
   R.push({ n: name, ok, ms: Math.round(performance.now() - t0), d });
 }
-async function go(st, w) { P.go(st, w); if (!await wf(() => P.S && P.S.stage === st && P.penguins !== undefined && !$('game').hidden, 4000)) throw new Error('go timeout'); await wait(80); P.bot = false; }
+async function go(st, w) { P.go(st, w); if (!await wf(() => P.S && P.S.stage === st && P.penguins !== undefined && !$('game').hidden, 4000 * (window.__qaSlow || 1))) throw new Error('go timeout'); await wait(80); P.bot = false; }
 
 await T('load', async () => { if (!P) throw new Error('no __pd'); const sv = P.sv(); ['stage', 'wave', 'bank', 'ach', 'ac2', 'gu', 'um', 'ra', 'run', 'cd', 'rl', 'lm', 'lh', 'aim', 'arc', 'hc', 'lt', 'thr'].forEach(k => { if (!isFinite(sv[k])) throw new Error('save field ' + k + ' = ' + sv[k]); }); });
 

@@ -3,6 +3,7 @@
 
   python3 -I tools/qa.py            build, syntax check, then the in-page suite in Chromium (about 10 s)
   python3 -I tools/qa.py --ff       also run it in Firefox (the stress test)
+  python3 -I tools/qa.py --wk       also run it in WebKitGTK (the nearest WebKit a Linux cloud machine can run)
   python3 -I tools/qa.py --lab      test the tester (lab) build instead
   python3 -I tools/qa.py --min      test the minified page (the one that gets packed)
   python3 -I tools/qa.py --fuzz 300 longer random-action fuzzing (game seconds per stage, default 60)
@@ -13,6 +14,11 @@
                                     Never cached and never a release gate: the full run stays mandatory before a release.
   python3 -I tools/qa.py --only REGEX  run only the checks whose name matches REGEX (fast loop while writing a check; not cached)
   python3 -I tools/qa.py --calm     run the suite with the system's reduced-motion setting on (calm mode starts by itself)
+
+Test browsers: only the ones on the "browsers" branch of JNFoo/knowledgebase-single-file (Firefox, ungoogled Chromium,
+WebKitGTK), one at a time, each with its version printed and recorded in .qa-browsers.json (tools/release.py puts them in the
+changelog). Point the harness at them with PD_CHROME, PD_FF, PD_GECKO; WebKitGTK needs WebKitWebDriver, xvfb-run and dbus-run-session
+(kb-browsers/install.sh as root). Read that branch's README before each run: versions and browsers can change.
 
 Why it is cheap: the suite fast-forwards game time inside the page (no waiting on frames, no per-frame screenshots),
 runs everything in ONE browser session, skips work when index.html and the suite are byte-identical to the last pass,
@@ -58,10 +64,14 @@ if not lab:
     if net: print('NETWORK OR LINK FOUND in the shipped page (the grown-ups card says there is none): %s' % sorted(set(net))); sys.exit(4)
 
 # 3. skip when nothing changed since the last pass
+CHROME = os.environ.get('PD_CHROME', '')
+if not CHROME or not os.path.exists(CHROME):
+    print('PD_CHROME must point at the ungoogled Chromium from the browsers branch (see docs/qa-process.md); stock Chromium is not a test browser'); sys.exit(2)
+USED = []   # (key, full label) of every browser this run really used
 suite = open(os.path.join(ROOT, 'tools/qa_suite.js'), encoding='utf-8').read()
 layout = open(os.path.join(ROOT, 'tools/qa_layout.js'), encoding='utf-8').read()
 PROBE = open(os.path.join(ROOT, 'tools/canvas-probe.js'), encoding='utf-8').read()
-key = hashlib.sha1((src + suite + layout + PROBE + str(FUZZ) + str(flag('--ff')) + str(CALM)).encode()).hexdigest()
+key = hashlib.sha1((src + suite + layout + PROBE + str(FUZZ) + str(flag('--ff')) + str(flag('--wk')) + str(CALM) + os.environ.get('PD_CHROME', '')).encode()).hexdigest()
 cache = os.path.join(ROOT, '.qa-cache'); mode = ('lab' if lab else 'main') + ('-min' if mini else '') + ('-calm' if CALM else '')
 store = json.load(open(cache)) if os.path.exists(cache) else {}
 if store.get(mode) == key and not flag('--force') and not QUICK and not ONLY:
@@ -133,7 +143,9 @@ def labview(shoot, run_js, name):
 from playwright.sync_api import sync_playwright
 url = 'file://' + page + '#qa'
 with sync_playwright() as p:
-    br = p.chromium.launch(executable_path=os.environ.get('PD_CHROME', '/opt/pw-browsers/chromium'), args=['--no-sandbox'])
+    br = p.chromium.launch(executable_path=CHROME, args=['--no-sandbox'])
+    _cv = br.version; _cn = 'ungoogled Chromium' if 'ungoogled' in CHROME.lower() else 'Chromium'
+    USED.append(('%s %s' % (_cn, _cv.split('.')[0]), '%s %s' % (_cn, _cv)))
     pg = br.new_page(viewport={'width': 500, 'height': 827}, **({'reduced_motion': 'reduce'} if CALM else {})); perr = []
     pg.on('pageerror', lambda e: perr.append(str(e))); pg.on('console', lambda m: perr.append(m.text) if m.type == 'error' else None)
     pg.goto(url); pg.wait_for_function('window.__pd')
@@ -165,21 +177,32 @@ for fx, bad in old:
     for x in bad: fails.append('old save %s: %s' % (fx, x))
 for e in perr: fails.append('chromium console: ' + e)
 
-# 5. Firefox (optional): the same suite, the performance and compatibility stress test
+# 5. Firefox and WebKitGTK (optional): the same suite through WebDriver, one browser after the other
+def sel_leg(d, name, slow=1):   # slow: patience factor for stage starts and the script timeout; WebKitGTK is slower to start stages here (its first frames take up to a second)
+    d.set_script_timeout(120 * slow)
+    try: d.set_window_size(500, 900)
+    except Exception: pass
+    d.get(url); time.sleep(0.4)
+    d.execute_script('window.__qaSlow=%d;window.__qaFuzz=%d;window.__qaQuick=%d;window.__qaOnly=%s' % (slow, min(FUZZ, 60), SEED if QUICK else 0, json.dumps(ONLY))); d.execute_script(PROBE)
+    res = d.execute_async_script('var cb=arguments[arguments.length-1];(async()=>{' + suite + '})().then(cb,e=>cb({r:[{n:"suite crashed",ok:false,ms:0,d:String(e)}],errs:[]}))')
+    lay = []
+    try: d.set_window_size(412, 915)
+    except Exception: pass
+    d.get(url); time.sleep(0.4)
+    out = d.execute_async_script('var cb=arguments[arguments.length-1];(async()=>{' + layout + '})().then(cb,e=>cb({vw:0,vh:0,bad:[String(e)]}))'); lay.append((out['vw'], out['vh'], out['bad']))
+    print('[%s] %s' % (stamp(), name)); report(name.split()[0].lower(), res, lay)
+
 if flag('--ff'):
     from selenium import webdriver
     from selenium.webdriver.firefox.service import Service
     from selenium.webdriver.firefox.options import Options
-    o = Options(); o.add_argument('-headless'); o.set_preference('ui.prefersReducedMotion', 1) if CALM else None; o.binary_location = os.environ.get('PD_FF', '/opt/ff158dl/firefox/firefox')
-    d = webdriver.Firefox(service=Service(os.environ.get('PD_GECKO', '/opt/ff158dl/geckodriver')), options=o)
+    _ff, _gk = os.environ.get('PD_FF', ''), os.environ.get('PD_GECKO', '')
+    if not (os.path.exists(_ff) and os.path.exists(_gk)): print('PD_FF and PD_GECKO must point at Firefox from the browsers branch and a geckodriver (see docs/qa-process.md)'); sys.exit(2)
+    o = Options(); o.add_argument('-headless'); o.set_preference('ui.prefersReducedMotion', 1) if CALM else None; o.binary_location = _ff
+    d = webdriver.Firefox(service=Service(_gk), options=o)
     try:
-        d.set_script_timeout(120); d.set_window_size(500, 900); d.get(url); time.sleep(0.4)
-        d.execute_script('window.__qaFuzz=%d;window.__qaQuick=%d;window.__qaOnly=%s' % (min(FUZZ, 60), SEED if QUICK else 0, json.dumps(ONLY))); d.execute_script(PROBE)
-        res = d.execute_async_script('var cb=arguments[arguments.length-1];(async()=>{' + suite + '})().then(cb,e=>cb({r:[{n:"suite crashed",ok:false,ms:0,d:String(e)}],errs:[]}))')
-        lay = []
-        d.set_window_size(412, 915); d.get(url); time.sleep(0.4)
-        out = d.execute_async_script('var cb=arguments[arguments.length-1];(async()=>{' + layout + '})().then(cb,e=>cb({vw:0,vh:0,bad:[String(e)]}))'); lay.append((out['vw'], out['vh'], out['bad']))
-        print('[%s] Firefox' % stamp()); report('firefox', res, lay)
+        _fv = d.capabilities.get('browserVersion', 'unknown'); USED.append(('Firefox %s' % _fv.split('.')[0], 'Firefox %s' % _fv))
+        sel_leg(d, 'Firefox %s' % _fv)
         if not QUICK and not ONLY:
             d.set_window_size(500, 900); d.get('file://' + os.path.join(ROOT, 'dist/lab/index.html') + '#qa'); time.sleep(0.6)
             bad = labview(d.get_screenshot_as_png, d.execute_script, 'firefox'); print('  %-4s tester color view (Firefox) %s' % ('ok' if not bad else 'FAIL', '; '.join(bad)))
@@ -187,8 +210,35 @@ if flag('--ff'):
     finally:
         d.quit()
 
+if flag('--wk'):
+    import signal
+    from selenium import webdriver
+    from selenium.webdriver.common.options import ArgOptions
+    if not all(shutil.which(x) for x in ('WebKitWebDriver', 'xvfb-run', 'dbus-run-session')): print('WebKitWebDriver, xvfb-run or dbus-run-session is missing (run kb-browsers/install.sh as root)'); sys.exit(2)
+    port = 4600 + os.getpid() % 300
+    drv = subprocess.Popen(['xvfb-run', '-a', '-s', '-screen 0 1280x1024x24', 'dbus-run-session', '--', 'WebKitWebDriver', '--port=%d' % port],
+                           env=dict(os.environ, GTK_A11Y='none', WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS='1'), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    d = None
+    try:
+        for _ in range(40):
+            try: d = webdriver.Remote(command_executor='http://127.0.0.1:%d' % port, options=ArgOptions()); break
+            except Exception: time.sleep(0.5)
+        if d is None: fails.append('webkitgtk: could not start a WebDriver session'); raise SystemExit
+        _wv = d.capabilities.get('browserVersion', 'unknown'); USED.append(('WebKitGTK %s' % _wv, 'WebKitGTK %s (%s)' % (_wv, d.capabilities.get('browserName', 'MiniBrowser'))))
+        sel_leg(d, 'WebKitGTK %s' % _wv, slow=6)
+    except SystemExit: pass
+    finally:
+        try: d and d.quit()
+        except Exception: pass
+        try: os.killpg(drv.pid, signal.SIGTERM)
+        except Exception: pass
+
 if fails:
     print('\nFAILED (%d):' % len(fails)); [print(' - ' + f) for f in fails]; sys.exit(1)
 if not QUICK and not ONLY: store[mode] = key; json.dump(store, open(cache, 'w'))
 if QUICK: print('(quick tier, seed %d: not cached, not a release gate)' % SEED)
+if not QUICK and not ONLY:   # what a release records: which browsers really ran this page (tools/release.py reads this file)
+    rec = json.load(open(os.path.join(ROOT, '.qa-browsers.json'))) if os.path.exists(os.path.join(ROOT, '.qa-browsers.json')) else {}
+    rec[mode] = [{'key': k, 'label': l} for k, l in USED]; json.dump(rec, open(os.path.join(ROOT, '.qa-browsers.json'), 'w'), indent=1)
+print('tested in: ' + ', '.join(l for _, l in USED))
 print('\nall checks passed in %s' % stamp())
