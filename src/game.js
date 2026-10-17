@@ -380,10 +380,10 @@ var ACH = [
   { n: 'Spotless Stand', d: 'Win a stage without one single bump.' }
 ];
 var PU = {
-  pz: { name: 'Zippy!', col: '#5cc84a', glow: '92,200,74', secs: 8, tip: 'Super fast throws' },
+  pz: { name: 'Zippy!', col: '#5cc84a', pop: '#3f9d32', glow: '92,200,74', secs: 8, tip: 'Super fast throws' },
   pm: { name: 'Mega!', col: '#9b5de5', glow: '155,93,229', secs: 8, tip: 'Every throw splashes' },
-  ph: { name: 'Cheer up!', col: '#ff6f9c', glow: '255,111,156', secs: 0, tip: 'Fills the cheer meter' },
-  pf: { name: 'Toasty!', col: '#ff7a3a', glow: '255,122,58', secs: 6, tip: 'Sleepy, slow penguins' }
+  ph: { name: 'Cheer up!', col: '#ff6f9c', pop: '#d84f7e', glow: '255,111,156', secs: 0, tip: 'Fills the cheer meter' },
+  pf: { name: 'Toasty!', col: '#ff7a3a', pop: '#d9560f', glow: '255,122,58', secs: 6, tip: 'Sleepy, slow penguins' }
 };
 var PU_KEYS = ['pz', 'pm', 'ph', 'pf'], slowK = 1;
 function toast(txt, ttl) { S.toast = { txt: txt, t: 0, ttl: ttl || 2.4 }; }
@@ -406,7 +406,7 @@ function collectPU() {
   var k = S.pu.k, d = PU[k], o = slot(0); S.pu = null;
   if (k === 'pz') S.fx.zip = d.secs; else if (k === 'pm') S.fx.mega = d.secs; else if (k === 'pf') S.fx.frost = d.secs;
   else S.cheer = Math.min(100, S.cheer + 35);
-  burst(o.x, o.cy, 16, [d.col, '#fff7e3', '#ffe58a']); popText(o.x, o.cy - o.s * 0.6, d.name, d.col);
+  burst(o.x, o.cy, 16, [d.col, '#fff7e3', '#ffe58a']); popText(o.x, o.cy - o.s * 0.6, d.name, d.pop || d.col);   /* the floating word gets its own darker shade (3:1 or better on its cream outline); the burst keeps the bright color */
   award(6);
 }
 function updateTable(dt) {
@@ -606,7 +606,7 @@ function targets() {
 function throwAt(ox, oy, dx, dy, spd, tapPoint, want) {
   if (S.cd > 0) { if (sv.ib && S.cd <= BUF_S && !S.over && !S.paused && S.rc <= 0 && !rsg()) S.buf = { a: [ox, oy, dx, dy, spd, tapPoint, want], t: S.t }; return; }
   if (S.over || S.paused || S.rc > 0) return;
-  if (rsg()) { if (S.t - (S.wgT || -9) > 1.2) { S.wgT = S.t; var wp = pouchPos(); popText(wp.x, wp.y - H * 0.1, 'Wait for GO!', '#e8a21c', 0); } return; }
+  if (rsg()) { if (S.t - (S.wgT || -9) > 1.2) { S.wgT = S.t; var wp = pouchPos(); popText(wp.x, wp.y - H * 0.1, 'Wait for GO!', '#c07800', 0); } return; }
   var tc = typeCost(curType);
   if (tc > 0) {
     if (sv.bank < tc) { setType('classic'); toast('Lobbers cost ' + tc + ' Golden Pineapples. Back to Classic!'); }

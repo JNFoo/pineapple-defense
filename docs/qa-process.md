@@ -33,6 +33,7 @@ Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 - Card flows: stage clear cards, the run-end card (Save and restart, Reset completely, the confirm step, trophies kept), pause keys.
 - Random-action fuzzing of raids, pickups, gulls, combos, pauses, taps and zones across every stage, clicking through win and lose cards.
 - Layout at 360x640, 412x915, 1280x720 and 820x1180: no sideways scroll, HUD pills do not overlap, the raid button clears the cheer bar and the picks, cards fit the screen.
+- Every floating word (pop text) has at least 3:1 contrast against its cream outline, read straight from the source before any browser starts.
 - Any page error or console error fails the run.
 
 ## Old saves

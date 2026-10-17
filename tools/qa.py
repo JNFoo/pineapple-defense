@@ -88,6 +88,19 @@ if not lab:
     net = _re.findall(r'\bfetch\s*\(|XMLHttpRequest|sendBeacon|WebSocket|EventSource|importScripts|<script[^>]+\ssrc=|<link[^>]+href=["\']?https?:|<a\s[^>]*href|window\.open\s*\(', src)
     if net: print('NETWORK OR LINK FOUND in the shipped page (the grown-ups card says there is none): %s' % sorted(set(net))); sys.exit(4)
 
+# 2c. every floating word (popText) must read at 3:1 or better against the cream outline it is drawn with (the cartoon-3d-kit 1.1.0 rule for pop numbers)
+if not lab:
+    def _lum(h):
+        h = h.lstrip('#'); c = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+        c = [x / 12.92 if x <= 0.03928 else ((x + 0.055) / 1.055) ** 2.4 for x in c]; return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    def _cr(a, b):
+        x, y = sorted((_lum(a), _lum(b)), reverse=True); return (x + 0.05) / (y + 0.05)
+    _g = open(os.path.join(ROOT, 'src/game.js'), encoding='utf-8').read(); _pops = []
+    _pops += [(m.group(1), m.group(0)[:40]) for m in re.finditer(r"popText\([^;]*?,\s*'(#[0-9a-fA-F]{6})'[^;]*?\);", _g)]
+    for m in re.finditer(r"(\w+): \{ name: '[^']*', col: '(#[0-9a-fA-F]{6})'(?:, pop: '(#[0-9a-fA-F]{6})')?", _g): _pops.append((m.group(3) or m.group(2), 'power-up ' + m.group(1)))
+    _low = ['%s %s is %.2f:1' % (n, c, _cr(c, '#fff7e3')) for c, n in _pops if _cr(c, '#fff7e3') < 3.0]
+    if _low or len(_pops) < 10: print('FLOATING WORD COLORS under 3:1 on the cream outline (or the scan found too few: %d): %s' % (len(_pops), '; '.join(_low))); sys.exit(5)
+
 # 3. skip when nothing changed since the last pass
 CHROME = os.environ.get('PD_CHROME', '')
 if not CHROME or not os.path.exists(CHROME):
