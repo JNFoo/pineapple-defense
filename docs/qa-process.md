@@ -5,6 +5,7 @@ Copyright (c) 2026 LFC Foundry. MIT License (see LICENSE).
 ## One command
 - `python3 -I tools/qa.py` builds, syntax-checks every inline script, then runs the in-page suite in Chromium (about 10 seconds).
 - `--ff` also runs it in Firefox 158 (the stress test, about 25 seconds). `--lab` tests the tester build. `--min` tests the esbuild-minified page (`build.py --min`), which is the page that gets packed. `--fuzz N` fuzzes N game seconds per stage (default 60). `--force` ignores the cache. `--shots DIR` saves screenshots.
+- Test browsers: Firefox 158 and ungoogled Chromium 155, installed from the `browsers` branch of JNFoo/knowledgebase-single-file (its README and `install.sh` do the work). Point the harness at them with `PD_CHROME` (Chromium path), `PD_FF` (Firefox path) and `PD_GECKO` (geckodriver path). Run one browser at a time (qa.py already does); stock Chromium, Chromium 153 and Firefox 157 are no longer used. Label results with these versions.
 - `python3 -I tools/release.py` runs QA, then writes the regular and tester files into `dist/` and prunes older ones (keeps the newest two versions).
 
 ## Why it is cheap
