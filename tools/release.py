@@ -20,7 +20,7 @@ if os.path.exists(os.path.join(ROOT, 'dist/min/index.html')):
     run('tools/qa.py', '--min', *[a for a in sys.argv[1:] if a == '--force'])   # the minified page is what ships, so it gets the same suite
 else: print('note: esbuild not found, packing the readable page')
 run('tools/pack.py', '--min'); run('tools/pack.py', '--lab', '--min')
-for _f, _extra in ((os.path.join('dist', 'pineapple-defense-%s.html'), ('--ff', '--wk')), (os.path.join('dist', 'pineapple-defense-tester-%s.html'), ())):   # open the packed files players get: the unpacker must hand over a working game (about 9 s)
+for _f, _extra in ((os.path.join('dist', 'pineapple-defense-%s.html'), ('--ff', '--wk', '--gnome')), (os.path.join('dist', 'pineapple-defense-tester-%s.html'), ())):   # open the packed files players get: the unpacker must hand over a working game (about 15 s)
     _g = [g for g in glob.glob(os.path.join(ROOT, _f % '20*')) if re.search(r'-20\d\d\.\d+\.\d+\.\d+\.html$', g)]
     if _g: run('tools/qa.py', '--packed', sorted(_g)[-1], *_extra)
 files = sorted(glob.glob(os.path.join(ROOT, 'dist/pineapple-defense*-20*.html')))
