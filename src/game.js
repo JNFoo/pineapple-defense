@@ -2048,7 +2048,7 @@ if (lpaEl) lpaEl.addEventListener('click', function () {
 function frame(now) {
   if (!running) return;
   raf = requestAnimationFrame(frame);
-  if (sv.bv && last && now - last < 28) return;   /* battery saver: about 30 pictures a second */
+  if (sv.bv && last && now - last < 28) return;   /* battery saver: about 30 FPS */
   if (!last) { last = now; return; }
   var gap = now - last; last = now;
   if (sv.fp) fpsTick(gap, now);
