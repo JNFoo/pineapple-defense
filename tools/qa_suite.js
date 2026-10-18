@@ -268,9 +268,9 @@ await T('FPS counter: row, badge, numbers', async () => {
   const fps = $('fps'); if (!fps || !fps.hidden) throw new Error('badge shown while the setting is off');
   document.getElementById('game').hidden = true; document.getElementById('title').hidden = false; $('bSet').click(); await wait(50);
   if (!$('cmFps') || !$('cmHold')) throw new Error('rows missing'); $('cmFps').click(); if (!sv.fp) throw new Error('FPS row did not switch on'); $('cmHold').click(); if (!sv.hp) throw new Error('Hold row did not switch on'); $('cmHold').click(); $('cardOk').click();
-  await go(1, 2, true); P.bot = false; await wf(() => !fps.hidden && /^\d+ fps/.test(fps.textContent), 4000 * (window.__qaSlow || 1));
+  await go(1, 2, true); P.bot = false; await wf(() => !fps.hidden && /^\d+ FPS/.test(fps.textContent), 4000 * (window.__qaSlow || 1));
   if (fps.hidden) throw new Error('badge hidden while playing with the setting on');
-  const tx = fps.textContent; if (!/^\d+ fps\nworst \d+ ms\nquality [0-2]\n(tap \d+ ms\n)?(smooth|\d+ hitch(es)?: [a-z ]+)$/.test(tx)) throw new Error('badge text: ' + tx);
+  const tx = fps.textContent; if (!/^\d+ FPS\nworst \d+ ms\nquality [0-2]\n(tap \d+ ms\n)?(smooth|\d+ hitch(es)?: [a-z ]+)$/.test(tx)) throw new Error('badge text: ' + tx);
   const r = fps.getBoundingClientRect(), bad = ['pause', 'raid', 'bRaid'].map(i => document.getElementById(i) || document.querySelector('.' + i)).filter(e => e && !e.hidden && (() => { const q = e.getBoundingClientRect(); return q.width && !(r.right < q.left || r.left > q.right || r.bottom < q.top || r.top > q.bottom); })());
   const pk = [...document.querySelectorAll('.pick')].filter(e => { const q = e.getBoundingClientRect(); return !(r.right < q.left || r.left > q.right || r.bottom < q.top || r.top > q.bottom); });
   if (bad.length || pk.length) throw new Error('badge covers a button: ' + bad.map(e => e.id || e.className).concat(pk.map(e => e.dataset.t)).join() + ' badge ' + [r.left, r.top, r.right, r.bottom].map(Math.round) + ' view ' + innerWidth + 'x' + innerHeight);
